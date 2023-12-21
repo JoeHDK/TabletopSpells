@@ -1,14 +1,62 @@
-﻿namespace TabletopSpells;
+﻿using Newtonsoft.Json;
+using System.Collections.ObjectModel;
+
+namespace TabletopSpells;
 public partial class MainPage : ContentPage
 {
+    ObservableCollection<string> Characters
+    {
+        get; set;
+    }
+
     public MainPage()
     {
         InitializeComponent();
-        // Load characters and bind to CharacterListView
+        Characters = new ObservableCollection<string>();
+        LoadCharacters();
+        CharacterListView.ItemsSource = Characters;
+        this.BindingContext = this; // Set the BindingContext
     }
 
-    private void OnCreateNewCharacterClicked(object sender, EventArgs e)
+    protected override void OnAppearing()
     {
-        // Navigate to the character creation page
+        base.OnAppearing();
+        LoadCharacters();
     }
+
+    private void LoadCharacters()
+    {
+        string existingCharactersJson = Preferences.Get("characters", "[]");
+        var characters = JsonConvert.DeserializeObject<List<string>>(existingCharactersJson);
+
+        Characters.Clear();
+        foreach (var character in characters)
+        {
+            Characters.Add(character);
+        }
+    }
+
+    private async void OnCreateNewCharacterClicked(object sender, EventArgs e)
+    {
+        string characterName = await DisplayPromptAsync("New Character", "Enter character name:");
+
+        if (!string.IsNullOrWhiteSpace(characterName))
+        {
+            SaveCharacter(characterName);
+        }
+    }
+    private void SaveCharacter(string characterName)
+    {
+        // Retrieve existing characters
+        string existingCharactersJson = Preferences.Get("characters", "[]");
+        var characters = JsonConvert.DeserializeObject<List<string>>(existingCharactersJson);
+
+        // Add new character
+        characters.Add(characterName);
+
+        // Save updated list
+        string updatedCharactersJson = JsonConvert.SerializeObject(characters);
+        Preferences.Set("characters", updatedCharactersJson);
+    }
+
 }
