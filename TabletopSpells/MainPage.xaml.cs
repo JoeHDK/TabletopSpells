@@ -24,17 +24,27 @@ public partial class MainPage : ContentPage
         LoadCharacters();
     }
 
-    private void LoadCharacters()
+    private static List<string>? GetExistingCharacters()
     {
         string existingCharactersJson = Preferences.Get("characters", "[]");
         var characters = JsonConvert.DeserializeObject<List<string>>(existingCharactersJson);
+        return characters;
+    }
 
-        Characters.Clear();
-        foreach (var character in characters)
+    private void LoadCharacters()
+    {
+        List<string>? characters = GetExistingCharacters();
+
+        if (characters.Count != Characters.Count)
         {
-            Characters.Add(character);
+            Characters.Clear();
+            foreach (string character in characters)
+            {
+                Characters.Add(character);
+            }
         }
     }
+
 
     private async void OnCreateNewCharacterClicked(object sender, EventArgs e)
     {
@@ -47,21 +57,51 @@ public partial class MainPage : ContentPage
     }
     private void SaveCharacter(string characterName)
     {
-        // Retrieve existing characters
+        List<string>? characters = GetExistingCharacters();
+
+        // Check if the character already exists
+        if (!characters.Contains(characterName))
+        {
+            characters.Add(characterName);
+
+            // Save updated list
+            string updatedCharactersJson = JsonConvert.SerializeObject(characters);
+            Preferences.Set("characters", updatedCharactersJson);
+
+            // Update ObservableCollection directly
+            Characters.Add(characterName);
+        }
+    }
+
+
+    private async void OnManageCharactersClicked(object sender, EventArgs e)
+    {
+        string result = await DisplayActionSheet("Remove Character", "Cancel", null, Characters.ToArray());
+
+        if (!string.IsNullOrWhiteSpace(result) && result != "Cancel")
+        {
+            bool delete = await DisplayAlert("Confirm Delete", $"Delete '{result}'?", "Yes", "No");
+            if (delete)
+            {
+                DeleteCharacter(result);
+            }
+        }
+    }
+
+    private void DeleteCharacter(string characterName)
+    {
+        // Retrieve the current list of characters
         string existingCharactersJson = Preferences.Get("characters", "[]");
         var characters = JsonConvert.DeserializeObject<List<string>>(existingCharactersJson);
 
+        // Remove the selected character
+        characters.Remove(characterName);
 
-        // Add new character
-        if (!characters.Contains(characterName))
-        {   
-            characters.Add(characterName);
-            LoadCharacters();
-        }
-
-        // Save updated list
+        // Save the updated list
         string updatedCharactersJson = JsonConvert.SerializeObject(characters);
         Preferences.Set("characters", updatedCharactersJson);
-    }
 
+        // Update the ObservableCollection
+        Characters.Remove(characterName);
+    }
 }

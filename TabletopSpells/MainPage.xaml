@@ -3,10 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TabletopSpells.MainPage">
 
-    <Grid>
+    <Grid BackgroundColor="Black"
+          Margin="10, 10, 0, 0">
         <!-- Grid Row Definitions -->
         <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
+            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
@@ -14,17 +15,47 @@
         <CollectionView x:Name="CharacterListView" Grid.Row="0">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Label Text="{Binding}" />
-                    <!-- Updated Binding -->
-                    <!-- Add additional character details or styling here -->
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="1"/>
+                            <!-- For the divider line -->
+                        </Grid.RowDefinitions>
+
+                        <!-- Character Name Label -->
+                        <Label Text="{Binding}"
+                               FontSize="Title"
+                               FontAttributes="Bold"
+                               HorizontalTextAlignment="Center"
+                               Margin="0,10"
+                               Grid.Row="0"/>
+
+                        <!-- Horizontal Divider Line -->
+                        <BoxView BackgroundColor="Gray"
+                                 HeightRequest="1"
+                                 Margin="30, 0"
+                                 Grid.Row="1"/>
+                    </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
 
+
         <!-- Create New Character Button -->
-        <Button Text="Create New Character" 
-                Grid.Row="1"
-                HorizontalOptions="FillAndExpand"
-                Clicked="OnCreateNewCharacterClicked"/>
+        <StackLayout Grid.Row="1" 
+                     Orientation="Horizontal" 
+                     HorizontalOptions="FillAndExpand">
+            <!-- Create New Character Button -->
+            <Button Text="Create New Character" 
+                    HorizontalOptions="FillAndExpand"
+                    Clicked="OnCreateNewCharacterClicked"
+                    Margin="10, 0, 5, 0"/>
+
+            <!-- Manage Characters Button -->
+            <Button Text="Remove Character" 
+                    HorizontalOptions="FillAndExpand"
+                    Clicked="OnManageCharactersClicked"
+                    Margin="5, 0, 10, 0"/>
+        </StackLayout>
     </Grid>
 </ContentPage>
