@@ -51,8 +51,13 @@ public partial class MainPage : ContentPage
         string existingCharactersJson = Preferences.Get("characters", "[]");
         var characters = JsonConvert.DeserializeObject<List<string>>(existingCharactersJson);
 
+
         // Add new character
-        characters.Add(characterName);
+        if (!characters.Contains(characterName))
+        {   
+            characters.Add(characterName);
+            LoadCharacters();
+        }
 
         // Save updated list
         string updatedCharactersJson = JsonConvert.SerializeObject(characters);
