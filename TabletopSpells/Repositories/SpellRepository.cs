@@ -31,15 +31,14 @@ public class SpellRepository
 
     public IEnumerable<Spell> GetSpellsByLevel(int level)
     {
-        // Assuming SpellLevel is a string like "sorcerer/wizard 2, magus 2"
-        // Adjust the logic if the format is different
         return spells.Where(spell => spell.SpellLevel.Contains($"level {level}", StringComparison.OrdinalIgnoreCase)).ToList();
     }
+
 
     public IEnumerable<Spell> GetSpellsByName(string name)
     {
         return spells.Where(spell => spell.Name.Equals(name, StringComparison.OrdinalIgnoreCase)).ToList();
     }
 
-    // Other methods as needed...
+    
 }

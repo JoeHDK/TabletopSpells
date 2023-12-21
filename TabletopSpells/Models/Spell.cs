@@ -2,19 +2,19 @@
 
 public class Spell
 {
-    public required string Name
+    public string Name
     {
         get; set;
     }
-    public required string SpellLevel
+    public string SpellLevel
     {
         get; set;
-    } // e.g., "sorcerer/wizard 2, magus 2"
+    } // e.g., "sorcerer/wizard 6, magus 6"
     public School School
     {
         get; set;
     }
-    public required string Description
+    public string Description
     {
         get; set;
     }
@@ -37,7 +37,7 @@ public class Spell
     public string Source
     {
         get; set;
-    } // Source book or reference
+    }
     public string Targets
     {
         get; set;
