@@ -45,7 +45,6 @@ public partial class MainPage : ContentPage
         }
     }
 
-
     private async void OnCreateNewCharacterClicked(object sender, EventArgs e)
     {
         string characterName = await DisplayPromptAsync("New Character", "Enter character name:");
@@ -72,7 +71,6 @@ public partial class MainPage : ContentPage
             Characters.Add(characterName);
         }
     }
-
 
     private async void OnManageCharactersClicked(object sender, EventArgs e)
     {

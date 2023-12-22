@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TabletopSpells.Pages.CharacterDetailPage"
+             Title="Character Details">
+
+    <StackLayout Spacing="20" Padding="15">
+
+        <!-- Add Spell Section -->
+        <Button Text="Add Spell" 
+                Clicked="OnAddSpellClicked" />
+
+        <!-- Spell List Section -->
+        <Label Text="Spell List" FontAttributes="Bold" />
+        <CollectionView x:Name="SpellListView">
+            <!-- Define ItemTemplate for spells -->
+        </CollectionView>
+
+        <!-- Prepared Spells Section -->
+        <Label Text="Prepared Spells" FontAttributes="Bold" />
+        <CollectionView x:Name="PreparedSpellListView">
+            <!-- Define ItemTemplate for prepared spells -->
+        </CollectionView>
+
+    </StackLayout>
+</ContentPage>

@@ -57,10 +57,26 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <MauiXaml Remove="Pages\CharacterDetailPage.xaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="Pages\CharacterDetailPage.xaml">
+	    <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+	  </EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Pages\CharacterDetailPage.xaml.cs">
+	    <DependentUpon>CharacterDetailPage.xaml</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 
 </Project>
