@@ -1,5 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Reflection;
+using TabletopSpells.Pages;
 
 namespace TabletopSpells;
 public partial class MainPage : ContentPage
@@ -23,6 +26,43 @@ public partial class MainPage : ContentPage
         base.OnAppearing();
         LoadCharacters();
     }
+
+    // Display spell details in a popup
+    private async Task DisplaySpellDetails(Spell spell)
+    {
+        // Logic to display the spell details
+        await DisplayAlert("Spell Details", $"{spell.Name}\n" +
+                                            $"{spell.Duration}\n" +
+                                            $"{spell.School}\n" +
+                                            $"{spell.SavingThrow}\n" +
+                                            $"{spell.CastingTime}\n" +
+                                            $"{spell.Components}\n" +
+                                            $"{spell.Description}\n",
+                                            $"{spell.Range}\n" + "OK");
+    }
+
+    private List<Spell> GetAllSpellsFromJson()
+    {
+        try
+        {
+            var assembly = IntrospectionExtensions.GetTypeInfo(typeof(MainPage)).Assembly;
+            Stream stream = assembly.GetManifestResourceStream("TabletopSpells.Resources.Spells.Pathfinder1e.json");
+
+            if (stream == null) throw new InvalidOperationException("Could not load the spell data.");
+
+            using var reader = new StreamReader(stream);
+            var jsonContent = reader.ReadToEnd();
+            var spells = JsonConvert.DeserializeObject<List<Spell>>(jsonContent);
+            return spells ?? new List<Spell>();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error loading spells from JSON: {ex.Message}");
+            return new List<Spell>(); // Return an empty list on error
+        }
+    }
+
+
 
     private static List<string>? GetExistingCharacters()
     {
@@ -54,6 +94,22 @@ public partial class MainPage : ContentPage
             SaveCharacter(characterName);
         }
     }
+
+    private async void OnCharacterSelected(object sender, SelectionChangedEventArgs e)
+    {
+        // Get the selected character
+        var selectedCharacter = e.CurrentSelection.FirstOrDefault() as string;
+        if (selectedCharacter != null)
+        {
+            // Navigate to the CharacterDetailPage with the selected character's name
+            await Navigation.PushAsync(new CharacterDetailPage(selectedCharacter));
+        }
+
+        // Optionally clear selection
+        ((CollectionView)sender).SelectedItem = null;
+    }
+
+
     private void SaveCharacter(string characterName)
     {
         List<string>? characters = GetExistingCharacters();
@@ -70,36 +126,5 @@ public partial class MainPage : ContentPage
             // Update ObservableCollection directly
             Characters.Add(characterName);
         }
-    }
-
-    private async void OnManageCharactersClicked(object sender, EventArgs e)
-    {
-        string result = await DisplayActionSheet("Remove Character", "Cancel", null, Characters.ToArray());
-
-        if (!string.IsNullOrWhiteSpace(result) && result != "Cancel")
-        {
-            bool delete = await DisplayAlert("Confirm Delete", $"Delete '{result}'?", "Yes", "No");
-            if (delete)
-            {
-                DeleteCharacter(result);
-            }
-        }
-    }
-
-    private void DeleteCharacter(string characterName)
-    {
-        // Retrieve the current list of characters
-        string existingCharactersJson = Preferences.Get("characters", "[]");
-        var characters = JsonConvert.DeserializeObject<List<string>>(existingCharactersJson);
-
-        // Remove the selected character
-        characters.Remove(characterName);
-
-        // Save the updated list
-        string updatedCharactersJson = JsonConvert.SerializeObject(characters);
-        Preferences.Set("characters", updatedCharactersJson);
-
-        // Update the ObservableCollection
-        Characters.Remove(characterName);
     }
 }

@@ -4,23 +4,53 @@
              x:Class="TabletopSpells.Pages.CharacterDetailPage"
              Title="Character Details">
 
-    <StackLayout Spacing="20" Padding="15">
+    <Grid BackgroundColor="Black"
+          Margin="10, 10, 0, 0">
 
-        <!-- Add Spell Section -->
-        <Button Text="Add Spell" 
+        <!-- Grid Row Definitions -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Add spell button -->
+        <Button Text="+"
+                CornerRadius="25"
+                HorizontalOptions="Start"
+                Grid.Row="0"
                 Clicked="OnAddSpellClicked" />
 
-        <!-- Spell List Section -->
-        <Label Text="Spell List" FontAttributes="Bold" />
-        <CollectionView x:Name="SpellListView">
-            <!-- Define ItemTemplate for spells -->
+        <!-- Spell Section -->
+        <CollectionView x:Name="SpellListView"
+                        SelectionMode="Single"
+                        Grid.Row="1"
+                        ItemsSource="{Binding}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <StackLayout>
+                        <Label Text="{Binding Name}" />
+                        <!--<Label Text="{Binding School}" />
+                        <Label Text="{Binding Description}" />
+                        <Label Text="{Binding CastingTime}" />
+                        <Label Text="{Binding Components}" />
+                        <Label Text="{Binding Range}" />
+                        <Label Text="{Binding Effect}" />
+                        <Label Text="{Binding Duration}" />
+                        <Label Text="{Binding SavingThrow}" />
+                        <Label Text="{Binding Description}" />-->
+                    </StackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <!-- Prepared Spells Section -->
-        <Label Text="Prepared Spells" FontAttributes="Bold" />
-        <CollectionView x:Name="PreparedSpellListView">
-            <!-- Define ItemTemplate for prepared spells -->
-        </CollectionView>
 
-    </StackLayout>
+        <!-- Remove Characters Button -->
+        <Button Text="Delete character"
+                Grid.Column="1"
+                Grid.Row="2"
+                Clicked="OnDeleteCharacterClicked"
+                CornerRadius="25"
+                Margin="100, 0, 100, 5"/>
+    </Grid>
 </ContentPage>

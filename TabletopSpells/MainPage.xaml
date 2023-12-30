@@ -12,7 +12,9 @@
         </Grid.RowDefinitions>
 
         <!-- Character List -->
-        <CollectionView x:Name="CharacterListView" Grid.Row="0">
+        <CollectionView x:Name="CharacterListView" Grid.Row="0"
+                        SelectionMode="Single"
+                        SelectionChanged="OnCharacterSelected">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Grid>
@@ -49,13 +51,7 @@
             <Button Text="Create New Character" 
                     HorizontalOptions="FillAndExpand"
                     Clicked="OnCreateNewCharacterClicked"
-                    Margin="10, 0, 5, 0"/>
-
-            <!-- Manage Characters Button -->
-            <Button Text="Remove Character" 
-                    HorizontalOptions="FillAndExpand"
-                    Clicked="OnManageCharactersClicked"
-                    Margin="5, 0, 10, 0"/>
+                    Margin="10, 0, 10, 0"/>
         </StackLayout>
     </Grid>
 </ContentPage>

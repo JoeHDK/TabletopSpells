@@ -1,48 +1,59 @@
-﻿using TabletopSpells.Models.Enums;
+﻿using Newtonsoft.Json;
+using TabletopSpells.Models.Enums;
 
 public class Spell
 {
+    [JsonProperty("name")]
     public string Name
     {
         get; set;
     }
-    public string SpellLevel
+    [JsonProperty("spell_level")]
+    public string? SpellLevel
     {
         get; set;
     } // e.g., "sorcerer/wizard 6, magus 6"
-    public School School
+    public School? School
     {
         get; set;
     }
-    public string Description
+    [JsonProperty("description")]
+    public string? Description
     {
         get; set;
     }
-    public string Duration
+    [JsonProperty("duration")]
+    public string? Duration
     {
         get; set;
     }
-    public string Components
+    [JsonProperty("components")]
+    public string? Components
     {
         get; set;
     }
-    public string SavingThrow
+    [JsonProperty("saving_throw")]
+    public string? SavingThrow
     {
         get; set;
     }
-    public string Range
+    [JsonProperty("range")]
+    public string? Range
     {
         get; set;
     }
-    public string Source
+    [JsonProperty("source")]
+    public string? Source
     {
         get; set;
     }
-    public string Targets
+    [JsonProperty("targets")]
+    public string? Targets
     {
         get; set;
     }
-    public string CastingTime
+    [JsonProperty("casting_time")]
+    public string? CastingTime
     {
         get; set;
     }
