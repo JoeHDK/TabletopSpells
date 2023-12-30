@@ -25,7 +25,7 @@
         <CollectionView x:Name="SpellListView"
                         SelectionMode="Single"
                         Grid.Row="1"
-                        ItemsSource="{Binding}">
+                        ItemsSource="{Binding Spells}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <StackLayout>

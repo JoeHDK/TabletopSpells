@@ -29,6 +29,7 @@ namespace TabletopSpells.Pages
             this.Title = $"{CharacterName}'s Details";
 
             Spells = new ObservableCollection<string>();
+            Spells.Add("Test spell");
 
             MessagingCenter.Subscribe<SpellListPage, Spell>(this, "AddSpellToCharacter", (sender, spell) =>
             {
