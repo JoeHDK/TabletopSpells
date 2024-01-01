@@ -24,6 +24,7 @@
         <!-- Spell Section -->
         <CollectionView x:Name="SpellListView"
                         SelectionMode="Single"
+                        SelectionChanged="OnSpellSelected"
                         Grid.Row="1"
                         ItemsSource="{Binding Spells}">
             <CollectionView.ItemTemplate>

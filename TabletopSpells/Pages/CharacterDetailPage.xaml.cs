@@ -5,9 +5,18 @@ namespace TabletopSpells.Pages
 {
     public partial class CharacterDetailPage : ContentPage
     {
-        public ObservableCollection<string> Spells { get; private set; }
-        private SharedViewModel ViewModel { get; set; }
-        private string CharacterName { get; set; }
+        public ObservableCollection<string> Spells
+        {
+            get; private set;
+        }
+        private SharedViewModel ViewModel
+        {
+            get; set;
+        }
+        private string CharacterName
+        {
+            get; set;
+        }
 
         [Obsolete]
         public CharacterDetailPage(string characterName, SharedViewModel viewModel)
@@ -16,7 +25,7 @@ namespace TabletopSpells.Pages
             CharacterName = characterName;
             this.Title = $"{CharacterName}'s Details";
             ViewModel = SharedViewModel.Instance;
-            
+
             this.BindingContext = ViewModel;
             ViewModel.LoadSpellsForCharacter(characterName);
 
@@ -70,6 +79,18 @@ namespace TabletopSpells.Pages
             {
                 await Navigation.PushAsync(new SpellListPage(CharacterName));
             });
+        }
+
+        private async void OnSpellSelected(object sender, SelectionChangedEventArgs e)
+        {
+            var selectedSpell = e.CurrentSelection.FirstOrDefault() as Spell;
+            if (selectedSpell != null)
+            {
+                await Navigation.PushAsync(new SpellDetailPage(selectedSpell));
+            }
+
+            // Optionally, clear the selection
+            ((CollectionView)sender).SelectedItem = null;
         }
     }
 }
