@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using AndroidX.Lifecycle;
+using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 
 namespace TabletopSpells.Pages
@@ -18,7 +19,6 @@ namespace TabletopSpells.Pages
             get; set;
         }
 
-        [Obsolete]
         public CharacterDetailPage(string characterName, SharedViewModel viewModel)
         {
             InitializeComponent();
@@ -31,7 +31,10 @@ namespace TabletopSpells.Pages
 
             if (ViewModel.CharacterSpells.ContainsKey(CharacterName))
             {
-                SpellListView.ItemsSource = ViewModel.CharacterSpells[CharacterName];
+                SpellListView.ItemsSource = ViewModel.CharacterSpells[CharacterName]
+                    .OrderBy(spell => spell.SpellLevel)
+                    .ThenBy(spell => spell.Name)
+                    .ToList();
             }
         }
 

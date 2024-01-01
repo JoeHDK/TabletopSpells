@@ -1,14 +1,95 @@
 ﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TabletopSpells.Pages.SpellDetailPage"
-             Title="Spell Details">
+             Title="{Binding Name}">
 
     <ScrollView>
         <StackLayout Padding="10">
-            <Label Text="{Binding Name}" FontSize="Large" FontAttributes="Bold"/>
-            <!-- Add other spell properties here -->
-            <Label Text="{Binding Description}" />
-            <!-- Continue adding labels for each property of the spell -->
+            <!-- School -->
+            <StackLayout Orientation="Horizontal">
+                <Label Text="School: " FontAttributes="Bold"/>
+                <Label Text="{Binding School}" />
+            </StackLayout>
+
+            <!-- Level -->
+            <StackLayout Orientation="Horizontal">
+                <Label Text="Level: " FontAttributes="Bold"/>
+                <Label Text="{Binding SpellLevel}" 
+                       LineBreakMode="WordWrap"
+                       HorizontalOptions="FillAndExpand"/>
+            </StackLayout>
+
+            <!-- Casting Time -->
+            <StackLayout Orientation="Horizontal">
+                <Label Text="Casting Time: " FontAttributes="Bold"/>
+                <Label Text="{Binding CastingTime}" 
+                       LineBreakMode="WordWrap"
+                       HorizontalOptions="FillAndExpand"/>
+            </StackLayout>
+
+            <!-- Components -->
+            <StackLayout Orientation="Horizontal">
+                <Label Text="Components: " FontAttributes="Bold"/>
+                <Label Text="{Binding Components}" 
+                       LineBreakMode="WordWrap"
+                       HorizontalOptions="FillAndExpand"/>
+            </StackLayout>
+
+            <!-- Range -->
+            <StackLayout Orientation="Horizontal">
+                <Label Text="Range: " FontAttributes="Bold"/>
+                <Label Text="{Binding Range}" 
+                       LineBreakMode="WordWrap"
+                       HorizontalOptions="FillAndExpand"/>
+            </StackLayout>
+
+            <!-- Effect -->
+            <StackLayout Orientation="Horizontal">
+                <Label Text="Effect: " FontAttributes="Bold"/>
+                <Label Text="{Binding Effect}" 
+                       LineBreakMode="WordWrap"
+                       HorizontalOptions="FillAndExpand"/>
+            </StackLayout>
+
+            <!-- Targets -->
+            <StackLayout Orientation="Horizontal">
+                <Label Text="Targets: " FontAttributes="Bold"/>
+                <Label Text="{Binding Targets}" 
+                       LineBreakMode="WordWrap"
+                       HorizontalOptions="FillAndExpand"/>
+            </StackLayout>
+
+            <!-- Duration -->
+            <StackLayout Orientation="Horizontal">
+                <Label Text="Duration: " FontAttributes="Bold"/>
+                <Label Text="{Binding Duration}" 
+                       LineBreakMode="WordWrap"
+                       HorizontalOptions="FillAndExpand"/>
+            </StackLayout>
+
+            <!-- Saving Throw -->
+            <StackLayout Orientation="Horizontal">
+                <Label Text="Saving Throw: " FontAttributes="Bold"/>
+                <Label Text="{Binding SavingThrow}" 
+                       LineBreakMode="WordWrap"
+                       HorizontalOptions="FillAndExpand"/>
+            </StackLayout>
+
+            <!-- Source -->
+            <StackLayout Orientation="Horizontal">
+                <Label Text="Source: " FontAttributes="Bold"/>
+                <Label Text="{Binding Source}" 
+                       LineBreakMode="WordWrap"
+                       HorizontalOptions="FillAndExpand"/>
+            </StackLayout>
+
+            <!-- Description -->
+            <StackLayout>
+                <Label Text="Description: " FontAttributes="Bold"/>
+                <Label Text="{Binding Description}" 
+                       LineBreakMode="WordWrap" 
+                       HorizontalOptions="FillAndExpand" />
+            </StackLayout>
         </StackLayout>
     </ScrollView>
 </ContentPage>
