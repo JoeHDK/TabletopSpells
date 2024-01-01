@@ -77,9 +77,9 @@ public class SharedViewModel : INotifyPropertyChanged
             CharacterSpells[characterName].CollectionChanged += (s, e) => OnPropertyChanged(nameof(CharacterSpells));
         }
     }
-
+    
     public event PropertyChangedEventHandler PropertyChanged;
-    protected virtual void OnPropertyChanged(string propertyName)
+    public virtual void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }

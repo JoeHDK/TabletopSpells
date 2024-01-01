@@ -68,22 +68,34 @@ namespace TabletopSpells.Pages
             }
         }
 
-        private void DeleteCharacter(string characterName)
+        private async void DeleteCharacter(string characterName)
         {
             // Retrieve the current list of characters
             string existingCharactersJson = Preferences.Get("characters", "[]");
             var characters = JsonConvert.DeserializeObject<List<string>>(existingCharactersJson);
 
             // Remove the selected character
-            characters.Remove(characterName);
+            if (characters.Remove(characterName))
+            {
+                // Save the updated list
+                string updatedCharactersJson = JsonConvert.SerializeObject(characters);
+                Preferences.Set("characters", updatedCharactersJson);
 
-            // Save the updated list
-            string updatedCharactersJson = JsonConvert.SerializeObject(characters);
-            Preferences.Set("characters", updatedCharactersJson);
+                // Remove the associated spell list for the character
+                SharedViewModel.Instance.CharacterSpells.Remove(characterName);
+                // Optionally, you can also remove the character's spells from Preferences
+                Preferences.Remove($"spells_{characterName}");
 
-            // Assuming you have some way to refresh the character list on the previous page
-            // You might need to use MessagingCenter or an event to notify the MainPage to refresh
+                // Notify any subscribers about the change
+                SharedViewModel.Instance.OnPropertyChanged(nameof(SharedViewModel.Instance.CharacterSpells));
+                await DisplayAlert("Success", $"{characterName} has been removed.", "OK");
+            }
+            else
+            {
+                await DisplayAlert("Error", $"Character '{characterName}' not found.", "OK");
+            }
         }
+
 
         [Obsolete]
         private void OnAddSpellClicked(object sender, EventArgs e)
@@ -99,7 +111,7 @@ namespace TabletopSpells.Pages
             var selectedSpell = e.CurrentSelection.FirstOrDefault() as Spell;
             if (selectedSpell != null)
             {
-                await Navigation.PushAsync(new SpellDetailPage(selectedSpell));
+                await Navigation.PushAsync(new SpellDetailPage(selectedSpell, CharacterName));
             }
 
             // Optionally, clear the selection

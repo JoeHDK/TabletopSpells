@@ -3,93 +3,107 @@
              x:Class="TabletopSpells.Pages.SpellDetailPage"
              Title="{Binding Name}">
 
-    <ScrollView>
-        <StackLayout Padding="10">
-            <!-- School -->
-            <StackLayout Orientation="Horizontal">
-                <Label Text="School: " FontAttributes="Bold"/>
-                <Label Text="{Binding School}" />
-            </StackLayout>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        
+        <ScrollView>
+            <StackLayout Padding="10">
+                <!-- School -->
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="School: " FontAttributes="Bold"/>
+                    <Label Text="{Binding School}" />
+                </StackLayout>
 
-            <!-- Level -->
-            <StackLayout Orientation="Horizontal">
-                <Label Text="Level: " FontAttributes="Bold"/>
-                <Label Text="{Binding SpellLevel}" 
+                <!-- Level -->
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Level: " FontAttributes="Bold"/>
+                    <Label Text="{Binding SpellLevel}" 
                        LineBreakMode="WordWrap"
                        HorizontalOptions="FillAndExpand"/>
-            </StackLayout>
+                </StackLayout>
 
-            <!-- Casting Time -->
-            <StackLayout Orientation="Horizontal">
-                <Label Text="Casting Time: " FontAttributes="Bold"/>
-                <Label Text="{Binding CastingTime}" 
+                <!-- Casting Time -->
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Casting Time: " FontAttributes="Bold"/>
+                    <Label Text="{Binding CastingTime}" 
                        LineBreakMode="WordWrap"
                        HorizontalOptions="FillAndExpand"/>
-            </StackLayout>
+                </StackLayout>
 
-            <!-- Components -->
-            <StackLayout Orientation="Horizontal">
-                <Label Text="Components: " FontAttributes="Bold"/>
-                <Label Text="{Binding Components}" 
+                <!-- Components -->
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Components: " FontAttributes="Bold"/>
+                    <Label Text="{Binding Components}" 
                        LineBreakMode="WordWrap"
                        HorizontalOptions="FillAndExpand"/>
-            </StackLayout>
+                </StackLayout>
 
-            <!-- Range -->
-            <StackLayout Orientation="Horizontal">
-                <Label Text="Range: " FontAttributes="Bold"/>
-                <Label Text="{Binding Range}" 
+                <!-- Range -->
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Range: " FontAttributes="Bold"/>
+                    <Label Text="{Binding Range}" 
                        LineBreakMode="WordWrap"
                        HorizontalOptions="FillAndExpand"/>
-            </StackLayout>
+                </StackLayout>
 
-            <!-- Effect -->
-            <StackLayout Orientation="Horizontal">
-                <Label Text="Effect: " FontAttributes="Bold"/>
-                <Label Text="{Binding Effect}" 
+                <!-- Effect -->
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Effect: " FontAttributes="Bold"/>
+                    <Label Text="{Binding Effect}" 
                        LineBreakMode="WordWrap"
                        HorizontalOptions="FillAndExpand"/>
-            </StackLayout>
+                </StackLayout>
 
-            <!-- Targets -->
-            <StackLayout Orientation="Horizontal">
-                <Label Text="Targets: " FontAttributes="Bold"/>
-                <Label Text="{Binding Targets}" 
+                <!-- Targets -->
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Targets: " FontAttributes="Bold"/>
+                    <Label Text="{Binding Targets}" 
                        LineBreakMode="WordWrap"
                        HorizontalOptions="FillAndExpand"/>
-            </StackLayout>
+                </StackLayout>
 
-            <!-- Duration -->
-            <StackLayout Orientation="Horizontal">
-                <Label Text="Duration: " FontAttributes="Bold"/>
-                <Label Text="{Binding Duration}" 
+                <!-- Duration -->
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Duration: " FontAttributes="Bold"/>
+                    <Label Text="{Binding Duration}" 
                        LineBreakMode="WordWrap"
                        HorizontalOptions="FillAndExpand"/>
-            </StackLayout>
+                </StackLayout>
 
-            <!-- Saving Throw -->
-            <StackLayout Orientation="Horizontal">
-                <Label Text="Saving Throw: " FontAttributes="Bold"/>
-                <Label Text="{Binding SavingThrow}" 
+                <!-- Saving Throw -->
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Saving Throw: " FontAttributes="Bold"/>
+                    <Label Text="{Binding SavingThrow}" 
                        LineBreakMode="WordWrap"
                        HorizontalOptions="FillAndExpand"/>
-            </StackLayout>
+                </StackLayout>
 
-            <!-- Source -->
-            <StackLayout Orientation="Horizontal">
-                <Label Text="Source: " FontAttributes="Bold"/>
-                <Label Text="{Binding Source}" 
+                <!-- Source -->
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Source: " FontAttributes="Bold"/>
+                    <Label Text="{Binding Source}" 
                        LineBreakMode="WordWrap"
                        HorizontalOptions="FillAndExpand"/>
-            </StackLayout>
+                </StackLayout>
 
-            <!-- Description -->
-            <StackLayout>
-                <Label Text="Description: " FontAttributes="Bold"/>
-                <Label Text="{Binding Description}" 
+                <!-- Description -->
+                <StackLayout>
+                    <Label Text="Description: " FontAttributes="Bold"/>
+                    <Label Text="{Binding Description}" 
                        LineBreakMode="WordWrap" 
                        HorizontalOptions="FillAndExpand" />
+                </StackLayout>
             </StackLayout>
-        </StackLayout>
-    </ScrollView>
+        </ScrollView>
+        <Button Text="Remove Spell"
+                Clicked="OnRemoveSpellClicked"
+                HorizontalOptions="FillAndExpand"
+                VerticalOptions="End"
+                Grid.Row="1"
+                CornerRadius="25"
+                Margin="100, 0, 100, 5" />
+    </Grid>
 </ContentPage>

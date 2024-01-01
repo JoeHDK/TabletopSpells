@@ -26,7 +26,7 @@
                         SelectionMode="Single"
                         SelectionChanged="OnSpellSelected"
                         Grid.Row="1"
-                        ItemsSource="{Binding Spells}">
+                        ItemsSource="{Binding CharacterSpells[CharacterName]}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Grid>
