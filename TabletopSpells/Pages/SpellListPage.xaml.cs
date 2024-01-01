@@ -10,9 +10,11 @@ namespace TabletopSpells.Pages
     // SpellListPage.xaml.cs
     public partial class SpellListPage : ContentPage
     {
-        public SpellListPage()
+        private string characterName;
+        public SpellListPage(string characterName)
         {
             InitializeComponent();
+            this.characterName = characterName;
             Spells = new ObservableCollection<Spell>(GetAllSpellsFromJson());
             FilteredSpells = new ObservableCollection<Spell>(Spells);
             BindingContext = this;
@@ -117,19 +119,12 @@ namespace TabletopSpells.Pages
 
                 if (addToCharacter)
                 {
-                    SharedViewModel.Instance.AddSpell(selectedSpell);
-                    SaveSpells();
+                    SharedViewModel.Instance.AddSpell(characterName, selectedSpell);
                     await Navigation.PopAsync();
                 }
 
                 ((CollectionView)sender).SelectedItem = null;
             }
-        }
-        
-        public void SaveSpells()
-        {
-            var spellsJson = JsonConvert.SerializeObject(SharedViewModel.Instance.Spells);
-            Preferences.Set("spells", spellsJson);
         }
     }
 }

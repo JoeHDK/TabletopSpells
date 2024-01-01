@@ -16,9 +16,14 @@ namespace TabletopSpells.Pages
             CharacterName = characterName;
             this.Title = $"{CharacterName}'s Details";
             ViewModel = SharedViewModel.Instance;
-            //Spells = new ObservableCollection<string>();
+            
             this.BindingContext = ViewModel;
-            LoadSpells();
+            ViewModel.LoadSpellsForCharacter(characterName);
+
+            if (ViewModel.CharacterSpells.ContainsKey(CharacterName))
+            {
+                SpellListView.ItemsSource = ViewModel.CharacterSpells[CharacterName];
+            }
         }
 
         private async void OnDeleteCharacterClicked(object sender, EventArgs e)
@@ -63,26 +68,8 @@ namespace TabletopSpells.Pages
         {
             Device.BeginInvokeOnMainThread(async () =>
             {
-                await Navigation.PushAsync(new SpellListPage());
+                await Navigation.PushAsync(new SpellListPage(CharacterName));
             });
         }
-
-        public void LoadSpells()
-        {
-            var spellsJson = Preferences.Get("spells", string.Empty);
-            if (!string.IsNullOrEmpty(spellsJson))
-            {
-                var spells = JsonConvert.DeserializeObject<ObservableCollection<Spell>>(spellsJson);
-                if (spells != null)
-                {
-                    SharedViewModel.Instance.Spells.Clear();
-                    foreach (var spell in spells)
-                    {
-                        SharedViewModel.Instance.Spells.Add(spell);
-                    }
-                }
-            }
-        }
-
     }
 }
