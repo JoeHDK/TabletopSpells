@@ -61,9 +61,7 @@ public partial class MainPage : ContentPage
             return new List<Spell>(); // Return an empty list on error
         }
     }
-
-
-
+    
     private static List<string>? GetExistingCharacters()
     {
         string existingCharactersJson = Preferences.Get("characters", "[]");
@@ -95,6 +93,7 @@ public partial class MainPage : ContentPage
         }
     }
 
+    [Obsolete]
     private async void OnCharacterSelected(object sender, SelectionChangedEventArgs e)
     {
         // Get the selected character
@@ -102,7 +101,9 @@ public partial class MainPage : ContentPage
         if (selectedCharacter != null)
         {
             // Navigate to the CharacterDetailPage with the selected character's name
-            await Navigation.PushAsync(new CharacterDetailPage(selectedCharacter));
+            // When navigating to CharacterDetailPage
+            SharedViewModel viewModel = new SharedViewModel(); // Ideally, this should be a single instance shared across pages
+            await Navigation.PushAsync(new CharacterDetailPage(selectedCharacter, viewModel));
         }
 
         // Optionally clear selection

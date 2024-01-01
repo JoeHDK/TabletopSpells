@@ -106,18 +106,30 @@ namespace TabletopSpells.Pages
             }
         }
 
-        [Obsolete]
         private async void OnSpellSelected(object sender, SelectionChangedEventArgs e)
         {
             var selectedSpell = e.CurrentSelection.FirstOrDefault() as Spell;
             if (selectedSpell != null)
             {
-                MessagingCenter.Send(this, "AddSpellToCharacter", selectedSpell);
+                bool addToCharacter = await DisplayAlert("Add Spell",
+                    $"Do you want to add '{selectedSpell.Name}' to your character?",
+                    "Yes", "No");
 
-                // Optionally, navigate back after adding
-                await Navigation.PopAsync();
+                if (addToCharacter)
+                {
+                    SharedViewModel.Instance.AddSpell(selectedSpell);
+                    SaveSpells();
+                    await Navigation.PopAsync();
+                }
+
+                ((CollectionView)sender).SelectedItem = null;
             }
         }
-
+        
+        public void SaveSpells()
+        {
+            var spellsJson = JsonConvert.SerializeObject(SharedViewModel.Instance.Spells);
+            Preferences.Set("spells", spellsJson);
+        }
     }
 }

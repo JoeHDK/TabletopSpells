@@ -1,43 +1,24 @@
 ﻿using Newtonsoft.Json;
-using System;
 using System.Collections.ObjectModel;
 
 namespace TabletopSpells.Pages
 {
     public partial class CharacterDetailPage : ContentPage
     {
-        public ObservableCollection<string> Spells
-        {
-            get; private set;
-        }
-
-        private string CharacterName
-        {
-            get; set;
-        }
-        protected override void OnDisappearing()
-        {
-            base.OnDisappearing();
-            MessagingCenter.Unsubscribe<SpellListPage, Spell>(this, "AddSpellToCharacter");
-        }
+        public ObservableCollection<string> Spells { get; private set; }
+        private SharedViewModel ViewModel { get; set; }
+        private string CharacterName { get; set; }
 
         [Obsolete]
-        public CharacterDetailPage(string characterName)
+        public CharacterDetailPage(string characterName, SharedViewModel viewModel)
         {
             InitializeComponent();
             CharacterName = characterName;
             this.Title = $"{CharacterName}'s Details";
-
-            Spells = new ObservableCollection<string>();
-
-            MessagingCenter.Subscribe<SpellListPage, Spell>(this, "AddSpellToCharacter", (sender, spell) =>
-            {
-                Device.BeginInvokeOnMainThread(() =>
-                {
-                    // Logic to add the spell to the character's list
-                    Spells.Add(spell.Name);
-                });
-            });
+            ViewModel = SharedViewModel.Instance;
+            //Spells = new ObservableCollection<string>();
+            this.BindingContext = ViewModel;
+            LoadSpells();
         }
 
         private async void OnDeleteCharacterClicked(object sender, EventArgs e)
@@ -86,6 +67,22 @@ namespace TabletopSpells.Pages
             });
         }
 
-        // Other methods for handling spell list interactions
+        public void LoadSpells()
+        {
+            var spellsJson = Preferences.Get("spells", string.Empty);
+            if (!string.IsNullOrEmpty(spellsJson))
+            {
+                var spells = JsonConvert.DeserializeObject<ObservableCollection<Spell>>(spellsJson);
+                if (spells != null)
+                {
+                    SharedViewModel.Instance.Spells.Clear();
+                    foreach (var spell in spells)
+                    {
+                        SharedViewModel.Instance.Spells.Add(spell);
+                    }
+                }
+            }
+        }
+
     }
 }
