@@ -14,7 +14,8 @@
         <!-- Character List -->
         <CollectionView x:Name="CharacterListView" Grid.Row="0"
                         SelectionMode="Single"
-                        SelectionChanged="OnCharacterSelected">
+                        SelectionChanged="OnCharacterSelected"
+                        ItemsSource="{Binding Characters}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Grid>

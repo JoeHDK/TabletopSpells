@@ -1,15 +1,13 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.ObjectModel;
+using TabletopSpells.Models;
 
 namespace TabletopSpells.Pages
 {
     public partial class CharacterDetailPage : ContentPage
     {
-        public ObservableCollection<string> Spells
-        {
-            get; private set;
-        }
+        private readonly Character character;
 
         private string CharacterName
         {
@@ -22,21 +20,21 @@ namespace TabletopSpells.Pages
         }
 
         [Obsolete]
-        public CharacterDetailPage(string characterName)
+        public CharacterDetailPage(Character character)
         {
             InitializeComponent();
-            CharacterName = characterName;
-            this.Title = $"{CharacterName}'s Details";
+            this.character = character;
+            this.Title = $"{character.Name}'s Details";
 
-            Spells = new ObservableCollection<string>();
-            Spells.Add("Test spell");
+            //Spells = new ObservableCollection<string>();
 
             MessagingCenter.Subscribe<SpellListPage, Spell>(this, "AddSpellToCharacter", (sender, spell) =>
             {
                 Device.BeginInvokeOnMainThread(() =>
                 {
                     // Logic to add the spell to the character's list
-                    Spells.Add(spell.Name);
+                    character.AddSpell(spell);
+                    //Spells.Add(spell.Name);
                 });
             });
         }

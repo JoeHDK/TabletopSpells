@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reflection;
+using TabletopSpells.Models;
 using TabletopSpells.Pages;
 
 namespace TabletopSpells;
@@ -27,63 +28,24 @@ public partial class MainPage : ContentPage
         LoadCharacters();
     }
 
-    // Display spell details in a popup
-    private async Task DisplaySpellDetails(Spell spell)
-    {
-        // Logic to display the spell details
-        await DisplayAlert("Spell Details", $"{spell.Name}\n" +
-                                            $"{spell.Duration}\n" +
-                                            $"{spell.School}\n" +
-                                            $"{spell.SavingThrow}\n" +
-                                            $"{spell.CastingTime}\n" +
-                                            $"{spell.Components}\n" +
-                                            $"{spell.Description}\n",
-                                            $"{spell.Range}\n" + "OK");
-    }
-
-    private List<Spell> GetAllSpellsFromJson()
-    {
-        try
-        {
-            var assembly = IntrospectionExtensions.GetTypeInfo(typeof(MainPage)).Assembly;
-            Stream stream = assembly.GetManifestResourceStream("TabletopSpells.Resources.Spells.Pathfinder1e.json");
-
-            if (stream == null) throw new InvalidOperationException("Could not load the spell data.");
-
-            using var reader = new StreamReader(stream);
-            var jsonContent = reader.ReadToEnd();
-            var spells = JsonConvert.DeserializeObject<List<Spell>>(jsonContent);
-            return spells ?? new List<Spell>();
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Error loading spells from JSON: {ex.Message}");
-            return new List<Spell>(); // Return an empty list on error
-        }
-    }
-
-
-
-    private static List<string>? GetExistingCharacters()
-    {
-        string existingCharactersJson = Preferences.Get("characters", "[]");
-        var characters = JsonConvert.DeserializeObject<List<string>>(existingCharactersJson);
-        return characters;
-    }
+    private List<Character> allCharacters = new List<Character>();
 
     private void LoadCharacters()
     {
-        List<string>? characters = GetExistingCharacters();
+        ObservableCollection<string> Characters = new ObservableCollection<string>();
 
-        if (characters.Count != Characters.Count)
+        Preferences.Set("characters", "[]"); // Temporarily clear characters for testing
+
+        string existingCharactersJson = Preferences.Get("characters", "[]");
+        allCharacters = JsonConvert.DeserializeObject<List<Character>>(existingCharactersJson) ?? new List<Character>();
+
+        Characters.Clear();
+        foreach (var character in allCharacters)
         {
-            Characters.Clear();
-            foreach (string character in characters)
-            {
-                Characters.Add(character);
-            }
+            Characters.Add(character.Name); // Populate with names for the UI
         }
     }
+
 
     private async void OnCreateNewCharacterClicked(object sender, EventArgs e)
     {
@@ -97,34 +59,32 @@ public partial class MainPage : ContentPage
 
     private async void OnCharacterSelected(object sender, SelectionChangedEventArgs e)
     {
-        // Get the selected character
-        var selectedCharacter = e.CurrentSelection.FirstOrDefault() as string;
+        var selectedCharacterName = e.CurrentSelection.FirstOrDefault() as string;
+        var selectedCharacter = allCharacters.FirstOrDefault(c => c.Name == selectedCharacterName);
+
         if (selectedCharacter != null)
         {
-            // Navigate to the CharacterDetailPage with the selected character's name
             await Navigation.PushAsync(new CharacterDetailPage(selectedCharacter));
         }
 
-        // Optionally clear selection
         ((CollectionView)sender).SelectedItem = null;
     }
 
-
     private void SaveCharacter(string characterName)
     {
-        List<string>? characters = GetExistingCharacters();
+        string existingCharactersJson = Preferences.Get("characters", "[]");
+        var characters = JsonConvert.DeserializeObject<List<Character>>(existingCharactersJson) ?? new List<Character>();
 
-        // Check if the character already exists
-        if (!characters.Contains(characterName))
+        if (characters.All(c => c.Name != characterName))
         {
-            characters.Add(characterName);
+            var newCharacter = new Character { Name = characterName, ID = characters.Count + 1 };
+            characters.Add(newCharacter);
 
-            // Save updated list
             string updatedCharactersJson = JsonConvert.SerializeObject(characters);
             Preferences.Set("characters", updatedCharactersJson);
 
-            // Update ObservableCollection directly
-            Characters.Add(characterName);
+            Characters.Add(characterName); // Update ObservableCollection
         }
     }
+
 }
