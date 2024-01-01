@@ -28,7 +28,7 @@ namespace TabletopSpells.Pages
         {
             InitializeComponent();
             CharacterName = characterName;
-            this.Title = $"{CharacterName}'s Details";
+            this.Title = $"{CharacterName}'s spells";
             ViewModel = SharedViewModel.Instance;
 
             this.BindingContext = ViewModel;
