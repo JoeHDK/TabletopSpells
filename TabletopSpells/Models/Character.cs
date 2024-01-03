@@ -1,4 +1,6 @@
-﻿namespace TabletopSpells.Models;
+﻿using TabletopSpells.Models.Enums;
+
+namespace TabletopSpells.Models;
 
 public class Character
 {
@@ -6,14 +8,21 @@ public class Character
     {
         get; set;
     }
+    
     public required string Name
     {
         get; set;
     }
+    
     public List<Spell> Spells
     {
         get; set;
     }
+
+    public Class CharacterClass
+    {
+        get; set; 
+    } 
 
     public Character() => Spells = new List<Spell>();
 

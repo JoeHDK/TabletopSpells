@@ -2,20 +2,23 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reflection;
+using TabletopSpells.Models;
+using TabletopSpells.Models.Enums;
 using TabletopSpells.Pages;
 
 namespace TabletopSpells;
 public partial class MainPage : ContentPage
 {
-    ObservableCollection<string> Characters
+    ObservableCollection<Character> Characters
     {
         get; set;
     }
 
+
     public MainPage()
     {
         InitializeComponent();
-        Characters = new ObservableCollection<string>();
+        Characters = new ObservableCollection<Character>();
         LoadCharacters();
         CharacterListView.ItemsSource = Characters;
         this.BindingContext = this; // Set the BindingContext
@@ -27,61 +30,25 @@ public partial class MainPage : ContentPage
         LoadCharacters();
     }
 
-    // Display spell details in a popup
-    private async Task DisplaySpellDetails(Spell spell)
-    {
-        // Logic to display the spell details
-        await DisplayAlert("Spell Details", $"{spell.Name}\n" +
-                                            $"{spell.Duration}\n" +
-                                            $"{spell.School}\n" +
-                                            $"{spell.SavingThrow}\n" +
-                                            $"{spell.CastingTime}\n" +
-                                            $"{spell.Components}\n" +
-                                            $"{spell.Description}\n",
-                                            $"{spell.Range}\n" + "OK");
-    }
-
-    private List<Spell> GetAllSpellsFromJson()
-    {
-        try
-        {
-            var assembly = IntrospectionExtensions.GetTypeInfo(typeof(MainPage)).Assembly;
-            Stream stream = assembly.GetManifestResourceStream("TabletopSpells.Resources.Spells.Pathfinder1e.json");
-
-            if (stream == null) throw new InvalidOperationException("Could not load the spell data.");
-
-            using var reader = new StreamReader(stream);
-            var jsonContent = reader.ReadToEnd();
-            var spells = JsonConvert.DeserializeObject<List<Spell>>(jsonContent);
-            return spells ?? new List<Spell>();
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Error loading spells from JSON: {ex.Message}");
-            return new List<Spell>(); // Return an empty list on error
-        }
-    }
-    
-    private static List<string>? GetExistingCharacters()
-    {
-        string existingCharactersJson = Preferences.Get("characters", "[]");
-        var characters = JsonConvert.DeserializeObject<List<string>>(existingCharactersJson);
-        return characters;
-    }
+    //private static List<string>? GetExistingCharacters()
+    //{
+    //    string existingCharactersJson = Preferences.Get("characters", "[]");
+    //    var characters = JsonConvert.DeserializeObject<List<string>>(existingCharactersJson);
+    //    return characters;
+    //}
 
     private void LoadCharacters()
     {
-        List<string>? characters = GetExistingCharacters();
+        var characters = GetExistingCharacters();
 
-        if (characters.Count != Characters.Count)
+        foreach (var character in characters)
         {
-            Characters.Clear();
-            foreach (string character in characters)
-            {
-                Characters.Add(character);
-            }
+            Characters.Add(character);
         }
     }
+
+
+
 
     private async void OnCreateNewCharacterClicked(object sender, EventArgs e)
     {
@@ -89,9 +56,23 @@ public partial class MainPage : ContentPage
 
         if (!string.IsNullOrWhiteSpace(characterName))
         {
-            SaveCharacter(characterName);
+            // Get the names of the classes from the enum
+            var classOptions = Enum.GetNames(typeof(Class)).Select(c => c.ToString()).ToArray();
+
+            // Display a list of classes to choose from
+            string selectedClass = await DisplayActionSheet("Select Class", "Cancel", null, classOptions);
+
+            if (!string.IsNullOrWhiteSpace(selectedClass) && selectedClass != "Cancel")
+            {
+                // Parse the selected class
+                if (Enum.TryParse(selectedClass, out Class characterClass))
+                {
+                    SaveCharacter(characterName, characterClass);
+                }
+            }
         }
     }
+
 
     [Obsolete]
     private async void OnCharacterSelected(object sender, SelectionChangedEventArgs e)
@@ -111,21 +92,27 @@ public partial class MainPage : ContentPage
     }
 
 
-    private void SaveCharacter(string characterName)
+    private void SaveCharacter(string characterName, Class characterClass)
     {
-        List<string>? characters = GetExistingCharacters();
+        var characters = GetExistingCharacters();
 
-        // Check if the character already exists
-        if (!characters.Contains(characterName))
+        if (characters.All(c => c.Name != characterName))
         {
-            characters.Add(characterName);
+            var newCharacter = new Character { Name = characterName, CharacterClass = characterClass };
+            characters.Add(newCharacter);
 
-            // Save updated list
             string updatedCharactersJson = JsonConvert.SerializeObject(characters);
             Preferences.Set("characters", updatedCharactersJson);
 
-            // Update ObservableCollection directly
-            Characters.Add(characterName);
+            Characters.Add(newCharacter); // Add the whole character object to the ObservableCollection
         }
+    }
+
+
+
+    private List<Character> GetExistingCharacters()
+    {
+        string existingCharactersJson = Preferences.Get("characters", "[]");
+        return JsonConvert.DeserializeObject<List<Character>>(existingCharactersJson) ?? new List<Character>();
     }
 }

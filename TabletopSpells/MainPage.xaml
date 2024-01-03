@@ -3,8 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TabletopSpells.MainPage">
 
-    <Grid BackgroundColor="Black"
-          Margin="10, 10, 0, 0">
+    <Grid BackgroundColor="Black" Margin="10, 10, 0, 0">
         <!-- Grid Row Definitions -->
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -17,37 +16,39 @@
                         SelectionChanged="OnCharacterSelected">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Grid>
+                    <Grid Padding="10">
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="1"/>
                             <!-- For the divider line -->
                         </Grid.RowDefinitions>
 
                         <!-- Character Name Label -->
-                        <Label Text="{Binding}"
+                        <Label Text="{Binding Name}"
                                FontSize="Title"
                                FontAttributes="Bold"
                                HorizontalTextAlignment="Center"
-                               Margin="0,10"
                                Grid.Row="0"/>
+
+                        <!-- Character Class Label -->
+                        <Label Text="{Binding CharacterClass}"
+                               FontSize="Subtitle"
+                               HorizontalTextAlignment="Center"
+                               Grid.Row="1"/>
 
                         <!-- Horizontal Divider Line -->
                         <BoxView BackgroundColor="Gray"
                                  HeightRequest="1"
-                                 Margin="30, 0"
-                                 Grid.Row="1"/>
+                                 Grid.Row="2"/>
                     </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-
         <!-- Create New Character Button -->
-        <StackLayout Grid.Row="1" 
-                     Orientation="Horizontal" 
+        <StackLayout Grid.Row="1" Orientation="Horizontal" 
                      HorizontalOptions="FillAndExpand">
-            <!-- Create New Character Button -->
             <Button Text="Create New Character" 
                     HorizontalOptions="FillAndExpand"
                     Clicked="OnCreateNewCharacterClicked"

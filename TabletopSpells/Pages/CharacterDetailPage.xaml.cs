@@ -42,6 +42,8 @@ namespace TabletopSpells.Pages
 
         private void CreateList()
         {
+
+            
             SpellListView.ItemsSource = ViewModel.CharacterSpells[CharacterName]
                     .OrderBy(spell => spell.SpellLevel)
                     .ThenBy(spell => spell.Name)
