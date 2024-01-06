@@ -9,12 +9,10 @@ using TabletopSpells.Pages;
 namespace TabletopSpells;
 public partial class MainPage : ContentPage
 {
-    bool isCharactersLoaded = false;
     ObservableCollection<Character> Characters
     {
         get; set;
     }
-
 
     public MainPage()
     {

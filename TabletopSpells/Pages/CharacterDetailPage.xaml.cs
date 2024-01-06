@@ -46,6 +46,22 @@ namespace TabletopSpells.Pages
             }
         }
 
+        [Obsolete]
+        private async void OnMenuClicked(object sender, EventArgs e)
+        {
+            string action = await DisplayActionSheet("Menu", "Cancel", null, "Add Spell", "Delete Character");
+
+            switch (action)
+            {
+                case "Add Spell":
+                    OnAddSpellClicked(this, null);
+                    break;
+                case "Delete Character":
+                    OnDeleteCharacterClicked(this, null);
+                    break;
+            }
+        }
+
         private void CreateList()
         {
             string characterClass = ViewModel.CurrentCharacter.CharacterClass.ToString();
