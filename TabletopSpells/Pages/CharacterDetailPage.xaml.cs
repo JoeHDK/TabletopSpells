@@ -1,5 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Linq;
+using TabletopSpells.Models;
 
 namespace TabletopSpells.Pages
 {
@@ -9,10 +12,12 @@ namespace TabletopSpells.Pages
         {
             get; private set;
         }
+
         private SharedViewModel ViewModel
         {
             get; set;
         }
+
         private string CharacterName
         {
             get; set;
@@ -29,7 +34,7 @@ namespace TabletopSpells.Pages
             InitializeComponent();
             CharacterName = characterName;
             this.Title = $"{CharacterName}'s spells";
-            ViewModel = SharedViewModel.Instance;
+            ViewModel = viewModel;  // Use the passed viewModel
 
             this.BindingContext = ViewModel;
             ViewModel.LoadSpellsForCharacter(characterName);
@@ -42,17 +47,15 @@ namespace TabletopSpells.Pages
 
         private void CreateList()
         {
-
-            
             SpellListView.ItemsSource = ViewModel.CharacterSpells[CharacterName]
-                    .OrderBy(spell => spell.SpellLevel)
-                    .ThenBy(spell => spell.Name)
-                    .ToList();
+                .OrderBy(spell => spell.SpellLevel)
+                .ThenBy(spell => spell.Name)
+                .ToList();
         }
 
+        [Obsolete]
         private async void OnDeleteCharacterClicked(object sender, EventArgs e)
         {
-            // Display a confirmation dialog
             bool deleteConfirmed = await DisplayAlert(
                 "Confirm Delete",
                 $"Are you sure you want to delete {CharacterName}?",
@@ -60,44 +63,47 @@ namespace TabletopSpells.Pages
                 "No"
             );
 
-            // If the user confirmed, proceed with the deletion
             if (deleteConfirmed)
             {
-                DeleteCharacter(CharacterName);
-
-                // Optionally, navigate back to the main character list after deletion
-                await Navigation.PopAsync();
+                await DeleteCharacter(CharacterName);
+                Device.BeginInvokeOnMainThread(async () =>
+                {
+                    await Navigation.PopAsync();
+                });
             }
         }
 
-        private async void DeleteCharacter(string characterName)
+        private async Task DeleteCharacter(string characterName)
         {
-            // Retrieve the current list of characters
-            string existingCharactersJson = Preferences.Get("characters", "[]");
-            var characters = JsonConvert.DeserializeObject<List<string>>(existingCharactersJson);
-
-            // Remove the selected character
-            if (characters.Remove(characterName))
+            try
             {
-                // Save the updated list
-                string updatedCharactersJson = JsonConvert.SerializeObject(characters);
-                Preferences.Set("characters", updatedCharactersJson);
+                string existingCharactersJson = Preferences.Get("characters", "[]");
+                var characters = JsonConvert.DeserializeObject<List<Character>>(existingCharactersJson);
 
-                // Remove the associated spell list for the character
-                SharedViewModel.Instance.CharacterSpells.Remove(characterName);
-                // Optionally, you can also remove the character's spells from Preferences
-                Preferences.Remove($"spells_{characterName}");
+                var characterToRemove = characters.FirstOrDefault(c => c.Name == characterName);
+                if (characterToRemove != null)
+                {
+                    characters.Remove(characterToRemove);
+                    string updatedCharactersJson = JsonConvert.SerializeObject(characters);
+                    Preferences.Set("characters", updatedCharactersJson);
 
-                // Notify any subscribers about the change
-                SharedViewModel.Instance.OnPropertyChanged(nameof(SharedViewModel.Instance.CharacterSpells));
-                await DisplayAlert("Success", $"{characterName} has been removed.", "OK");
+                    ViewModel.CharacterSpells.Remove(characterName);
+                    Preferences.Remove($"spells_{characterName}");
+
+                    ViewModel.OnPropertyChanged(nameof(ViewModel.CharacterSpells));
+                    await DisplayAlert("Success", $"{characterName} has been removed.", "OK");
+                }
+                else
+                {
+                    await DisplayAlert("Error", $"Character '{characterName}' not found.", "OK");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                await DisplayAlert("Error", $"Character '{characterName}' not found.", "OK");
+                Debug.WriteLine($"Error in DeleteCharacter: {ex.Message}");
+                await DisplayAlert("Error", "An error occurred while deleting the character.", "OK");
             }
         }
-
 
         [Obsolete]
         private void OnAddSpellClicked(object sender, EventArgs e)
@@ -116,7 +122,6 @@ namespace TabletopSpells.Pages
                 await Navigation.PushAsync(new SpellDetailPage(selectedSpell, CharacterName));
             }
 
-            // Optionally, clear the selection
             ((CollectionView)sender).SelectedItem = null;
         }
     }

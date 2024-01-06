@@ -9,6 +9,7 @@ using TabletopSpells.Pages;
 namespace TabletopSpells;
 public partial class MainPage : ContentPage
 {
+    bool isCharactersLoaded = false;
     ObservableCollection<Character> Characters
     {
         get; set;
@@ -27,18 +28,12 @@ public partial class MainPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        LoadCharacters();
+        LoadCharacters();  // Reload characters each time the page appears
     }
-
-    //private static List<string>? GetExistingCharacters()
-    //{
-    //    string existingCharactersJson = Preferences.Get("characters", "[]");
-    //    var characters = JsonConvert.DeserializeObject<List<string>>(existingCharactersJson);
-    //    return characters;
-    //}
 
     private void LoadCharacters()
     {
+        Characters.Clear();  // Clear existing items
         var characters = GetExistingCharacters();
 
         foreach (var character in characters)
@@ -46,8 +41,6 @@ public partial class MainPage : ContentPage
             Characters.Add(character);
         }
     }
-
-
 
 
     private async void OnCreateNewCharacterClicked(object sender, EventArgs e)
@@ -77,20 +70,18 @@ public partial class MainPage : ContentPage
     [Obsolete]
     private async void OnCharacterSelected(object sender, SelectionChangedEventArgs e)
     {
-        // Get the selected character
-        var selectedCharacter = e.CurrentSelection.FirstOrDefault() as string;
+        var selectedCharacter = e.CurrentSelection.FirstOrDefault() as Character;
         if (selectedCharacter != null)
         {
-            // Navigate to the CharacterDetailPage with the selected character's name
-            // When navigating to CharacterDetailPage
-            SharedViewModel viewModel = new SharedViewModel(); // Ideally, this should be a single instance shared across pages
-            await Navigation.PushAsync(new CharacterDetailPage(selectedCharacter, viewModel));
+            SharedViewModel viewModel = new SharedViewModel();
+            await Navigation.PushAsync(new CharacterDetailPage(selectedCharacter.Name, viewModel));
+
+            // After returning from CharacterDetailPage, refresh the list
+            LoadCharacters();
         }
 
-        // Optionally clear selection
-        ((CollectionView)sender).SelectedItem = null;
+    ((CollectionView)sender).SelectedItem = null;
     }
-
 
     private void SaveCharacter(string characterName, Class characterClass)
     {
@@ -112,7 +103,16 @@ public partial class MainPage : ContentPage
 
     private List<Character> GetExistingCharacters()
     {
-        string existingCharactersJson = Preferences.Get("characters", "[]");
-        return JsonConvert.DeserializeObject<List<Character>>(existingCharactersJson) ?? new List<Character>();
+        try
+        {
+            string existingCharactersJson = Preferences.Get("characters", "[]");
+            return JsonConvert.DeserializeObject<List<Character>>(existingCharactersJson) ?? new List<Character>();
+        }
+        catch (JsonException ex)
+        {
+            Debug.WriteLine($"JSON Error: {ex.Message}");
+            return new List<Character>();
+        }
     }
+
 }
