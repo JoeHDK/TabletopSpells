@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using TabletopSpells.Models;
 
 namespace TabletopSpells.Pages
@@ -47,11 +48,43 @@ namespace TabletopSpells.Pages
 
         private void CreateList()
         {
-            SpellListView.ItemsSource = ViewModel.CharacterSpells[CharacterName]
-                .OrderBy(spell => spell.SpellLevel)
-                .ThenBy(spell => spell.Name)
+            string characterClass = ViewModel.CurrentCharacter.CharacterClass.ToString();
+
+            var groupedSpells = ViewModel.CharacterSpells[CharacterName]
+                .GroupBy(spell => ParseSpellLevel(spell.SpellLevel, characterClass))
+                .OrderBy(group => group.Key)
                 .ToList();
+
+            var groupedCollection = new ObservableCollection<Grouping<int, Spell>>();
+
+            foreach (var group in groupedSpells)
+            {
+                groupedCollection.Add(new Grouping<int, Spell>(group.Key, group));
+            }
+
+            SpellListView.ItemsSource = groupedCollection;
         }
+
+        private int ParseSpellLevel(string spellLevel, string characterClass)
+        {
+            string classLowerCase = characterClass.ToLower();
+            string[] parts = spellLevel.Split(',');
+
+            foreach (var part in parts)
+            {
+                if (part.Trim().ToLower().Contains(classLowerCase))
+                {
+                    var match = Regex.Match(part, @"\d+");
+                    if (match.Success)
+                    {
+                        return int.Parse(match.Value);
+                    }
+                }
+            }
+
+            return -1; // Return an invalid level if not found
+        }
+
 
         [Obsolete]
         private async void OnDeleteCharacterClicked(object sender, EventArgs e)

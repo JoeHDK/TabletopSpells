@@ -73,15 +73,15 @@ public partial class MainPage : ContentPage
         var selectedCharacter = e.CurrentSelection.FirstOrDefault() as Character;
         if (selectedCharacter != null)
         {
-            SharedViewModel viewModel = new SharedViewModel();
-            await Navigation.PushAsync(new CharacterDetailPage(selectedCharacter.Name, viewModel));
+            SharedViewModel.Instance.CurrentCharacter = selectedCharacter;
+            await Navigation.PushAsync(new CharacterDetailPage(selectedCharacter.Name, SharedViewModel.Instance));
 
-            // After returning from CharacterDetailPage, refresh the list
             LoadCharacters();
         }
 
     ((CollectionView)sender).SelectedItem = null;
     }
+
 
     private void SaveCharacter(string characterName, Class characterClass)
     {
