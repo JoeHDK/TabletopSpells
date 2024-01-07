@@ -69,17 +69,20 @@ namespace TabletopSpells.Pages
             var groupedSpells = ViewModel.CharacterSpells[CharacterName]
                 .GroupBy(spell => ParseSpellLevel(spell.SpellLevel, characterClass))
                 .OrderBy(group => group.Key)
+                .Select(group => new { Level = group.Key, Spells = group.OrderBy(spell => spell.Name) }) // Add sorting by name within each level
                 .ToList();
 
             var groupedCollection = new ObservableCollection<Grouping<int, Spell>>();
 
             foreach (var group in groupedSpells)
             {
-                groupedCollection.Add(new Grouping<int, Spell>(group.Key, group));
+                var spellsSortedAlphabetically = group.Spells.OrderBy(spell => spell.Name).ToList(); // Ensure spells are sorted alphabetically
+                groupedCollection.Add(new Grouping<int, Spell>(group.Level, spellsSortedAlphabetically));
             }
 
             SpellListView.ItemsSource = groupedCollection;
         }
+
 
         private int ParseSpellLevel(string spellLevel, string characterClass)
         {
