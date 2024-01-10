@@ -48,7 +48,7 @@ public partial class MainPage : ContentPage
         if (!string.IsNullOrWhiteSpace(characterName))
         {
             // Get the names of the classes from the enum
-            var classOptions = Enum.GetNames(typeof(Class)).Select(c => c.ToString()).ToArray();
+            var classOptions = Enum.GetNames(typeof(Class)).OrderBy(c => c).ToArray();
 
             // Display a list of classes to choose from
             string selectedClass = await DisplayActionSheet("Select Class", "Cancel", null, classOptions);
