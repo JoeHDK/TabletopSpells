@@ -13,5 +13,10 @@
         rogue,
         sorcerer,
         wizard,
+        inquisitor,
+        summoner,
+        witch,
+        alchemist,
+        magus,
     }
 }
