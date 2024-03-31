@@ -113,18 +113,25 @@ namespace TabletopSpells.Pages
             var selectedSpell = e.CurrentSelection.FirstOrDefault() as Spell;
             if (selectedSpell != null)
             {
-                bool addToCharacter = await DisplayAlert("Add Spell",
-                    $"Do you want to add '{selectedSpell.Name}' to your character?",
-                    "Yes", "No");
-
-                if (addToCharacter)
-                {
-                    SharedViewModel.Instance.AddSpell(characterName, selectedSpell);
-                    await Navigation.PopAsync();
-                }
-
-                ((CollectionView)sender).SelectedItem = null;
+                await Navigation.PushAsync(new SpellDetailPage(selectedSpell, characterName));
             }
+
+            ((CollectionView)sender).SelectedItem = null;
+            //var selectedSpell = e.CurrentSelection.FirstOrDefault() as Spell;
+            //if (selectedSpell != null)
+            //{
+            //    bool addToCharacter = await DisplayAlert("Add Spell",
+            //        $"Do you want to add '{selectedSpell.Name}' to your character?",
+            //        "Yes", "No");
+
+            //    if (addToCharacter)
+            //    {
+            //        SharedViewModel.Instance.AddSpell(characterName, selectedSpell);
+            //        await Navigation.PopAsync();
+            //    }
+
+            //    ((CollectionView)sender).SelectedItem = null;
+            //}
         }
     }
 }

@@ -98,8 +98,8 @@
                 </StackLayout>
             </StackLayout>
         </ScrollView>
-        <Button Text="Remove Spell"
-                Clicked="OnRemoveSpellClicked"
+        <Button x:Name="AddOrRemoveButton"
+                Text="Remove Spell"
                 HorizontalOptions="FillAndExpand"
                 VerticalOptions="End"
                 Grid.Row="1"
