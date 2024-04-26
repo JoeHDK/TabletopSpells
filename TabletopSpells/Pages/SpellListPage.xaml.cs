@@ -30,6 +30,22 @@ namespace TabletopSpells.Pages
         }
 
         [Obsolete]
+        private async void OnMenuClicked(object sender, EventArgs e)
+        {
+            string action = await DisplayActionSheet("Filters", "Cancel", null, "Search Spells", "--");
+
+            switch (action)
+            {
+                case "Search Spells":
+                    
+                    break;
+                case "Delete Character":
+                    
+                    break;
+            }
+        }
+
+        [Obsolete]
         private async void OnSearchResultSelected(object sender, SelectionChangedEventArgs e)
         {
             var selectedSpell = e.CurrentSelection.FirstOrDefault() as Spell;
@@ -118,21 +134,6 @@ namespace TabletopSpells.Pages
             }
 
             ((CollectionView)sender).SelectedItem = null;
-            //var selectedSpell = e.CurrentSelection.FirstOrDefault() as Spell;
-            //if (selectedSpell != null)
-            //{
-            //    bool addToCharacter = await DisplayAlert("Add Spell",
-            //        $"Do you want to add '{selectedSpell.Name}' to your character?",
-            //        "Yes", "No");
-
-            //    if (addToCharacter)
-            //    {
-            //        SharedViewModel.Instance.AddSpell(characterName, selectedSpell);
-            //        await Navigation.PopAsync();
-            //    }
-
-            //    ((CollectionView)sender).SelectedItem = null;
-            //}
         }
     }
 }

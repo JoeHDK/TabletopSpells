@@ -3,11 +3,6 @@
              x:Class="TabletopSpells.Pages.CharacterDetailPage"
              Title="Character Spells">
 
-    <!-- Adding ToolbarItem for Dropdown Menu -->
-    <ContentPage.ToolbarItems>
-        <ToolbarItem IconImageSource="menu.png" Clicked="OnMenuClicked" Priority="0" Order="Primary" />
-    </ContentPage.ToolbarItems>
-
     <Grid BackgroundColor="Black" Margin="10, 10, 0, 0">
         <!-- Grid Row Definitions -->
         <Grid.RowDefinitions>

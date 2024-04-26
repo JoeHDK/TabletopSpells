@@ -4,6 +4,15 @@
              x:Class="TabletopSpells.Pages.SpellListPage"
              Title="Spell List">
 
+    <!-- Filters -->
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Filters"
+                     IconImageSource="menu.png"
+                     Clicked="OnMenuClicked" 
+                     Priority="0" 
+                     Order="Primary" />
+    </ContentPage.ToolbarItems>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

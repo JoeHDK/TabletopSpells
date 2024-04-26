@@ -34,13 +34,29 @@ namespace TabletopSpells.Pages
         }
 
         [Obsolete]
+        private async void OnMenuClicked(object sender, EventArgs e)
+        {
+            string action = await DisplayActionSheet("Menu", "Cancel", null, "Search Spells", "--");
+
+            switch (action)
+            {
+                case "Search Spells":
+                    OnSearchSpellsClicked(this, null);
+                    break;
+                case "Delete Character":
+                    OnDeleteCharacterClicked(this, null);
+                    break;
+            }
+        }
+
+        [Obsolete]
         private async void OnCharacterSelected(object sender, EventArgs e)
         {
             await Navigation.PushAsync(new CharacterDetailPage(CharacterName, SharedViewModel.Instance));
         }
 
         [Obsolete]
-        private void OnAddSpellClicked(object sender, EventArgs e)
+        private void OnSearchSpellsClicked(object sender, EventArgs e)
         {
             Device.BeginInvokeOnMainThread(async () =>
             {

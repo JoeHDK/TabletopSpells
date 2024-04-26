@@ -3,7 +3,14 @@
              x:Class="TabletopSpells.Pages.CharacterOverviewPage"
              Title="Character Spells">
 
-
+    <!-- Searchbar -->
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Search Spells"
+                     IconImageSource="menu.png"
+                     Clicked="OnMenuClicked" 
+                     Priority="0" 
+                     Order="Primary" />
+    </ContentPage.ToolbarItems>
 
     <Grid BackgroundColor="Black" Margin="10, 10, 0, 0">
         <!-- Grid Row Definitions -->
@@ -13,20 +20,11 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Show Spells --> 
-        <Button Text="Show spells"
+        <!-- Show Spells -->
+        <Button Text="Spells"
                 Grid.Column="1"
                 Grid.Row="0"
                 Clicked="OnCharacterSelected"
-                CornerRadius="25" 
-                Margin="100, 0, 100, 5"
-                BackgroundColor="green"/>
-
-        <!-- Search Spells -->
-        <Button Text="Search spells"
-                Grid.Column="1"
-                Grid.Row="1"
-                Clicked="OnAddSpellClicked"
                 CornerRadius="25" 
                 Margin="100, 0, 100, 5"
                 BackgroundColor="green"/>

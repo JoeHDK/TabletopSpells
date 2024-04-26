@@ -46,22 +46,6 @@ namespace TabletopSpells.Pages
             }
         }
 
-        [Obsolete]
-        private async void OnMenuClicked(object sender, EventArgs e)
-        {
-            string action = await DisplayActionSheet("Menu", "Cancel", null, "Add Spell", "Delete Character");
-
-            switch (action)
-            {
-                case "Add Spell":
-                    OnAddSpellClicked(this, null);
-                    break;
-                case "Delete Character":
-                    OnDeleteCharacterClicked(this, null);
-                    break;
-            }
-        }
-
         private void CreateList()
         {
             string characterClass = ViewModel.CurrentCharacter.CharacterClass.ToString();
@@ -83,7 +67,6 @@ namespace TabletopSpells.Pages
             SpellListView.ItemsSource = groupedCollection;
         }
 
-
         private int ParseSpellLevel(string spellLevel, string characterClass)
         {
             string classLowerCase = characterClass.ToLower();
@@ -102,27 +85,6 @@ namespace TabletopSpells.Pages
             }
 
             return -1; // Return an invalid level if not found
-        }
-
-
-        [Obsolete]
-        private async void OnDeleteCharacterClicked(object sender, EventArgs? e)
-        {
-            bool deleteConfirmed = await DisplayAlert(
-                "Confirm Delete",
-                $"Are you sure you want to delete {CharacterName}?",
-                "Yes",
-                "No"
-            );
-
-            if (deleteConfirmed)
-            {
-                await DeleteCharacter(CharacterName);
-                Device.BeginInvokeOnMainThread(async () =>
-                {
-                    await Navigation.PopAsync();
-                });
-            }
         }
 
         private async Task DeleteCharacter(string characterName)
@@ -157,14 +119,6 @@ namespace TabletopSpells.Pages
             }
         }
 
-        [Obsolete]
-        private void OnAddSpellClicked(object sender, EventArgs? e)
-        {
-            Device.BeginInvokeOnMainThread(async () =>
-            {
-                await Navigation.PushAsync(new SpellListPage(CharacterName));
-            });
-        }
 
         private async void OnSpellSelected(object sender, SelectionChangedEventArgs e)
         {
