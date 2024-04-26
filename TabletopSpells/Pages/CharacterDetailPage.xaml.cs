@@ -106,7 +106,7 @@ namespace TabletopSpells.Pages
 
 
         [Obsolete]
-        private async void OnDeleteCharacterClicked(object sender, EventArgs e)
+        private async void OnDeleteCharacterClicked(object sender, EventArgs? e)
         {
             bool deleteConfirmed = await DisplayAlert(
                 "Confirm Delete",
@@ -158,7 +158,7 @@ namespace TabletopSpells.Pages
         }
 
         [Obsolete]
-        private void OnAddSpellClicked(object sender, EventArgs e)
+        private void OnAddSpellClicked(object sender, EventArgs? e)
         {
             Device.BeginInvokeOnMainThread(async () =>
             {
