@@ -72,7 +72,7 @@ public partial class MainPage : ContentPage
         if (selectedCharacter != null)
         {
             SharedViewModel.Instance.CurrentCharacter = selectedCharacter;
-            await Navigation.PushAsync(new CharacterDetailPage(selectedCharacter.Name, SharedViewModel.Instance));
+            await Navigation.PushAsync(new CharacterOverviewPage(selectedCharacter.Name, SharedViewModel.Instance));
 
             LoadCharacters();
         }
