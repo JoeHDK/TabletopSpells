@@ -36,15 +36,12 @@ namespace TabletopSpells.Pages
         [Obsolete]
         private async void OnMenuClicked(object sender, EventArgs e)
         {
-            string action = await DisplayActionSheet("Menu", "Cancel", null, "Search Spells", "--");
+            string action = await DisplayActionSheet("Menu", "Cancel", null, "Search Spells");
 
             switch (action)
             {
                 case "Search Spells":
                     OnSearchSpellsClicked(this, null);
-                    break;
-                case "Delete Character":
-                    OnDeleteCharacterClicked(this, null);
                     break;
             }
         }

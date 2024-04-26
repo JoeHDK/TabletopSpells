@@ -32,7 +32,8 @@
                                TextColor="LightGray"
                                HorizontalTextAlignment="Center"
                                Margin="10, 5"
-                               Grid.Row="0"/>
+                               Grid.Row="0"
+                               />
 
                         <!-- Horizontal Divider Line -->
                         <BoxView BackgroundColor="Gray"

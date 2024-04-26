@@ -45,7 +45,6 @@ namespace TabletopSpells.Pages
                 CreateList();
             }
         }
-
         private void CreateList()
         {
             string characterClass = ViewModel.CurrentCharacter.CharacterClass.ToString();
@@ -86,39 +85,6 @@ namespace TabletopSpells.Pages
 
             return -1; // Return an invalid level if not found
         }
-
-        private async Task DeleteCharacter(string characterName)
-        {
-            try
-            {
-                string existingCharactersJson = Preferences.Get("characters", "[]");
-                var characters = JsonConvert.DeserializeObject<List<Character>>(existingCharactersJson);
-
-                var characterToRemove = characters.FirstOrDefault(c => c.Name == characterName);
-                if (characterToRemove != null)
-                {
-                    characters.Remove(characterToRemove);
-                    string updatedCharactersJson = JsonConvert.SerializeObject(characters);
-                    Preferences.Set("characters", updatedCharactersJson);
-
-                    ViewModel.CharacterSpells.Remove(characterName);
-                    Preferences.Remove($"spells_{characterName}");
-
-                    ViewModel.OnPropertyChanged(nameof(ViewModel.CharacterSpells));
-                    await DisplayAlert("Success", $"{characterName} has been removed.", "OK");
-                }
-                else
-                {
-                    await DisplayAlert("Error", $"Character '{characterName}' not found.", "OK");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error in DeleteCharacter: {ex.Message}");
-                await DisplayAlert("Error", "An error occurred while deleting the character.", "OK");
-            }
-        }
-
 
         private async void OnSpellSelected(object sender, SelectionChangedEventArgs e)
         {
