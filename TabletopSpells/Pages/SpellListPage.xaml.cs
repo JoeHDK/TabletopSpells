@@ -29,6 +29,7 @@ namespace TabletopSpells.Pages
             get; set;
         }
 
+        [Obsolete]
         private async void OnSearchResultSelected(object sender, SelectionChangedEventArgs e)
         {
             var selectedSpell = e.CurrentSelection.FirstOrDefault() as Spell;
@@ -69,7 +70,7 @@ namespace TabletopSpells.Pages
             try
             {
                 var assembly = IntrospectionExtensions.GetTypeInfo(typeof(App)).Assembly;
-                Stream stream = assembly.GetManifestResourceStream("TabletopSpells.Spells.Pathfinder1e.json");
+                Stream? stream = assembly.GetManifestResourceStream("TabletopSpells.Spells.Pathfinder1e.json");
 
                 if (stream == null)
                 {

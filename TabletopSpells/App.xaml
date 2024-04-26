@@ -10,6 +10,8 @@
             <Color x:Key="TextColor">White</Color>
             <Color x:Key="AccentColor">DarkGray</Color>
             <Color x:Key="ButtonColor">Purple</Color>
+            <Color x:Key="CharacterSpell">Green</Color>
+            <Color x:Key="NonCharacterSpell">Red</Color>
 
             <!-- Global Styles -->
             <Style TargetType="ContentPage">
