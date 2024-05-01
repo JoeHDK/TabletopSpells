@@ -8,6 +8,11 @@ public class Character
     {
         get; set;
     }
+
+    public Dictionary<int, (int Current, int Maximum)> SpellsPerDay
+    {
+        get; set;
+    }
     
     public required string Name
     {

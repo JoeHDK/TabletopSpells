@@ -1,32 +1,13 @@
-﻿using Newtonsoft.Json;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
-using TabletopSpells.Models;
 
 namespace TabletopSpells.Pages
 {
     public partial class CharacterDetailPage : ContentPage
     {
-        private string characterClass
-        {
-            get;
-        }
-        public ObservableCollection<string> Spells
-        {
-            get; private set;
-        }
-
-        private SharedViewModel ViewModel
-        {
-            get; set;
-        }
-
-        private string CharacterName
-        {
-            get; set;
-        }
+        private string CharacterClass { get; }
+        private SharedViewModel ViewModel { get; set; }
+        private string CharacterName { get; set; }
 
         protected override void OnAppearing()
         {
@@ -40,7 +21,7 @@ namespace TabletopSpells.Pages
             CharacterName = characterName;
             this.Title = $"{CharacterName}'s spells";
             ViewModel = viewModel;  // Use the passed viewModel
-            this.characterClass = ViewModel.CurrentCharacter.CharacterClass.ToString();
+            this.CharacterClass = ViewModel.CurrentCharacter.CharacterClass.ToString();
 
             this.BindingContext = ViewModel;
             ViewModel.LoadSpellsForCharacter(characterName);
@@ -52,31 +33,18 @@ namespace TabletopSpells.Pages
         }
 
         [Obsolete]
-        private async void OnMenuClicked(object sender, EventArgs e)
-        {
-            string action = await DisplayActionSheet("Menu", "Cancel", null, "Search Spells");
-
-            switch (action)
-            {
-                case "Search Spells":
-                    OnSearchSpellsClicked(this, null);
-                    break;
-            }
-        }
-
-        [Obsolete]
         private void OnSearchSpellsClicked(object sender, EventArgs e)
         {
             Device.BeginInvokeOnMainThread(async () =>
             {
-                await Navigation.PushAsync(new SpellListPage(CharacterName, characterClass));
+                await Navigation.PushAsync(new SpellListPage(CharacterName, CharacterClass));
             });
         }
 
         private void CreateList()
         {
             var groupedSpells = ViewModel.CharacterSpells[CharacterName]
-                .GroupBy(spell => ParseSpellLevel(spell.SpellLevel, characterClass))
+                .GroupBy(spell => ParseSpellLevel(spell.SpellLevel, CharacterClass))
                 .OrderBy(group => group.Key)
                 .Select(group => new { Level = group.Key, Spells = group.OrderBy(spell => spell.Name) }) // Add sorting by name within each level
                 .ToList();

@@ -1,12 +1,19 @@
 ﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:TabletopSpells.Converters"
              x:Class="TabletopSpells.Pages.CharacterDetailPage"
              Title="Character Spells">
     
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:NonClassSpellConverter x:Key="NonClassSpellConverter"/>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+
     <!-- Searchbar -->
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Search Spells"
-                     IconImageSource="menu.png"
+        <ToolbarItem IconImageSource="search_icon_white.png"
                      Clicked="OnSearchSpellsClicked" 
                      Priority="0" 
                      Order="Primary" />
@@ -20,11 +27,13 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Add Spell Button -->
-        <!--<Button Text="Add Spell" CornerRadius="25" HorizontalOptions="Start" Grid.Row="0" Clicked="OnAddSpellClicked" />-->
-
         <!-- Spell Section -->
-        <CollectionView x:Name="SpellListView" IsGrouped="True" SelectionMode="Single" SelectionChanged="OnSpellSelected" Grid.Row="1" Margin="0, 10, 0, 10">
+        <CollectionView x:Name="SpellListView" 
+                        IsGrouped="True" 
+                        SelectionMode="Single" 
+                        SelectionChanged="OnSpellSelected" 
+                        Grid.Row="1" 
+                        Margin="0, 10, 0, 10">
             <CollectionView.GroupHeaderTemplate>
                 <DataTemplate>
                     <Grid>
@@ -35,7 +44,7 @@
                         </Grid.RowDefinitions>
 
                         <!-- Level Header -->
-                        <Label Text="{Binding Key, StringFormat='Level {0}'}" 
+                        <Label Text="{Binding Key, Converter={StaticResource NonClassSpellConverter}}" 
                                FontSize="Title"
                                FontAttributes="Bold"
                                TextColor="LightGray"

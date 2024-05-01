@@ -2,7 +2,7 @@
 
 namespace TabletopSpells.Converters
 {
-    public class NonClassSpell : IValueConverter
+    public class NonClassSpellConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

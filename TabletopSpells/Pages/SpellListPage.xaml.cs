@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reflection;
@@ -24,13 +23,10 @@ public partial class SpellListPage : ContentPage
         BindingContext = this;
     }
 
-
-
     public ObservableCollection<Spell> Spells
     {
         get; set;
     }
-
     public ObservableCollection<Spell> FilteredSpells
     {
         get; set;
@@ -45,24 +41,25 @@ public partial class SpellListPage : ContentPage
     [Obsolete]
     private async void OnMenuClicked(object sender, EventArgs e)
     {
-        // List of level options
+        // List of level options including Cantrips
         var levels = new List<string>
-    {
-        "1st level",
-        "2nd level",
-        "3rd level",
-        "4th level",
-        "5th level",
-        "6th level",
-        "7th level",
-        "8th level",
-        "9th level"
-    };
+        {
+            "Cantrips",
+            "1st level",
+            "2nd level",
+            "3rd level",
+            "4th level",
+            "5th level",
+            "6th level",
+            "7th level",
+            "8th level",
+            "9th level"
+        };
 
         // Highlight the active filter with an asterisk
         for (int i = 0; i < levels.Count; i++)
         {
-            int levelNumber = i + 1; // Calculate the actual level number
+            int levelNumber = i; // Cantrips are level 0
             if (selectedSpellLevel.HasValue && selectedSpellLevel.Value == levelNumber)
             {
                 levels[i] = $"* {levels[i]}"; // Append an asterisk to highlight the active filter
@@ -70,7 +67,7 @@ public partial class SpellListPage : ContentPage
         }
 
         // Show the action sheet with the dynamically generated options
-        string action = await DisplayActionSheet("Menu", "Cancel", null, levels.ToArray());
+        string action = await DisplayActionSheet("Filters", null, null, levels.ToArray());
 
         // Early exit if 'Cancel' is selected or no action is returned
         if (action == "Cancel" || string.IsNullOrEmpty(action))
@@ -80,13 +77,17 @@ public partial class SpellListPage : ContentPage
 
         // Strip any asterisk and extra spaces from the action to clean it up for parsing
         string cleanAction = action.Replace("*", "").Trim();
-        var match = Regex.Match(cleanAction, @"\d+");
-        if (!match.Success)
+        int selectedLevel = 0; // Default to Cantrips if no number found
+        var match = Regex.Match(cleanAction, @"\d+"); // Find the first number
+        if (match.Success)
         {
-            return; // Exit if no number is found, to prevent errors
+            selectedLevel = int.Parse(match.Value);
+        }
+        else if (cleanAction == "Cantrips")
+        {
+            selectedLevel = 0; // Cantrips are considered level 0
         }
 
-        int selectedLevel = int.Parse(match.Value);
         if (selectedSpellLevel.HasValue && selectedSpellLevel.Value == selectedLevel)
         {
             selectedSpellLevel = null; // Toggle off if the same level is selected again
@@ -100,8 +101,6 @@ public partial class SpellListPage : ContentPage
         UpdateTitle();  // Update the title to reflect the current filter status
     }
 
-
-
     private void UpdateTitle()
     {
         switch (selectedSpellLevel)
@@ -109,6 +108,9 @@ public partial class SpellListPage : ContentPage
 
             case null:
                 Title = "Spells";
+                break;
+            case 0:
+                Title = "Cantrips";
                 break;
             case 1:
                 Title = "1st level spells";
