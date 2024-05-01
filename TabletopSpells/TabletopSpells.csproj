@@ -60,6 +60,7 @@
 	<ItemGroup>
 	  <None Remove="Resources\Images\menu.png" />
 	  <None Remove="Resources\Images\menu2.png" />
+	  <None Remove="Resources\Images\search_icon_white.png" />
 	  <None Remove="Spells\Pathfinder1e.json" />
 	</ItemGroup>
 
