@@ -2,15 +2,15 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TabletopSpells.Pages.SpellListPage"
-             Title="Spell List">
+             Title="Spells">
 
-    <!-- Filters -->
+    <!-- Searchbar -->
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Filters"
+        <ToolbarItem Text="Filter Spells"
                      IconImageSource="menu.png"
                      Clicked="OnMenuClicked" 
                      Priority="0" 
-                     Order="Primary" />
+                     Order="Primary"/>
     </ContentPage.ToolbarItems>
 
     <Grid>

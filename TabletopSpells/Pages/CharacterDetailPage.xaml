@@ -2,6 +2,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TabletopSpells.Pages.CharacterDetailPage"
              Title="Character Spells">
+    
+    <!-- Searchbar -->
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Search Spells"
+                     IconImageSource="menu.png"
+                     Clicked="OnSearchSpellsClicked" 
+                     Priority="0" 
+                     Order="Primary" />
+    </ContentPage.ToolbarItems>
 
     <Grid BackgroundColor="Black" Margin="10, 10, 0, 0">
         <!-- Grid Row Definitions -->

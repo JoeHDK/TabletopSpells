@@ -1,86 +1,188 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace TabletopSpells.Pages;
 [XamlCompilation(XamlCompilationOptions.Compile)]
 public partial class SpellListPage : ContentPage
 {
-    SharedViewModel ViewModel;
     private string characterName;
-    public SpellListPage(string characterName)
+    private string characterClass;
+    private int? selectedSpellLevel = null;
+    private string currentSearchText = "";
+    public SpellListPage(string characterName, string characterClass)
     {
         InitializeComponent();
         this.characterName = characterName;
+        this.characterClass = characterClass;
         Spells = new ObservableCollection<Spell>(GetAllSpellsFromJson());
         FilteredSpells = new ObservableCollection<Spell>(Spells);
         BindingContext = this;
-        this.ViewModel = SharedViewModel.Instance;
     }
+
+
 
     public ObservableCollection<Spell> Spells
     {
         get; set;
     }
+
     public ObservableCollection<Spell> FilteredSpells
     {
         get; set;
     }
 
+    private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
+    {
+        currentSearchText = e.NewTextValue.ToLower();
+        FilterSpells(); // Apply all filters whenever search text changes
+    }
+
     [Obsolete]
     private async void OnMenuClicked(object sender, EventArgs e)
     {
-        string action = await DisplayActionSheet("Filters", "Cancel", null, "Class", "--");
-
-        switch (action)
-        {
-            case "Class":
-                FilterByClass();
-                break;
-            case "Delete Character":
-
-                break;
-        }
-    }
-
-    private void FilterByClass()
+        // List of level options
+        var levels = new List<string>
     {
-        
-    }
+        "1st level",
+        "2nd level",
+        "3rd level",
+        "4th level",
+        "5th level",
+        "6th level",
+        "7th level",
+        "8th level",
+        "9th level"
+    };
 
-    [Obsolete]
-    private async void OnSearchResultSelected(object sender, SelectionChangedEventArgs e)
-    {
-        var selectedSpell = e.CurrentSelection.FirstOrDefault() as Spell;
-        if (selectedSpell != null)
+        // Highlight the active filter with an asterisk
+        for (int i = 0; i < levels.Count; i++)
         {
-            // Show confirmation dialog
-            bool addToCharacter = await DisplayAlert("Add Spell",
-                $"Do you want to add '{selectedSpell.Name}' to your character?",
-                "Yes", "No");
-
-            if (addToCharacter)
+            int levelNumber = i + 1; // Calculate the actual level number
+            if (selectedSpellLevel.HasValue && selectedSpellLevel.Value == levelNumber)
             {
-                MessagingCenter.Send(this, "AddSpellToCharacter", selectedSpell);
-                await Navigation.PopAsync();
+                levels[i] = $"* {levels[i]}"; // Append an asterisk to highlight the active filter
             }
+        }
 
-            // Clear selection
-            ((CollectionView)sender).SelectedItem = null;
+        // Show the action sheet with the dynamically generated options
+        string action = await DisplayActionSheet("Menu", "Cancel", null, levels.ToArray());
+
+        // Early exit if 'Cancel' is selected or no action is returned
+        if (action == "Cancel" || string.IsNullOrEmpty(action))
+        {
+            return;
+        }
+
+        // Strip any asterisk and extra spaces from the action to clean it up for parsing
+        string cleanAction = action.Replace("*", "").Trim();
+        var match = Regex.Match(cleanAction, @"\d+");
+        if (!match.Success)
+        {
+            return; // Exit if no number is found, to prevent errors
+        }
+
+        int selectedLevel = int.Parse(match.Value);
+        if (selectedSpellLevel.HasValue && selectedSpellLevel.Value == selectedLevel)
+        {
+            selectedSpellLevel = null; // Toggle off if the same level is selected again
+        }
+        else
+        {
+            selectedSpellLevel = selectedLevel; // Set the selected level
+        }
+
+        FilterSpells(); // Re-apply filters based on the updated selected level
+        UpdateTitle();  // Update the title to reflect the current filter status
+    }
+
+
+
+    private void UpdateTitle()
+    {
+        switch (selectedSpellLevel)
+        {
+
+            case null:
+                Title = "Spells";
+                break;
+            case 1:
+                Title = "1st level spells";
+                break;
+            case 2:
+                Title = "2nd level spells";
+                break;
+            case 3:
+                Title = "3rd level spells";
+                break;
+            default:
+                Title = $"{selectedSpellLevel}th level spells";
+                break;
         }
     }
 
-    private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
+    private void FilterSpells()
     {
-        var searchText = e.NewTextValue.ToLower();
+        var filtered = Spells.Where(spell =>
+            (string.IsNullOrEmpty(currentSearchText) || spell.Name.ToLower().Contains(currentSearchText)) &&
+            (!selectedSpellLevel.HasValue || ParseSpellLevel(spell.SpellLevel, characterClass ?? "") == selectedSpellLevel.Value)
+        ).OrderBy(spell => spell.Name).ToList(); // Sort here and convert to list once
+
         FilteredSpells.Clear();
-        foreach (var spell in Spells.Where(s => s.Name.ToLower().Contains(searchText)))
+        foreach (var spell in filtered)
         {
             FilteredSpells.Add(spell);
         }
     }
+
+    private int ParseSpellLevel(string spellLevel, string characterClass)
+    {
+        if (string.IsNullOrWhiteSpace(characterClass))
+        {
+            Debug.WriteLine("Character class is not specified.");
+            return -1; // Indicate no specific class level found
+        }
+
+        string classLowerCase = characterClass.Trim().ToLower();
+        string[] entries = spellLevel.Split(',');
+
+        foreach (var entry in entries)
+        {
+            var trimmedEntry = entry.Trim().ToLower();
+            // Split the entry into parts to isolate class names and level number
+            string[] parts = trimmedEntry.Split(' ');
+            if (parts.Length < 2)
+            {
+                Debug.WriteLine($"Invalid spell level format in entry: '{entry}'");
+                continue;
+            }
+
+            // Checking for the presence of the class name in the combined class names section
+            string combinedClasses = parts[0];
+            if (combinedClasses.Contains(classLowerCase))
+            {
+                // Extract the level number which is supposed to be the last part after a space
+                string levelPart = parts[1];
+                var match = Regex.Match(levelPart, @"\d+");
+                if (match.Success)
+                {
+                    return int.Parse(match.Value);
+                }
+                else
+                {
+                    Debug.WriteLine($"No numeric level found for class {characterClass} in part '{entry}'.");
+                }
+            }
+        }
+
+        Debug.WriteLine($"Class {characterClass} not found in spellLevel '{spellLevel}'.");
+        return -1; // Return an invalid level if not found
+    }
+
 
     private List<Spell> GetAllSpellsFromJson()
     {
@@ -116,6 +218,8 @@ public partial class SpellListPage : ContentPage
                 Debug.WriteLine("Failed to deserialize spells.");
                 return new List<Spell>();
             }
+
+            // Create switch here
 
             return spells;
         }

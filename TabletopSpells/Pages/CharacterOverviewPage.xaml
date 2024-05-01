@@ -3,15 +3,6 @@
              x:Class="TabletopSpells.Pages.CharacterOverviewPage"
              Title="Character Spells">
 
-    <!-- Searchbar -->
-    <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Search Spells"
-                     IconImageSource="menu.png"
-                     Clicked="OnMenuClicked" 
-                     Priority="0" 
-                     Order="Primary" />
-    </ContentPage.ToolbarItems>
-
     <Grid BackgroundColor="Black" Margin="10, 10, 0, 0">
         <!-- Grid Row Definitions -->
         <Grid.RowDefinitions>

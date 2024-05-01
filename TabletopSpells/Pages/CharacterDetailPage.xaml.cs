@@ -9,6 +9,10 @@ namespace TabletopSpells.Pages
 {
     public partial class CharacterDetailPage : ContentPage
     {
+        private string characterClass
+        {
+            get;
+        }
         public ObservableCollection<string> Spells
         {
             get; private set;
@@ -36,6 +40,7 @@ namespace TabletopSpells.Pages
             CharacterName = characterName;
             this.Title = $"{CharacterName}'s spells";
             ViewModel = viewModel;  // Use the passed viewModel
+            this.characterClass = ViewModel.CurrentCharacter.CharacterClass.ToString();
 
             this.BindingContext = ViewModel;
             ViewModel.LoadSpellsForCharacter(characterName);
@@ -45,10 +50,31 @@ namespace TabletopSpells.Pages
                 CreateList();
             }
         }
+
+        [Obsolete]
+        private async void OnMenuClicked(object sender, EventArgs e)
+        {
+            string action = await DisplayActionSheet("Menu", "Cancel", null, "Search Spells");
+
+            switch (action)
+            {
+                case "Search Spells":
+                    OnSearchSpellsClicked(this, null);
+                    break;
+            }
+        }
+
+        [Obsolete]
+        private void OnSearchSpellsClicked(object sender, EventArgs e)
+        {
+            Device.BeginInvokeOnMainThread(async () =>
+            {
+                await Navigation.PushAsync(new SpellListPage(CharacterName, characterClass));
+            });
+        }
+
         private void CreateList()
         {
-            string characterClass = ViewModel.CurrentCharacter.CharacterClass.ToString();
-
             var groupedSpells = ViewModel.CharacterSpells[CharacterName]
                 .GroupBy(spell => ParseSpellLevel(spell.SpellLevel, characterClass))
                 .OrderBy(group => group.Key)
