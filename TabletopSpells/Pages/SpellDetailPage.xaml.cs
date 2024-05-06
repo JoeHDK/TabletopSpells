@@ -1,19 +1,21 @@
-﻿
-namespace TabletopSpells.Pages;
+﻿namespace TabletopSpells.Pages;
 public partial class SpellDetailPage : ContentPage
 {
     private readonly Spell spell;
     private readonly string characterName;
+    private readonly int spellLevel;
     private bool spellIsKnown;
 
-    public SpellDetailPage(Spell spell, string characterName)
+    public SpellDetailPage(Spell spell, string characterName, int spellLevel)
     {
         InitializeComponent();
         this.spell = spell;
         this.characterName = characterName;
         this.BindingContext = spell;
+        this.spellLevel = spellLevel;
         CheckIfSpellIsKnown();
         UpdateButton();
+        ShowCastSpellButton();
     }
 
     private void CheckIfSpellIsKnown()
@@ -22,6 +24,24 @@ public partial class SpellDetailPage : ContentPage
         spellIsKnown = viewModel.CharacterSpells.ContainsKey(characterName) &&
                        viewModel.CharacterSpells[characterName].Any(s => s.Name == spell.Name);
     }
+
+    private void ShowCastSpellButton()
+    {
+        CastSpellButton.Clicked -= OnCastSpellClicked;
+        if (spellIsKnown)
+        {
+            CastSpellButton.IsEnabled = true;
+            CastSpellButton.Text = "Cast";
+            CastSpellButton.Clicked += OnCastSpellClicked;
+        }
+        else
+        {
+            CastSpellButton.IsEnabled = false;
+            CastSpellButton.Text = "";
+            CastSpellButton.Clicked -= OnCastSpellClicked;
+        }
+    }
+    
     private void UpdateButton()
     {
         AddOrRemoveButton.Text = spellIsKnown ? "Remove Spell" : "Add Spell";
@@ -41,7 +61,34 @@ public partial class SpellDetailPage : ContentPage
         }
     }
 
-    private async void OnAddSpellClicked(object sender, EventArgs e)
+    private void OnCastSpellClicked(object? sender, EventArgs e)
+    {
+        // Retrieve the character from the SharedViewModel using the character name
+        var character = SharedViewModel.Instance.CurrentCharacter;
+
+        if (character == null)
+        {
+            DisplayAlert("Error", "No character selected.", "OK");
+            return;
+        }
+
+        // Use the CastSpell method from the Character model
+        bool success = character.CastSpell(spellLevel);
+
+        if (success)
+        {
+            // Update the spells used information in the SharedViewModel
+            SharedViewModel.Instance.SaveSpellsPerDayDetails(characterName, character.MaxSpellsPerDay, character.SpellsUsedToday);
+
+            DisplayAlert("Spell Cast", $"{spell.Name} has been cast.", "OK");
+        }
+        else
+        {
+            DisplayAlert("Failed", "Unable to cast the spell, limit reached or invalid level.", "OK");
+        }
+    }
+
+    private async void OnAddSpellClicked(object? sender, EventArgs e)
     {
         bool confirmation = await DisplayAlert("Add Spell",
                                               $"Do you want to add '{spell.Name}' " +
@@ -59,7 +106,7 @@ public partial class SpellDetailPage : ContentPage
         }
     }
 
-    private async void OnRemoveSpellClicked(object sender, EventArgs e)
+    private async void OnRemoveSpellClicked(object? sender, EventArgs e)
     {
         bool confirmation = await DisplayAlert("Remove Spell",
                                               $"Are you sure you want to remove '{spell.Name}' " +

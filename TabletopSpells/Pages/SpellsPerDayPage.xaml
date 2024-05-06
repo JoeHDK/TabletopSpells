@@ -1,0 +1,16 @@
+﻿<!-- SpellListPage.xaml -->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TabletopSpells.Pages.SpellsPerDayPage"
+             Title="Spells per day">
+
+    <StackLayout Padding="20">
+        <ListView x:Name="lvSpellsPerDay" ItemSelected="OnSpellLevelSelected">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <TextCell Text="{Binding DisplayText}" Detail="{Binding DetailText}" />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </StackLayout>
+</ContentPage>

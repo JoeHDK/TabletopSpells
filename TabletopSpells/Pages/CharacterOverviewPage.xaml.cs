@@ -39,6 +39,11 @@ namespace TabletopSpells.Pages
             await Navigation.PushAsync(new CharacterDetailPage(CharacterName, SharedViewModel.Instance));
         }
 
+        private async void OnSpellPerDaySelected(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new SpellsPerDayPage());
+        }
+
         [Obsolete]
         private async void OnDeleteCharacterClicked(object sender, EventArgs e)
         {

@@ -221,8 +221,6 @@ public partial class SpellListPage : ContentPage
                 return new List<Spell>();
             }
 
-            // Create switch here
-
             return spells;
         }
         catch (Exception ex)
@@ -237,9 +235,17 @@ public partial class SpellListPage : ContentPage
         var selectedSpell = e.CurrentSelection.FirstOrDefault() as Spell;
         if (selectedSpell != null)
         {
-            await Navigation.PushAsync(new SpellDetailPage(selectedSpell, characterName));
-        }
-
+            int spellLevel = ParseSpellLevel(selectedSpell.SpellLevel, characterClass ?? "");
+            if (spellLevel >= 0)
+            {
+                await Navigation.PushAsync(new SpellDetailPage(selectedSpell, characterName, spellLevel));
+            }
+            else
+            {
+                await DisplayAlert("Error", "Failed to determine spell level for the selected spell.", "OK");
+            }
+            
         ((CollectionView)sender).SelectedItem = null;
+        }
     }
 }
