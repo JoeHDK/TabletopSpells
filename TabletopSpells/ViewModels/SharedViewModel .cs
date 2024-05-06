@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using TabletopSpells.Models; // Ensure this namespace contains the Character and Spell classes
 
 public class SharedViewModel : INotifyPropertyChanged
@@ -86,12 +87,21 @@ public class SharedViewModel : INotifyPropertyChanged
 
     public void SaveSpellsPerDayDetails(string characterName, Dictionary<int, int> maxSpellsPerDay, Dictionary<int, int> spellsUsedToday)
     {
-        var maxSpellsJson = JsonConvert.SerializeObject(maxSpellsPerDay);
-        Preferences.Set($"maxSpells_{characterName}", maxSpellsJson);
+        try
+        {
+            var maxSpellsJson = JsonConvert.SerializeObject(maxSpellsPerDay);
+            Preferences.Set($"maxSpells_{characterName}", maxSpellsJson);
 
-        var usedSpellsJson = JsonConvert.SerializeObject(spellsUsedToday);
-        Preferences.Set($"usedSpells_{characterName}", usedSpellsJson);
+            var usedSpellsJson = JsonConvert.SerializeObject(spellsUsedToday);
+            Preferences.Set($"usedSpells_{characterName}", usedSpellsJson);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error saving spell data: {ex.Message}");
+            // Optionally, provide feedback to the user that saving failed
+        }
     }
+
 
     public void LoadSpellsPerDayDetails(Character character)
     {
