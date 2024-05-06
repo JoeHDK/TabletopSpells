@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Windows.Input;
 using TabletopSpells.Models; // Ensure this namespace contains the Character and Spell classes
 
 public class SharedViewModel : INotifyPropertyChanged
@@ -26,7 +27,6 @@ public class SharedViewModel : INotifyPropertyChanged
             }
         }
     }
-
 
     private Dictionary<string, ObservableCollection<Spell>> characterSpells = new Dictionary<string, ObservableCollection<Spell>>();
     public Dictionary<string, ObservableCollection<Spell>> CharacterSpells
@@ -114,6 +114,18 @@ public class SharedViewModel : INotifyPropertyChanged
         character.SpellsUsedToday = JsonConvert.DeserializeObject<Dictionary<int, int>>(usedSpellsJson) ?? new Dictionary<int, int>();
     }
 
+    public void ResetSpellsUsedToday()
+    {
+        if (CurrentCharacter == null) return;
+
+        foreach (var key in CurrentCharacter.SpellsUsedToday.Keys.ToList())
+        {
+            CurrentCharacter.SpellsUsedToday[key] = 0;
+        }
+
+        SaveSpellsPerDayDetails(CurrentCharacter.Name, CurrentCharacter.MaxSpellsPerDay, CurrentCharacter.SpellsUsedToday);
+        OnPropertyChanged("CurrentCharacter"); // Make sure this triggers UI updates
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public void OnPropertyChanged(string propertyName)

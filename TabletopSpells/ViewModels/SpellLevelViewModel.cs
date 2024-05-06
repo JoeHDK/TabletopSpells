@@ -20,7 +20,8 @@ public class SpellLevelViewModel : INotifyPropertyChanged
             {
                 maxSpells = value;
                 OnPropertyChanged(nameof(MaxSpells));
-                OnPropertyChanged(nameof(DetailText));  // Notify that DetailText needs to update
+                OnPropertyChanged(nameof(DetailText));
+                OnPropertyChanged(nameof(ProgressValue)); // Update progress bar
             }
         }
     }
@@ -34,18 +35,23 @@ public class SpellLevelViewModel : INotifyPropertyChanged
             {
                 spellsUsed = value;
                 OnPropertyChanged(nameof(SpellsUsed));
-                OnPropertyChanged(nameof(DetailText));  // Notify that DetailText needs to update
+                OnPropertyChanged(nameof(DetailText));
+                OnPropertyChanged(nameof(ProgressValue)); // Update progress bar
             }
         }
     }
+
+
+
+
+    public float ProgressValue => MaxSpells > 0 ? (float)SpellsUsed / MaxSpells : 0;
 
     public string DisplayText
     {
         get; set;
     }
 
-    // ReadOnly computed property
-    public string DetailText => $"Used: {SpellsUsed} / Max: {MaxSpells}";
+    public string DetailText => $"{SpellsUsed} / {MaxSpells}";
 
     public event PropertyChangedEventHandler PropertyChanged;
 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Security.Cryptography.X509Certificates;
 using TabletopSpells.Models;
 
 namespace TabletopSpells.Pages;
@@ -10,6 +11,7 @@ public partial class SpellsPerDayPage : ContentPage
     public SpellsPerDayPage()
     {
         InitializeComponent();
+        BindingContext = SharedViewModel.Instance;
         spellLevels = new ObservableCollection<SpellLevelViewModel>();
         LoadSpellLevels();
         lvSpellsPerDay.ItemsSource = spellLevels;
@@ -92,5 +94,19 @@ public partial class SpellsPerDayPage : ContentPage
             }
         }
     }
-
+    
+    public async void OnResetSpellsPerDayClicked(object sender, EventArgs e)
+    {
+        SharedViewModel sharedViewModel = SharedViewModel.Instance;
+        bool confirm = await Application.Current.MainPage.DisplayAlert(
+            "Confirm Reset",
+            "Reset all spells used today to zero?",
+            "Yes", "No");
+        
+        if (confirm)
+        {
+            sharedViewModel.ResetSpellsUsedToday();
+            await Navigation.PopAsync();
+        }
+    }
 }

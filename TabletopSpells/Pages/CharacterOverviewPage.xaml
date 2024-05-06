@@ -18,9 +18,9 @@
 
         <Grid.ColumnDefinitions>
             <!-- Column 1 -->
-            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
             <!-- Column 2 -->
-            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         <!-- Show Spells -->
@@ -28,17 +28,15 @@
                 Grid.Column="0"
                 Grid.Row="0"
                 Clicked="OnCharacterSelected"
-                CornerRadius="25" 
-                Margin="100, 0, 100, 5"
-                BackgroundColor="green"/>
+                BackgroundColor="green"
+                Margin="5"/>
 
         <Button Text="Spells per day"
                 Grid.Column="1"
                 Grid.Row="0"
                 Clicked="OnSpellPerDaySelected"
-                CornerRadius="25" 
-                Margin="100, 0, 100, 5"
-                BackgroundColor="green"/>
+                BackgroundColor="green"
+                Margin="5"/>
 
         <!--Remove Characters Button-->
         <Button Text="Delete character" 
@@ -46,8 +44,7 @@
                 Grid.ColumnSpan="2"
                 Grid.Row="3" 
                 Clicked="OnDeleteCharacterClicked" 
-                CornerRadius="25" 
-                Margin="100, 0, 100, 5"
-                BackgroundColor="Red"/>
+                BackgroundColor="Red"
+                Margin="5"/>
     </Grid>
 </ContentPage>
