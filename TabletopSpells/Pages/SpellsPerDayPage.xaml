@@ -11,12 +11,17 @@
                      Order="Primary"/>
     </ContentPage.ToolbarItems>
 
-    <StackLayout Padding="20">
-        <ListView x:Name="lvSpellsPerDay" ItemSelected="OnSpellLevelSelected">
+    <StackLayout Padding="20"
+                 Margin="10">
+        <ListView x:Name="lvSpellsPerDay" 
+                  ItemSelected="OnSpellLevelSelected"
+                  Margin="20">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <ViewCell>
-                        <StackLayout Orientation="Vertical" Padding="10">
+                        <StackLayout Orientation="Vertical" 
+                                     Padding="10"
+                                     HeightRequest="75">
                             <Label Text="{Binding DisplayText}" 
                                    FontAttributes="Bold"
                                    HorizontalTextAlignment="Center"/>
@@ -34,7 +39,8 @@
                                                  BackgroundColor="Transparent"
                                                  HorizontalOptions="FillAndExpand"
                                                  VerticalOptions="FillAndExpand"
-                                                 MinimumHeightRequest="30"/>
+                                                 HeightRequest="30"
+                                                 ScaleY="30"/>
                                     <Label Text="{Binding DetailText}" 
                                            HorizontalOptions="Center" 
                                            VerticalOptions="Center"
