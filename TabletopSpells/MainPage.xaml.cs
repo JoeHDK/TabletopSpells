@@ -40,7 +40,6 @@ public partial class MainPage : ContentPage
         }
     }
 
-
     private async void OnCreateNewCharacterClicked(object sender, EventArgs e)
     {
         string characterName = await DisplayPromptAsync("New Character", "Enter character name:");

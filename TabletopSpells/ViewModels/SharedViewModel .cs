@@ -1,17 +1,15 @@
-﻿using System.Collections.ObjectModel;
+﻿using Newtonsoft.Json;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
-using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.Linq;
 using TabletopSpells.Models; // Ensure this namespace contains the Character and Spell classes
 
 public class SharedViewModel : INotifyPropertyChanged
 {
-    private static SharedViewModel instance;
+    private static SharedViewModel? instance;
     public static SharedViewModel Instance => instance ?? (instance = new SharedViewModel());
 
-    private Character currentCharacter;
-    public Character CurrentCharacter
+    private Character? currentCharacter;
+    public Character? CurrentCharacter
     {
         get => currentCharacter;
         set
@@ -20,9 +18,14 @@ public class SharedViewModel : INotifyPropertyChanged
             {
                 currentCharacter = value;
                 OnPropertyChanged(nameof(CurrentCharacter));
+                if (currentCharacter != null)
+                {
+                    LoadSpellsPerDayDetails(currentCharacter);  // Load spell details directly into the character
+                }
             }
         }
     }
+
 
     private Dictionary<string, ObservableCollection<Spell>> characterSpells = new Dictionary<string, ObservableCollection<Spell>>();
     public Dictionary<string, ObservableCollection<Spell>> CharacterSpells
@@ -81,7 +84,28 @@ public class SharedViewModel : INotifyPropertyChanged
         }
     }
 
-    public event PropertyChangedEventHandler PropertyChanged;
+    public void SaveSpellsPerDayDetails(string characterName, Dictionary<int, int> maxSpellsPerDay, Dictionary<int, int> spellsUsedToday)
+    {
+        var maxSpellsJson = JsonConvert.SerializeObject(maxSpellsPerDay);
+        Preferences.Set($"maxSpells_{characterName}", maxSpellsJson);
+
+        var usedSpellsJson = JsonConvert.SerializeObject(spellsUsedToday);
+        Preferences.Set($"usedSpells_{characterName}", usedSpellsJson);
+    }
+
+    public void LoadSpellsPerDayDetails(Character character)
+    {
+        if (character == null) return;
+
+        var maxSpellsJson = Preferences.Get($"maxSpells_{character.Name}", "{}");
+        var usedSpellsJson = Preferences.Get($"usedSpells_{character.Name}", "{}");
+
+        character.MaxSpellsPerDay = JsonConvert.DeserializeObject<Dictionary<int, int>>(maxSpellsJson) ?? new Dictionary<int, int>();
+        character.SpellsUsedToday = JsonConvert.DeserializeObject<Dictionary<int, int>>(usedSpellsJson) ?? new Dictionary<int, int>();
+    }
+
+
+    public event PropertyChangedEventHandler? PropertyChanged;
     public void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

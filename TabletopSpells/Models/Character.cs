@@ -8,12 +8,12 @@ public class Character
     {
         get; set;
     }
-    
+
     public required string Name
     {
         get; set;
     }
-    
+
     public List<Spell> Spells
     {
         get; set;
@@ -21,10 +21,25 @@ public class Character
 
     public Class CharacterClass
     {
-        get; set; 
-    } 
+        get; set;
+    }
 
-    public Character() => Spells = new List<Spell>();
+    public Dictionary<int, int> MaxSpellsPerDay
+    {
+        get; set;
+    }
+
+    public Dictionary<int, int> SpellsUsedToday
+    {
+        get; set;
+    }
+
+    public Character()
+    {
+        Spells = new List<Spell>();
+        MaxSpellsPerDay = new Dictionary<int, int>();
+        SpellsUsedToday = new Dictionary<int, int>();
+    }
 
     public void AddSpell(Spell spell)
     {
@@ -38,4 +53,16 @@ public class Character
     {
         Spells.Remove(spell);
     }
+
+    public bool CastSpell(int spellLevel)
+    {
+        if (!SpellsUsedToday.ContainsKey(spellLevel) || SpellsUsedToday[spellLevel] >= MaxSpellsPerDay[spellLevel])
+        {
+            return false;
+        }
+        
+        SpellsUsedToday[spellLevel]++;
+        return true;
+    }
+
 }

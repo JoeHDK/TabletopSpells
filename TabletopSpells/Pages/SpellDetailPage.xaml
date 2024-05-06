@@ -3,6 +3,14 @@
              x:Class="TabletopSpells.Pages.SpellDetailPage"
              Title="{Binding Name}">
 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem x:Name="CastSpellButton"
+                     IsEnabled="False"
+                     Clicked="OnCastSpellClicked" 
+                     Priority="0" 
+                     Order="Primary"/>
+    </ContentPage.ToolbarItems>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />

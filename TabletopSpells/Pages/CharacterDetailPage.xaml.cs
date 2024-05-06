@@ -1,13 +1,23 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 
 namespace TabletopSpells.Pages
 {
     public partial class CharacterDetailPage : ContentPage
     {
-        private string CharacterClass { get; }
-        private SharedViewModel ViewModel { get; set; }
-        private string CharacterName { get; set; }
+        private string CharacterClass
+        {
+            get;
+        }
+        private SharedViewModel? ViewModel
+        {
+            get; set;
+        }
+        private string CharacterName
+        {
+            get; set;
+        }
 
         protected override void OnAppearing()
         {
@@ -77,7 +87,7 @@ namespace TabletopSpells.Pages
                 }
             }
 
-            return -1; // Return an invalid level if not found
+            return -1; 
         }
 
         private async void OnSpellSelected(object sender, SelectionChangedEventArgs e)
@@ -85,10 +95,18 @@ namespace TabletopSpells.Pages
             var selectedSpell = e.CurrentSelection.FirstOrDefault() as Spell;
             if (selectedSpell != null)
             {
-                await Navigation.PushAsync(new SpellDetailPage(selectedSpell, CharacterName));
+                int spellLevel = ParseSpellLevel(selectedSpell.SpellLevel, CharacterClass);
+                if (spellLevel >= 0) 
+                {
+                    await Navigation.PushAsync(new SpellDetailPage(selectedSpell, CharacterName, spellLevel));
+                }
+                else
+                {
+                    await DisplayAlert("Error", "Failed to determine spell level for the selected spell.", "OK");
+                }
             }
 
-            ((CollectionView)sender).SelectedItem = null;
+        ((CollectionView)sender).SelectedItem = null;
         }
     }
 }
