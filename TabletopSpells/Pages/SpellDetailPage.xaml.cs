@@ -84,7 +84,7 @@ public partial class SpellDetailPage : ContentPage
         }
         else
         {
-            DisplayAlert("Failed", "Unable to cast the spell, limit reached or invalid level.", "OK");
+            DisplayAlert("Failed", "404: Available spell slot not found", "OK");
         }
     }
 

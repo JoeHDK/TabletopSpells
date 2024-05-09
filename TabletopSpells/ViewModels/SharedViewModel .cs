@@ -2,8 +2,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Windows.Input;
-using TabletopSpells.Models; // Ensure this namespace contains the Character and Spell classes
+using TabletopSpells.Models;
 
 public class SharedViewModel : INotifyPropertyChanged
 {
@@ -126,6 +125,44 @@ public class SharedViewModel : INotifyPropertyChanged
         SaveSpellsPerDayDetails(CurrentCharacter.Name, CurrentCharacter.MaxSpellsPerDay, CurrentCharacter.SpellsUsedToday);
         OnPropertyChanged("CurrentCharacter"); // Make sure this triggers UI updates
     }
+
+    public void LogSpellCast(string characterName, string spellName, int spellLevel)
+    {
+        var sessionId = Preferences.Get($"currentSession_{characterName}", 0);
+        var logEntry = new SpellCastLog
+        {
+            CastTime = DateTime.Now,
+            SpellName = spellName,
+            SpellLevel = spellLevel,
+            SessionId = sessionId
+        };
+
+        UpdateLogs(characterName, logEntry);
+    }
+
+    public void LogFailedSpellCast(string characterName, string spellName, int spellLevel, string reason)
+    {
+        var sessionId = Preferences.Get($"currentSession_{characterName}", 0);
+        var logEntry = new SpellCastLog
+        {
+            CastTime = DateTime.Now,
+            SpellName = spellName,
+            SpellLevel = spellLevel,
+            SessionId = sessionId,
+            FailedReason = reason
+        };
+
+        UpdateLogs(characterName, logEntry);
+    }
+
+    private void UpdateLogs(string characterName, SpellCastLog logEntry)
+    {
+        var logsJson = Preferences.Get($"spellLogs_{characterName}", "[]");
+        var logs = JsonConvert.DeserializeObject<List<SpellCastLog>>(logsJson) ?? new List<SpellCastLog>();
+        logs.Add(logEntry);
+        Preferences.Set($"spellLogs_{characterName}", JsonConvert.SerializeObject(logs));
+    }
+
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public void OnPropertyChanged(string propertyName)
