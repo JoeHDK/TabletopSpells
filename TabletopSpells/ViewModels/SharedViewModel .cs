@@ -2,13 +2,16 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Windows.Input;
-using TabletopSpells.Models; // Ensure this namespace contains the Character and Spell classes
+using TabletopSpells.Models;
 
 public class SharedViewModel : INotifyPropertyChanged
 {
     private static SharedViewModel? instance;
     public static SharedViewModel Instance => instance ?? (instance = new SharedViewModel());
+    public ObservableCollection<Grouping<int, SpellCastLog>> GroupedLogs { get; set; } = new ObservableCollection<Grouping<int, SpellCastLog>>();
+    
+    private Dictionary<string, ObservableCollection<Spell>> characterSpells = new Dictionary<string, ObservableCollection<Spell>>();
+
 
     private Character? currentCharacter;
     public Character? CurrentCharacter
@@ -28,7 +31,6 @@ public class SharedViewModel : INotifyPropertyChanged
         }
     }
 
-    private Dictionary<string, ObservableCollection<Spell>> characterSpells = new Dictionary<string, ObservableCollection<Spell>>();
     public Dictionary<string, ObservableCollection<Spell>> CharacterSpells
     {
         get => characterSpells;
@@ -125,6 +127,70 @@ public class SharedViewModel : INotifyPropertyChanged
 
         SaveSpellsPerDayDetails(CurrentCharacter.Name, CurrentCharacter.MaxSpellsPerDay, CurrentCharacter.SpellsUsedToday);
         OnPropertyChanged("CurrentCharacter"); // Make sure this triggers UI updates
+    }
+
+    public void LogSpellCast(string characterName, string spellName, int spellLevel)
+    {
+        var sessionId = Preferences.Get($"currentSession_{characterName}", 0);
+        var logEntry = new SpellCastLog
+        {
+            CastTime = DateTime.Now,
+            SpellName = spellName,
+            SpellLevel = spellLevel,
+            SessionId = sessionId
+        };
+
+        UpdateLogs(characterName, logEntry);
+    }
+
+    public void LogFailedSpellCast(string characterName, string spellName, int spellLevel, string reason)
+    {
+        var sessionId = Preferences.Get($"currentSession_{characterName}", 0);
+        var logEntry = new SpellCastLog
+        {
+            CastTime = DateTime.Now,
+            SpellName = spellName,
+            SpellLevel = spellLevel,
+            SessionId = sessionId,
+            FailedReason = reason
+        };
+
+        UpdateLogs(characterName, logEntry);
+    }
+
+    private void UpdateLogs(string characterName, SpellCastLog logEntry)
+    {
+        var logsJson = Preferences.Get($"spellLogs_{characterName}", "[]");
+        var logs = JsonConvert.DeserializeObject<List<SpellCastLog>>(logsJson) ?? new List<SpellCastLog>();
+        logs.Add(logEntry);
+        Preferences.Set($"spellLogs_{characterName}", JsonConvert.SerializeObject(logs));
+    }
+
+    public void LoadLogs(string characterName)
+    {
+        var logsJson = Preferences.Get($"spellLogs_{characterName}", "[]");
+        var logs = JsonConvert.DeserializeObject<List<SpellCastLog>>(logsJson);
+
+        // Clear existing logs to avoid duplication
+        GroupedLogs.Clear();
+
+        // Group logs by session ID or another relevant property
+        var groupedData = logs
+            .GroupBy(log => log.SessionId)
+            .OrderByDescending(group => group.Key)
+            .Select(group => new Grouping<int, SpellCastLog>(group.Key, group.OrderByDescending(log => log.CastTime)))
+            .ToList();
+
+        foreach (var log in logs)
+        {
+            Debug.WriteLine($"Log Time: {log.CastTime}, Name: {log.SpellName}");
+        }
+
+        foreach (var group in groupedData)
+        {
+            var newGroup = new Grouping<int, SpellCastLog>(group.Key, group);
+            GroupedLogs.Add(newGroup);
+        }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

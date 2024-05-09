@@ -38,6 +38,13 @@
                 BackgroundColor="green"
                 Margin="5"/>
 
+        <Button Text="Spell log"
+                Grid.Column="1"
+                Grid.Row="1"
+                Clicked="OnSpellLogSelected"
+                BackgroundColor="green"
+                Margin="5"/>
+
         <!--Remove Characters Button-->
         <Button Text="Delete character" 
                 Grid.Column="0" 

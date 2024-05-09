@@ -1,0 +1,40 @@
+﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TabletopSpells.Pages.SpellLogPage"
+             Title="Spell Log">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <DataTemplate x:Key="SpellLogHeaderTemplate">
+                <ViewCell>
+                    <Label Text="{Binding Key}" 
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"
+                           FontSize="Large"
+                           BackgroundColor="Transparent" 
+                           Padding="10"/>
+                </ViewCell>
+            </DataTemplate>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ListView x:Name="lvSpellLogs"
+              ItemsSource="{Binding GroupedLogs}"
+              IsGroupingEnabled="True"
+              GroupDisplayBinding="{Binding Key}"
+              GroupHeaderTemplate="{StaticResource SpellLogHeaderTemplate}"
+              VerticalOptions="FillAndExpand"
+              HasUnevenRows="True">
+        <ListView.ItemTemplate>
+            <DataTemplate>
+                <ViewCell>
+                    <StackLayout Orientation="Vertical">
+                        <Label Text="{Binding SpellName}" FontAttributes="Bold" TextColor="White"/>
+                        <Label Text="{Binding CastTime, StringFormat='{0:G}'}" TextColor="DarkGrey"/>
+                        <Label Text="{Binding FailedReason}" TextColor="Red"/>
+                    </StackLayout>
+                </ViewCell>
+            </DataTemplate>
+        </ListView.ItemTemplate>
+    </ListView>
+</ContentPage>

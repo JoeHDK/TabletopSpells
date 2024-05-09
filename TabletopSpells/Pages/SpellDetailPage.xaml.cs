@@ -79,12 +79,13 @@ public partial class SpellDetailPage : ContentPage
         {
             // Update the spells used information in the SharedViewModel
             SharedViewModel.Instance.SaveSpellsPerDayDetails(characterName, character.MaxSpellsPerDay, character.SpellsUsedToday);
-
+            SharedViewModel.Instance.LogSpellCast(characterName, spell.Name, spellLevel);
             DisplayAlert("Spell Cast", $"{spell.Name} has been cast.", "OK");
         }
         else
         {
-            DisplayAlert("Failed", "Unable to cast the spell, limit reached or invalid level.", "OK");
+            SharedViewModel.Instance.LogFailedSpellCast(characterName, spell.Name, spellLevel, "No slots available");
+            DisplayAlert("Failed", "404: Available spell slot not found", "OK");
         }
     }
 
