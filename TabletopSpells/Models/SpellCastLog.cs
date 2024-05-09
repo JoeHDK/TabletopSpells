@@ -1,4 +1,4 @@
-﻿namespace TabletopSpells.Models.Enums;
+﻿namespace TabletopSpells.Models;
 public class SpellCastLog
 {
     public DateTime CastTime

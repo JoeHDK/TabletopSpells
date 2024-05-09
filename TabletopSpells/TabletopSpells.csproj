@@ -89,6 +89,9 @@
 	  <Compile Update="Pages\CharacterOverviewPage.xaml.cs">
 	    <DependentUpon>CharacterOverviewPage.xaml</DependentUpon>
 	  </Compile>
+	  <Compile Update="Pages\SpellLogPage.xaml.cs">
+	    <DependentUpon>SpellLogPage.xaml</DependentUpon>
+	  </Compile>
 	  <Compile Update="Pages\SpellsPerDayPage.xaml.cs">
 	    <DependentUpon>SpellsPerDayPage.xaml</DependentUpon>
 	  </Compile>
@@ -97,6 +100,9 @@
 	<ItemGroup>
 	  <MauiXaml Update="Pages\CharacterOverviewPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Pages\SpellLogPage.xaml">
+	    <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Pages\SpellDetailPage.xaml">
 	    <Generator>MSBuild:UpdateDesignTimeXaml</Generator>

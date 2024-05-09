@@ -44,6 +44,11 @@ namespace TabletopSpells.Pages
             await Navigation.PushAsync(new SpellsPerDayPage());
         }
 
+        private async void OnSpellLogSelected(object sender, EventArgs e)
+        {
+            await Navigation.PushAsync(new SpellLogPage(CharacterName));
+        }
+
         [Obsolete]
         private async void OnDeleteCharacterClicked(object sender, EventArgs e)
         {

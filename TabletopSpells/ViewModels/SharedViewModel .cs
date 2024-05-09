@@ -8,6 +8,10 @@ public class SharedViewModel : INotifyPropertyChanged
 {
     private static SharedViewModel? instance;
     public static SharedViewModel Instance => instance ?? (instance = new SharedViewModel());
+    public ObservableCollection<Grouping<int, SpellCastLog>> GroupedLogs { get; set; } = new ObservableCollection<Grouping<int, SpellCastLog>>();
+    
+    private Dictionary<string, ObservableCollection<Spell>> characterSpells = new Dictionary<string, ObservableCollection<Spell>>();
+
 
     private Character? currentCharacter;
     public Character? CurrentCharacter
@@ -27,7 +31,6 @@ public class SharedViewModel : INotifyPropertyChanged
         }
     }
 
-    private Dictionary<string, ObservableCollection<Spell>> characterSpells = new Dictionary<string, ObservableCollection<Spell>>();
     public Dictionary<string, ObservableCollection<Spell>> CharacterSpells
     {
         get => characterSpells;
@@ -163,6 +166,32 @@ public class SharedViewModel : INotifyPropertyChanged
         Preferences.Set($"spellLogs_{characterName}", JsonConvert.SerializeObject(logs));
     }
 
+    public void LoadLogs(string characterName)
+    {
+        var logsJson = Preferences.Get($"spellLogs_{characterName}", "[]");
+        var logs = JsonConvert.DeserializeObject<List<SpellCastLog>>(logsJson);
+
+        // Clear existing logs to avoid duplication
+        GroupedLogs.Clear();
+
+        // Group logs by session ID or another relevant property
+        var groupedData = logs
+            .GroupBy(log => log.SessionId)
+            .OrderByDescending(group => group.Key)
+            .Select(group => new Grouping<int, SpellCastLog>(group.Key, group.OrderByDescending(log => log.CastTime)))
+            .ToList();
+
+        foreach (var log in logs)
+        {
+            Debug.WriteLine($"Log Time: {log.CastTime}, Name: {log.SpellName}");
+        }
+
+        foreach (var group in groupedData)
+        {
+            var newGroup = new Grouping<int, SpellCastLog>(group.Key, group);
+            GroupedLogs.Add(newGroup);
+        }
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public void OnPropertyChanged(string propertyName)
