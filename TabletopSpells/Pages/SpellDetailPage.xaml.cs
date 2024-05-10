@@ -84,7 +84,7 @@ public partial class SpellDetailPage : ContentPage
         }
         else
         {
-            SharedViewModel.Instance.LogFailedSpellCast(characterName, spell.Name, spellLevel, "No slots available");
+            SharedViewModel.Instance.LogFailedSpellCast(characterName, spell.Name, spellLevel, "No more spells of this level available");
             DisplayAlert("Failed", "404: Available spell slot not found", "OK");
         }
     }

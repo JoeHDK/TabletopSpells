@@ -56,10 +56,10 @@ public class Character
 
     public bool CastSpell(int spellLevel)
     {
-        if (!SpellsUsedToday.ContainsKey(spellLevel) || SpellsUsedToday[spellLevel] >= MaxSpellsPerDay[spellLevel])
-        {
+        if (spellLevel == 0 || spellLevel == -1)  
+            return true;
+        else if (!SpellsUsedToday.ContainsKey(spellLevel) || SpellsUsedToday[spellLevel] >= MaxSpellsPerDay[spellLevel])
             return false;
-        }
         
         SpellsUsedToday[spellLevel]++;
         return true;

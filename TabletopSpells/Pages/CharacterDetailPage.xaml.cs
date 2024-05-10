@@ -96,14 +96,14 @@ namespace TabletopSpells.Pages
             if (selectedSpell != null)
             {
                 int spellLevel = ParseSpellLevel(selectedSpell.SpellLevel, CharacterClass);
-                if (spellLevel >= 0) 
-                {
+                //if (spellLevel >= 0) 
+                //{
                     await Navigation.PushAsync(new SpellDetailPage(selectedSpell, CharacterName, spellLevel));
-                }
-                else
-                {
-                    await DisplayAlert("Error", "Failed to determine spell level for the selected spell.", "OK");
-                }
+                //}
+                //else
+                //{
+                //    await DisplayAlert("Error", "Failed to determine spell level for the selected spell.", "OK");
+                //}
             }
 
         ((CollectionView)sender).SelectedItem = null;

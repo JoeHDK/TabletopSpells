@@ -120,6 +120,10 @@ public class SharedViewModel : INotifyPropertyChanged
     {
         if (CurrentCharacter == null) return;
 
+        // Increment session ID on reset
+        var sessionId = Preferences.Get($"currentSession_{CurrentCharacter.Name}", 0);
+        Preferences.Set($"currentSession_{CurrentCharacter.Name}", sessionId + 1);
+
         foreach (var key in CurrentCharacter.SpellsUsedToday.Keys.ToList())
         {
             CurrentCharacter.SpellsUsedToday[key] = 0;
@@ -127,7 +131,11 @@ public class SharedViewModel : INotifyPropertyChanged
 
         SaveSpellsPerDayDetails(CurrentCharacter.Name, CurrentCharacter.MaxSpellsPerDay, CurrentCharacter.SpellsUsedToday);
         OnPropertyChanged("CurrentCharacter"); // Make sure this triggers UI updates
+
+        // Optionally notify that session has changed
+        OnPropertyChanged("SessionId");
     }
+
 
     public void LogSpellCast(string characterName, string spellName, int spellLevel)
     {

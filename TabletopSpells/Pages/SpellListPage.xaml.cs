@@ -236,14 +236,14 @@ public partial class SpellListPage : ContentPage
         if (selectedSpell != null)
         {
             int spellLevel = ParseSpellLevel(selectedSpell.SpellLevel, characterClass ?? "");
-            if (spellLevel >= 0)
-            {
+            //if (spellLevel >= 0)
+            //{
                 await Navigation.PushAsync(new SpellDetailPage(selectedSpell, characterName, spellLevel));
-            }
-            else
-            {
-                await DisplayAlert("Error", "Failed to determine spell level for the selected spell.", "OK");
-            }
+            //}
+            //else
+            //{
+            //    await DisplayAlert("Error", "Failed to determine spell level for the selected spell.", "OK");
+            //}
             
         ((CollectionView)sender).SelectedItem = null;
         }

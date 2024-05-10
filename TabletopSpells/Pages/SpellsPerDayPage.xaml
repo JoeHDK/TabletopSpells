@@ -15,12 +15,13 @@
                  Margin="10">
         <ListView x:Name="lvSpellsPerDay" 
                   ItemSelected="OnSpellLevelSelected"
-                  Margin="20">
+                  Margin="20"
+                  HasUnevenRows="True"
+                  VerticalScrollBarVisibility="Never">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <ViewCell>
                         <StackLayout Orientation="Vertical" 
-                                     Padding="10"
                                      HeightRequest="75">
                             <Label Text="{Binding DisplayText}" 
                                    FontAttributes="Bold"
