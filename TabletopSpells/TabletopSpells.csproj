@@ -27,7 +27,7 @@
 		<ApplicationId>com.companyname.tabletopspells</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+		<ApplicationDisplayVersion>1.1</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">11.0</SupportedOSPlatformVersion>
@@ -36,6 +36,10 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-android|AnyCPU'">
+	  <DebugSymbols>False</DebugSymbols>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -58,22 +62,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <AndroidResource Remove="NewFolder\**" />
-	  <Compile Remove="NewFolder\**" />
-	  <EmbeddedResource Remove="NewFolder\**" />
-	  <MauiCss Remove="NewFolder\**" />
-	  <MauiXaml Remove="NewFolder\**" />
-	  <None Remove="NewFolder\**" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <None Remove="Resources\Images\menu.png" />
 	  <None Remove="Resources\Images\menu2.png" />
 	  <None Remove="Resources\Images\search_icon_white.png" />
+	  <None Remove="Spells\dnd 5e.json" />
 	  <None Remove="Spells\Pathfinder1e.json" />
 	</ItemGroup>
 
 	<ItemGroup>
+	  <EmbeddedResource Include="Spells\dnd 5e.json" />
 	  <EmbeddedResource Include="Spells\Pathfinder1e.json" />
 	</ItemGroup>
 
@@ -89,6 +86,9 @@
 	  <Compile Update="Pages\CharacterOverviewPage.xaml.cs">
 	    <DependentUpon>CharacterOverviewPage.xaml</DependentUpon>
 	  </Compile>
+	  <Compile Update="Pages\CharacterSelectPage.xaml.cs">
+	    <DependentUpon>CharacterSelectPage.xaml</DependentUpon>
+	  </Compile>
 	  <Compile Update="Pages\SpellLogPage.xaml.cs">
 	    <DependentUpon>SpellLogPage.xaml</DependentUpon>
 	  </Compile>
@@ -99,6 +99,9 @@
 
 	<ItemGroup>
 	  <MauiXaml Update="Pages\CharacterOverviewPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Pages\CharacterSelectPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Pages\SpellLogPage.xaml">

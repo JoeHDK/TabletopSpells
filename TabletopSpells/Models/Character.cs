@@ -34,6 +34,11 @@ public class Character
         get; set;
     }
 
+    public string GameType
+    {
+        get; set;
+    }
+
     public Character()
     {
         Spells = new List<Spell>();

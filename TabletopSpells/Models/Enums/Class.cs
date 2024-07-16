@@ -18,5 +18,12 @@
         witch,
         alchemist,
         magus,
+        oracle,
+        shaman,
+        spiritualist,
+        occultist,
+        psychic,
+        mesmerist,
+        warlock,
     }
 }

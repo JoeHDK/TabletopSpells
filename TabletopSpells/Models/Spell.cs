@@ -57,6 +57,11 @@ public class Spell
     {
         get; set;
     }
+    [JsonProperty("ritual")]
+    public bool Ritual
+    {
+        get; set;
+    }
 
     // Additional fields can be added as needed
 }

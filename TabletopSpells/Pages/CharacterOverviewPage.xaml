@@ -3,7 +3,7 @@
              x:Class="TabletopSpells.Pages.CharacterOverviewPage"
              Title="Character Spells">
 
-    <Grid BackgroundColor="Black" Margin="10, 10, 0, 0">
+    <Grid BackgroundColor="Black" Margin="0, 10, 0, 0">
         <!-- Grid Row Definitions -->
         <Grid.RowDefinitions>
             <!-- Row 1 -->
