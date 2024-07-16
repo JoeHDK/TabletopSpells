@@ -4,48 +4,38 @@ namespace TabletopSpells.Helpers
 {
     public static class ClassHelper
     {
-        private static readonly Dictionary<Class, string> ClassGameMapping = new Dictionary<Class, string>
+        private static readonly Dictionary<Class, List<Game>> ClassGameMapping = new Dictionary<Class, List<Game>>
         {
-            { Class.barbarian, "Pathfinder 1e" },
-            { Class.bard, "Pathfinder 1e" },
-            { Class.cleric, "Pathfinder 1e" },
-            { Class.druid, "Pathfinder 1e" },
-            { Class.fighter, "Pathfinder 1e" },
-            { Class.monk, "Pathfinder 1e" },
-            { Class.paladin, "Pathfinder 1e" },
-            { Class.ranger, "Pathfinder 1e" },
-            { Class.rogue, "Pathfinder 1e" },
-            { Class.sorcerer, "Pathfinder 1e" },
-            { Class.wizard, "Pathfinder 1e" },
-            { Class.inquisitor, "Pathfinder 1e" },
-            { Class.summoner, "Pathfinder 1e" },
-            { Class.witch, "Pathfinder 1e" },
-            { Class.alchemist, "Pathfinder 1e" },
-            { Class.magus, "Pathfinder 1e" },
-            { Class.oracle, "Pathfinder 1e" },
-            { Class.shaman, "Pathfinder 1e" },
-            { Class.spiritualist, "Pathfinder 1e" },
-            { Class.occultist, "Pathfinder 1e" },
-            { Class.psychic, "Pathfinder 1e" },
-            { Class.mesmerist, "Pathfinder 1e" },
-            
-            { Class.barbarian, "dnd 5e" },
-            { Class.bard, "dnd 5e" },
-            { Class.cleric, "dnd 5e" },
-            { Class.druid, "dnd 5e" },
-            { Class.fighter, "dnd 5e" },
-            { Class.monk, "dnd 5e" },
-            { Class.paladin, "dnd 5e" },
-            { Class.ranger, "dnd 5e" },
-            { Class.rogue, "dnd 5e" },
-            { Class.sorcerer, "dnd 5e" },
-            { Class.wizard, "dnd 5e" },
-            { Class.warlock, "dnd 5e" },
+            // Classes for Pathfinder 1st edition
+            { Class.barbarian, new List<Game> { Game.pathfinder1e, Game.dnd5e } },
+            { Class.bard, new List<Game> { Game.pathfinder1e, Game.dnd5e } },
+            { Class.cleric, new List<Game> { Game.pathfinder1e, Game.dnd5e } },
+            { Class.druid, new List<Game> { Game.pathfinder1e, Game.dnd5e } },
+            { Class.fighter, new List<Game> { Game.pathfinder1e, Game.dnd5e } },
+            { Class.monk, new List<Game> { Game.pathfinder1e, Game.dnd5e } },
+            { Class.paladin, new List<Game> { Game.pathfinder1e, Game.dnd5e } },
+            { Class.ranger, new List<Game> { Game.pathfinder1e, Game.dnd5e } },
+            { Class.rogue, new List<Game> { Game.pathfinder1e, Game.dnd5e } },
+            { Class.sorcerer, new List<Game> { Game.pathfinder1e, Game.dnd5e } },
+            { Class.wizard, new List<Game> { Game.pathfinder1e, Game.dnd5e } },
+            { Class.warlock, new List<Game> { Game.pathfinder1e, Game.dnd5e } },
+            { Class.inquisitor, new List<Game> { Game.pathfinder1e} },
+            { Class.summoner, new List<Game> { Game.pathfinder1e} },
+            { Class.witch, new List<Game> { Game.pathfinder1e} },
+            { Class.alchemist, new List<Game> { Game.pathfinder1e} },
+            { Class.magus, new List<Game> { Game.pathfinder1e} },
+            { Class.oracle, new List<Game> { Game.pathfinder1e} },
+            { Class.shaman, new List<Game> { Game.pathfinder1e} },
+            { Class.spiritualist, new List<Game> { Game.pathfinder1e} },
+            { Class.occultist, new List<Game> { Game.pathfinder1e} },
+            { Class.psychic, new List<Game> { Game.pathfinder1e} },
+            { Class.mesmerist, new List<Game> { Game.pathfinder1e} },
+
         };
 
-        public static IEnumerable<Class> GetClassesByGame(string game)
+        public static IEnumerable<Class> GetClassesByGame(Game game)
         {
-            return ClassGameMapping.Where(kvp => kvp.Value == game).Select(kvp => kvp.Key);
+            return ClassGameMapping.Where(kvp => kvp.Value.Contains(game)).Select(kvp => kvp.Key);
         }
     }
 }

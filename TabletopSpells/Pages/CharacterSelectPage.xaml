@@ -12,6 +12,7 @@
 
         <!-- Character List -->
         <CollectionView x:Name="CharacterListView" Grid.Row="0"
+                        ItemsSource="{Binding Characters}"
                         SelectionMode="Single"
                         SelectionChanged="OnCharacterSelected">
             <CollectionView.ItemTemplate>

@@ -44,46 +44,46 @@ public class SharedViewModel : INotifyPropertyChanged
         }
     }
 
-    public void AddSpell(string characterName, Spell spell)
+    public void AddSpell(Character character, Spell spell)
     {
-        if (!CharacterSpells.ContainsKey(characterName))
+        if (!CharacterSpells.ContainsKey(character.Name))
         {
-            CharacterSpells[characterName] = new ObservableCollection<Spell>();
-            CharacterSpells[characterName].CollectionChanged += (s, e) => OnPropertyChanged(nameof(CharacterSpells));
+            CharacterSpells[character.Name] = new ObservableCollection<Spell>();
+            CharacterSpells[character.Name].CollectionChanged += (s, e) => OnPropertyChanged(nameof(CharacterSpells));
         }
 
-        if (!CharacterSpells[characterName].Any(s => s.Name == spell.Name))
+        if (!CharacterSpells[character.Name].Any(s => s.Name == spell.Name))
         {
-            CharacterSpells[characterName].Add(spell);
-            SaveSpellsForCharacter(characterName);
-        }
-    }
-
-    public void SaveSpellsForCharacter(string characterName)
-    {
-        if (CharacterSpells.ContainsKey(characterName))
-        {
-            var spellsJson = JsonConvert.SerializeObject(CharacterSpells[characterName]);
-            Preferences.Set($"spells_{characterName}", spellsJson);
+            CharacterSpells[character.Name].Add(spell);
+            SaveSpellsForCharacter(character);
         }
     }
 
-    public void LoadSpellsForCharacter(string characterName)
+    public void SaveSpellsForCharacter(Character character)
     {
-        var spellsJson = Preferences.Get($"spells_{characterName}", string.Empty);
+        if (CharacterSpells.ContainsKey(character.Name))
+        {
+            var spellsJson = JsonConvert.SerializeObject(CharacterSpells[character.Name]);
+            Preferences.Set($"spells_{character.Name}", spellsJson);
+        }
+    }
+
+    public void LoadSpellsForCharacter(Character character)
+    {
+        var spellsJson = Preferences.Get($"spells_{character.Name}", string.Empty);
         if (!string.IsNullOrEmpty(spellsJson))
         {
             var spells = JsonConvert.DeserializeObject<ObservableCollection<Spell>>(spellsJson);
             if (spells != null)
             {
-                CharacterSpells[characterName] = spells;
-                CharacterSpells[characterName].CollectionChanged += (s, e) => OnPropertyChanged(nameof(CharacterSpells));
+                CharacterSpells[character.Name] = spells;
+                CharacterSpells[character.Name].CollectionChanged += (s, e) => OnPropertyChanged(nameof(CharacterSpells));
             }
         }
         else
         {
-            CharacterSpells[characterName] = new ObservableCollection<Spell>();
-            CharacterSpells[characterName].CollectionChanged += (s, e) => OnPropertyChanged(nameof(CharacterSpells));
+            CharacterSpells[character.Name] = new ObservableCollection<Spell>();
+            CharacterSpells[character.Name].CollectionChanged += (s, e) => OnPropertyChanged(nameof(CharacterSpells));
         }
     }
 
@@ -174,9 +174,9 @@ public class SharedViewModel : INotifyPropertyChanged
         Preferences.Set($"spellLogs_{characterName}", JsonConvert.SerializeObject(logs));
     }
 
-    public void LoadLogs(string characterName)
+    public void LoadLogs(Character character)
     {
-        var logsJson = Preferences.Get($"spellLogs_{characterName}", "[]");
+        var logsJson = Preferences.Get($"spellLogs_{character.Name}", "[]");
         var logs = JsonConvert.DeserializeObject<List<SpellCastLog>>(logsJson);
 
         // Clear existing logs to avoid duplication

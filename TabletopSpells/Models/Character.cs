@@ -4,7 +4,7 @@ namespace TabletopSpells.Models;
 
 public class Character
 {
-    public int ID
+    public Guid? ID
     {
         get; set;
     }
@@ -34,7 +34,7 @@ public class Character
         get; set;
     }
 
-    public string GameType
+    public Game GameType
     {
         get; set;
     }

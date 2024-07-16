@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using TabletopSpells.Models;
 
 namespace TabletopSpells.Pages
 {
@@ -14,10 +15,7 @@ namespace TabletopSpells.Pages
         {
             get; set;
         }
-        private string CharacterName
-        {
-            get; set;
-        }
+        private Character character;
 
         protected override void OnAppearing()
         {
@@ -25,18 +23,18 @@ namespace TabletopSpells.Pages
             CreateList();
         }
 
-        public CharacterDetailPage(string characterName, SharedViewModel viewModel)
+        public CharacterDetailPage(Character character, SharedViewModel viewModel)
         {
             InitializeComponent();
-            CharacterName = characterName;
-            this.Title = $"{CharacterName}'s spells";
+            this.character = character;
+            this.Title = $"{character.Name}'s spells";
             ViewModel = viewModel;  // Use the passed viewModel
             this.CharacterClass = ViewModel.CurrentCharacter.CharacterClass.ToString();
 
             this.BindingContext = ViewModel;
-            ViewModel.LoadSpellsForCharacter(characterName);
-
-            if (ViewModel.CharacterSpells.ContainsKey(CharacterName))
+            ViewModel.LoadSpellsForCharacter(character);
+            
+            if (ViewModel.CharacterSpells.ContainsKey(character.Name))
             {
                 CreateList();
             }
@@ -47,13 +45,13 @@ namespace TabletopSpells.Pages
         {
             Device.BeginInvokeOnMainThread(async () =>
             {
-                await Navigation.PushAsync(new SpellListPage(CharacterName, CharacterClass));
+                await Navigation.PushAsync(new SpellListPage(character));
             });
         }
 
         private void CreateList()
         {
-            var groupedSpells = ViewModel.CharacterSpells[CharacterName]
+            var groupedSpells = ViewModel.CharacterSpells[character.Name]
                 .GroupBy(spell => ParseSpellLevel(spell.SpellLevel, CharacterClass))
                 .OrderBy(group => group.Key)
                 .Select(group => new { Level = group.Key, Spells = group.OrderBy(spell => spell.Name) }) // Add sorting by name within each level
@@ -98,7 +96,7 @@ namespace TabletopSpells.Pages
                 int spellLevel = ParseSpellLevel(selectedSpell.SpellLevel, CharacterClass);
                 //if (spellLevel >= 0) 
                 //{
-                    await Navigation.PushAsync(new SpellDetailPage(selectedSpell, CharacterName, spellLevel));
+                    await Navigation.PushAsync(new SpellDetailPage(selectedSpell, character, spellLevel));
                 //}
                 //else
                 //{

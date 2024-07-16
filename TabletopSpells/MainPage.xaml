@@ -8,52 +8,21 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-
-        <!-- Character List -->
-        <CollectionView x:Name="CharacterListView" Grid.Row="0"
-                        SelectionMode="Single"
-                        SelectionChanged="OnCharacterSelected">
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Grid Padding="10">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="1"/>
-                            <!-- For the divider line -->
-                        </Grid.RowDefinitions>
-
-                        <!-- Character Name Label -->
-                        <Label Text="{Binding Name}"
-                               FontSize="Title"
-                               FontAttributes="Bold"
-                               HorizontalTextAlignment="Center"
-                               Grid.Row="0"/>
-
-                        <!-- Character Class Label -->
-                        <Label Text="{Binding CharacterClass}"
-                               FontSize="Subtitle"
-                               HorizontalTextAlignment="Center"
-                               Grid.Row="1"/>
-
-                        <!-- Horizontal Divider Line -->
-                        <BoxView BackgroundColor="Gray"
-                                 HeightRequest="1"
-                                 Margin="0, 10, 0, 0"
-                                 Grid.Row="2"/>
-                    </Grid>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions >
 
         <!-- Create New Character Button -->
-        <StackLayout Grid.Row="1" Orientation="Horizontal" 
-                     HorizontalOptions="FillAndExpand">
-            <Button Text="Create New Character" 
+            <Button Grid.Row="1"
+                    Text="Pathfinder 1e" 
                     HorizontalOptions="FillAndExpand"
-                    Clicked="OnCreateNewCharacterClicked"
+                    Clicked="OnPathfinder1eSelected"
                     Margin="10, 0, 10, 0"/>
-        </StackLayout>
+
+            <Button Grid.Row="2" 
+                    Text="DnD 5e"
+                    HorizontalOptions="FillAndExpand"
+                    Clicked="OnDnd5eSelected"
+                    Margin="10, 0, 10, 0" />
     </Grid>
 </ContentPage>

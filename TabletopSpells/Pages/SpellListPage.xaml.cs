@@ -4,23 +4,22 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using TabletopSpells.Models;
 
 namespace TabletopSpells.Pages;
 [XamlCompilation(XamlCompilationOptions.Compile)]
 public partial class SpellListPage : ContentPage
 {
-    private string characterName;
-    private string characterClass;
+    private Character? character;
     private int? selectedSpellLevel = null;
     private string currentSearchText = "";
-    public SpellListPage(string characterName, string characterClass)
+    public SpellListPage(Character character)
     {
         InitializeComponent();
-        this.characterName = characterName;
-        this.characterClass = characterClass;
         Spells = new ObservableCollection<Spell>(GetAllSpellsFromJson());
         FilteredSpells = new ObservableCollection<Spell>(Spells);
         BindingContext = this;
+        this.character = character;
     }
 
     public ObservableCollection<Spell> Spells
@@ -131,9 +130,9 @@ public partial class SpellListPage : ContentPage
     {
         var filtered = Spells.Where(spell =>
             (string.IsNullOrEmpty(currentSearchText) || spell.Name.ToLower().Contains(currentSearchText)) &&
-            (!selectedSpellLevel.HasValue || ParseSpellLevel(spell.SpellLevel, characterClass ?? "") == selectedSpellLevel.Value)
+            (!selectedSpellLevel.HasValue || ParseSpellLevel(spell.SpellLevel, character.CharacterClass.ToString() ?? "") == selectedSpellLevel.Value)
         ).OrderBy(spell => spell.Name).ToList(); // Sort here and convert to list once
-
+        
         FilteredSpells.Clear();
         foreach (var spell in filtered)
         {
@@ -235,10 +234,10 @@ public partial class SpellListPage : ContentPage
         var selectedSpell = e.CurrentSelection.FirstOrDefault() as Spell;
         if (selectedSpell != null)
         {
-            int spellLevel = ParseSpellLevel(selectedSpell.SpellLevel, characterClass ?? "");
+            int spellLevel = ParseSpellLevel(selectedSpell.SpellLevel, character.CharacterClass.ToString() ?? "");
             //if (spellLevel >= 0)
             //{
-                await Navigation.PushAsync(new SpellDetailPage(selectedSpell, characterName, spellLevel));
+                await Navigation.PushAsync(new SpellDetailPage(selectedSpell, character, spellLevel));
             //}
             //else
             //{

@@ -1,42 +1,44 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Linq;
-using System.Text.RegularExpressions;
 using TabletopSpells.Models;
+using TabletopSpells.Models.Enums;
 
 namespace TabletopSpells.Pages
 {
     public partial class CharacterOverviewPage : ContentPage
     {
+        public Character character;
+        public Game gameType;
         public ObservableCollection<string> Spells
         {
             get; private set;
         }
 
         private SharedViewModel ViewModel;
-        private string CharacterName;
 
         protected override void OnAppearing()
         {
             base.OnAppearing();
         }
 
-        public CharacterOverviewPage(string characterName, SharedViewModel viewModel)
+        public CharacterOverviewPage(Character character, SharedViewModel viewModel, Game gameType)
         {
             InitializeComponent();
-            CharacterName = characterName;
-            this.Title = $"{CharacterName}'s home";
+            this.character = character;
+            this.Title = $"{character.Name}'s home";
             ViewModel = viewModel;  // Use the passed viewModel
 
             this.BindingContext = ViewModel;
-            ViewModel.LoadSpellsForCharacter(characterName);
+            ViewModel.LoadSpellsForCharacter(character);
+
+            this.gameType = gameType;
         }
 
         [Obsolete]
         private async void OnCharacterSelected(object sender, EventArgs e)
         {
-            await Navigation.PushAsync(new CharacterDetailPage(CharacterName, SharedViewModel.Instance));
+            await Navigation.PushAsync(new CharacterDetailPage(character, SharedViewModel.Instance));
         }
 
         private async void OnSpellPerDaySelected(object sender, EventArgs e)
@@ -46,7 +48,7 @@ namespace TabletopSpells.Pages
 
         private async void OnSpellLogSelected(object sender, EventArgs e)
         {
-            await Navigation.PushAsync(new SpellLogPage(CharacterName));
+            await Navigation.PushAsync(new SpellLogPage(character));
         }
 
         [Obsolete]
@@ -54,14 +56,14 @@ namespace TabletopSpells.Pages
         {
             bool deleteConfirmed = await DisplayAlert(
                 "Confirm Delete",
-                $"Are you sure you want to delete {CharacterName}?",
+                $"Are you sure you want to delete {character.Name}?",
                 "Yes",
                 "No"
             );
 
             if (deleteConfirmed)
             {
-                await DeleteCharacter(CharacterName);
+                await DeleteCharacter(character);
                 Device.BeginInvokeOnMainThread(async () =>
                 {
                     await Navigation.PopAsync();
@@ -69,29 +71,29 @@ namespace TabletopSpells.Pages
             }
         }
 
-        private async Task DeleteCharacter(string characterName)
+        private async Task DeleteCharacter(Character character)
         {
             try
             {
                 string existingCharactersJson = Preferences.Get("characters", "[]");
                 var characters = JsonConvert.DeserializeObject<List<Character>>(existingCharactersJson);
 
-                var characterToRemove = characters.FirstOrDefault(c => c.Name == characterName);
+                var characterToRemove = characters.FirstOrDefault(c => c.ID == character.ID);
                 if (characterToRemove != null)
                 {
                     characters.Remove(characterToRemove);
                     string updatedCharactersJson = JsonConvert.SerializeObject(characters);
                     Preferences.Set("characters", updatedCharactersJson);
 
-                    ViewModel.CharacterSpells.Remove(characterName);
-                    Preferences.Remove($"spells_{characterName}");
-
+                    ViewModel.CharacterSpells.Remove(character.Name);
+                    Preferences.Remove($"spells_{character.Name}");
+                    
                     ViewModel.OnPropertyChanged(nameof(ViewModel.CharacterSpells));
-                    await DisplayAlert("Success", $"{characterName} has been removed.", "OK");
+                    await DisplayAlert("Success", $"{character.Name} has been removed.", "OK");
                 }
                 else
                 {
-                    await DisplayAlert("Error", $"Character '{characterName}' not found.", "OK");
+                    await DisplayAlert("Error", $"Character '{character.Name}' not found.", "OK");
                 }
             }
             catch (Exception ex)
