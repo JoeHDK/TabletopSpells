@@ -1,17 +1,20 @@
 ﻿using TabletopSpells.Models;
+using TabletopSpells.Models.Enums;
 
 namespace TabletopSpells.Pages;
 public partial class SpellDetailPage : ContentPage
 {
+    private Game gameType;
     private readonly Spell spell;
     private Character character;
     private readonly int spellLevel;
     private bool spellIsKnown;
     
-    public SpellDetailPage(Spell spell, Character character, int spellLevel)
+    public SpellDetailPage(Spell spell, Character character, int spellLevel, Game gameType)
     {
         InitializeComponent();
         this.spell = spell;
+        this.gameType = gameType;
         this.character = character;
         this.BindingContext = spell;
         this.spellLevel = spellLevel;
@@ -80,13 +83,13 @@ public partial class SpellDetailPage : ContentPage
         if (success)
         {
             // Update the spells used information in the SharedViewModel
-            SharedViewModel.Instance.SaveSpellsPerDayDetails(character.Name, character.MaxSpellsPerDay, character.SpellsUsedToday);
-            SharedViewModel.Instance.LogSpellCast(character.Name, spell.Name, spellLevel);
+            SharedViewModel.Instance.SaveSpellsPerDayDetails(character, character.MaxSpellsPerDay, character.SpellsUsedToday);
+            SharedViewModel.Instance.LogSpellCast(character, spell.Name, spellLevel);
             DisplayAlert("Spell Cast", $"{spell.Name} has been cast.", "OK");
         }
         else
         {
-            SharedViewModel.Instance.LogFailedSpellCast(character.Name, spell.Name, spellLevel, "No more spells of this level available");
+            SharedViewModel.Instance.LogFailedSpellCast(character, spell.Name, spellLevel, "No more spells of this level available");
             DisplayAlert("Failed", "404: Available spell slot not found", "OK");
         }
     }

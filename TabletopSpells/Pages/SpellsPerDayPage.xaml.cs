@@ -56,7 +56,7 @@ public partial class SpellsPerDayPage : ContentPage
         }
 
         // Save any changes if defaults were added
-        SharedViewModel.Instance.SaveSpellsPerDayDetails(character.Name, character.MaxSpellsPerDay, character.SpellsUsedToday);
+        SharedViewModel.Instance.SaveSpellsPerDayDetails(character, character.MaxSpellsPerDay, character.SpellsUsedToday);
     }
 
     private async void OnSpellLevelSelected(object sender, SelectedItemChangedEventArgs e)
@@ -84,7 +84,7 @@ public partial class SpellsPerDayPage : ContentPage
                 if (character != null)
                 {
                     character.MaxSpellsPerDay[selectedLevel.Level] = newMax;
-                    SharedViewModel.Instance.SaveSpellsPerDayDetails(character.Name,
+                    SharedViewModel.Instance.SaveSpellsPerDayDetails(character,
                                                                     character.MaxSpellsPerDay,
                                                                     character.SpellsUsedToday);
                 }

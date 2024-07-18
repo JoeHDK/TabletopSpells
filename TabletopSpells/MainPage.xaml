@@ -6,23 +6,31 @@
     <Grid BackgroundColor="Black" Margin="10, 10, 0, 0">
         <!-- Grid Row Definitions -->
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions >
 
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
         <!-- Create New Character Button -->
-            <Button Grid.Row="1"
+            <Button Grid.Row="0" 
+                    BackgroundColor="Green"
+                    Grid.Column="0"
                     Text="Pathfinder 1e" 
                     HorizontalOptions="FillAndExpand"
                     Clicked="OnPathfinder1eSelected"
-                    Margin="10, 0, 10, 0"/>
+                    Margin="0, 0, 10, 0"
+                    HeightRequest="75"/>
 
-            <Button Grid.Row="2" 
+            <Button Grid.Row="0" 
+                    BackgroundColor="Green"
+                    Grid.Column="1"
                     Text="DnD 5e"
                     HorizontalOptions="FillAndExpand"
                     Clicked="OnDnd5eSelected"
-                    Margin="10, 0, 10, 0" />
+                    Margin="0, 0, 10, 0" />
     </Grid>
 </ContentPage>

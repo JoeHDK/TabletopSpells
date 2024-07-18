@@ -38,7 +38,7 @@ namespace TabletopSpells.Pages
         [Obsolete]
         private async void OnCharacterSelected(object sender, EventArgs e)
         {
-            await Navigation.PushAsync(new CharacterDetailPage(character, SharedViewModel.Instance));
+            await Navigation.PushAsync(new CharacterDetailPage(character, SharedViewModel.Instance, gameType));
         }
 
         private async void OnSpellPerDaySelected(object sender, EventArgs e)

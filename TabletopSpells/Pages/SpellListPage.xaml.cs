@@ -5,18 +5,21 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using TabletopSpells.Models;
+using TabletopSpells.Models.Enums;
 
 namespace TabletopSpells.Pages;
 [XamlCompilation(XamlCompilationOptions.Compile)]
 public partial class SpellListPage : ContentPage
 {
+    private Game gameType;
     private Character? character;
     private int? selectedSpellLevel = null;
     private string currentSearchText = "";
-    public SpellListPage(Character character)
+    public SpellListPage(Character character, Game gameType)
     {
         InitializeComponent();
-        Spells = new ObservableCollection<Spell>(GetAllSpellsFromJson());
+        this.gameType = gameType;
+        Spells = new ObservableCollection<Spell>(GetAllSpellsFromJson(gameType));
         FilteredSpells = new ObservableCollection<Spell>(Spells);
         BindingContext = this;
         this.character = character;
@@ -132,7 +135,7 @@ public partial class SpellListPage : ContentPage
             (string.IsNullOrEmpty(currentSearchText) || spell.Name.ToLower().Contains(currentSearchText)) &&
             (!selectedSpellLevel.HasValue || ParseSpellLevel(spell.SpellLevel, character.CharacterClass.ToString() ?? "") == selectedSpellLevel.Value)
         ).OrderBy(spell => spell.Name).ToList(); // Sort here and convert to list once
-        
+
         FilteredSpells.Clear();
         foreach (var spell in filtered)
         {
@@ -183,14 +186,26 @@ public partial class SpellListPage : ContentPage
         Debug.WriteLine($"Class {characterClass} not found in spellLevel '{spellLevel}'.");
         return -1; // Return an invalid level if not found
     }
+    
 
-
-    private List<Spell> GetAllSpellsFromJson()
+    private List<Spell> GetAllSpellsFromJson(Game gameType)
     {
         try
         {
+            Stream? stream = null;
             var assembly = IntrospectionExtensions.GetTypeInfo(typeof(App)).Assembly;
-            Stream? stream = assembly.GetManifestResourceStream("TabletopSpells.Spells.Pathfinder1e.json");
+            switch (gameType)
+            {
+                case Game.pathfinder1e:
+                    stream = assembly.GetManifestResourceStream("TabletopSpells.Spells.Pathfinder1e.json");
+                    break;
+                case Game.dnd5e:
+                    stream = assembly.GetManifestResourceStream("TabletopSpells.Spells.dnd 5e.json");
+                    break;
+                default:
+                    stream = null;
+                    break;
+            }
 
             if (stream == null)
             {
@@ -235,16 +250,10 @@ public partial class SpellListPage : ContentPage
         if (selectedSpell != null)
         {
             int spellLevel = ParseSpellLevel(selectedSpell.SpellLevel, character.CharacterClass.ToString() ?? "");
-            //if (spellLevel >= 0)
-            //{
-                await Navigation.PushAsync(new SpellDetailPage(selectedSpell, character, spellLevel));
-            //}
-            //else
-            //{
-            //    await DisplayAlert("Error", "Failed to determine spell level for the selected spell.", "OK");
-            //}
             
-        ((CollectionView)sender).SelectedItem = null;
+            await Navigation.PushAsync(new SpellDetailPage(selectedSpell, character, spellLevel, gameType));
+            
+            ((CollectionView)sender).SelectedItem = null;
         }
     }
 }

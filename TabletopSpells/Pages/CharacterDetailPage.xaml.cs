@@ -2,11 +2,13 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using TabletopSpells.Models;
+using TabletopSpells.Models.Enums;
 
 namespace TabletopSpells.Pages
 {
     public partial class CharacterDetailPage : ContentPage
     {
+        private Game gameType;
         private string CharacterClass
         {
             get;
@@ -23,9 +25,10 @@ namespace TabletopSpells.Pages
             CreateList();
         }
 
-        public CharacterDetailPage(Character character, SharedViewModel viewModel)
+        public CharacterDetailPage(Character character, SharedViewModel viewModel, Game gameType)
         {
             InitializeComponent();
+            this.gameType = gameType;
             this.character = character;
             this.Title = $"{character.Name}'s spells";
             ViewModel = viewModel;  // Use the passed viewModel
@@ -45,7 +48,7 @@ namespace TabletopSpells.Pages
         {
             Device.BeginInvokeOnMainThread(async () =>
             {
-                await Navigation.PushAsync(new SpellListPage(character));
+                await Navigation.PushAsync(new SpellListPage(character, gameType));
             });
         }
 
@@ -96,7 +99,7 @@ namespace TabletopSpells.Pages
                 int spellLevel = ParseSpellLevel(selectedSpell.SpellLevel, CharacterClass);
                 //if (spellLevel >= 0) 
                 //{
-                    await Navigation.PushAsync(new SpellDetailPage(selectedSpell, character, spellLevel));
+                    await Navigation.PushAsync(new SpellDetailPage(selectedSpell, character, spellLevel, gameType));
                 //}
                 //else
                 //{

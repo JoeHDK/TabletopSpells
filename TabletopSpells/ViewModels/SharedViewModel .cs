@@ -87,15 +87,15 @@ public class SharedViewModel : INotifyPropertyChanged
         }
     }
 
-    public void SaveSpellsPerDayDetails(string characterName, Dictionary<int, int> maxSpellsPerDay, Dictionary<int, int> spellsUsedToday)
+    public void SaveSpellsPerDayDetails(Character character, Dictionary<int, int> maxSpellsPerDay, Dictionary<int, int> spellsUsedToday)
     {
         try
         {
             var maxSpellsJson = JsonConvert.SerializeObject(maxSpellsPerDay);
-            Preferences.Set($"maxSpells_{characterName}", maxSpellsJson);
+            Preferences.Set($"maxSpells_{character.ID}", maxSpellsJson);
 
             var usedSpellsJson = JsonConvert.SerializeObject(spellsUsedToday);
-            Preferences.Set($"usedSpells_{characterName}", usedSpellsJson);
+            Preferences.Set($"usedSpells_{character.ID}", usedSpellsJson);
         }
         catch (Exception ex)
         {
@@ -108,9 +108,9 @@ public class SharedViewModel : INotifyPropertyChanged
     public void LoadSpellsPerDayDetails(Character character)
     {
         if (character == null) return;
-
-        var maxSpellsJson = Preferences.Get($"maxSpells_{character.Name}", "{}");
-        var usedSpellsJson = Preferences.Get($"usedSpells_{character.Name}", "{}");
+        
+        var maxSpellsJson = Preferences.Get($"maxSpells_{character.ID}", "{}");
+        var usedSpellsJson = Preferences.Get($"usedSpells_{character.ID}", "{}");
 
         character.MaxSpellsPerDay = JsonConvert.DeserializeObject<Dictionary<int, int>>(maxSpellsJson) ?? new Dictionary<int, int>();
         character.SpellsUsedToday = JsonConvert.DeserializeObject<Dictionary<int, int>>(usedSpellsJson) ?? new Dictionary<int, int>();
@@ -121,15 +121,15 @@ public class SharedViewModel : INotifyPropertyChanged
         if (CurrentCharacter == null) return;
 
         // Increment session ID on reset
-        var sessionId = Preferences.Get($"currentSession_{CurrentCharacter.Name}", 0);
-        Preferences.Set($"currentSession_{CurrentCharacter.Name}", sessionId + 1);
-
+        var sessionId = Preferences.Get($"currentSession_{CurrentCharacter.ID}", 0);
+        Preferences.Set($"currentSession_{CurrentCharacter.ID}", sessionId + 1);
+        
         foreach (var key in CurrentCharacter.SpellsUsedToday.Keys.ToList())
         {
             CurrentCharacter.SpellsUsedToday[key] = 0;
         }
 
-        SaveSpellsPerDayDetails(CurrentCharacter.Name, CurrentCharacter.MaxSpellsPerDay, CurrentCharacter.SpellsUsedToday);
+        SaveSpellsPerDayDetails(CurrentCharacter, CurrentCharacter.MaxSpellsPerDay, CurrentCharacter.SpellsUsedToday);
         OnPropertyChanged("CurrentCharacter"); // Make sure this triggers UI updates
 
         // Optionally notify that session has changed
@@ -137,9 +137,9 @@ public class SharedViewModel : INotifyPropertyChanged
     }
 
 
-    public void LogSpellCast(string characterName, string spellName, int spellLevel)
+    public void LogSpellCast(Character character, string spellName, int spellLevel)
     {
-        var sessionId = Preferences.Get($"currentSession_{characterName}", 0);
+        var sessionId = Preferences.Get($"currentSession_{character.ID}", 0);
         var logEntry = new SpellCastLog
         {
             CastTime = DateTime.Now,
@@ -148,12 +148,12 @@ public class SharedViewModel : INotifyPropertyChanged
             SessionId = sessionId
         };
 
-        UpdateLogs(characterName, logEntry);
+        UpdateLogs(character.Name, logEntry);
     }
 
-    public void LogFailedSpellCast(string characterName, string spellName, int spellLevel, string reason)
+    public void LogFailedSpellCast(Character character, string spellName, int spellLevel, string reason)
     {
-        var sessionId = Preferences.Get($"currentSession_{characterName}", 0);
+        var sessionId = Preferences.Get($"currentSession_{character.ID}", 0);
         var logEntry = new SpellCastLog
         {
             CastTime = DateTime.Now,
@@ -163,7 +163,7 @@ public class SharedViewModel : INotifyPropertyChanged
             FailedReason = reason
         };
 
-        UpdateLogs(characterName, logEntry);
+        UpdateLogs(character.Name, logEntry);
     }
 
     private void UpdateLogs(string characterName, SpellCastLog logEntry)
