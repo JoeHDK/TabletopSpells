@@ -32,8 +32,8 @@ function Transform-Spell($spell) {
         $description += " " + $spell.higher_levels
     }
     if ($spell.ritual) {
-        $ritualText = "A ritual spell can be cast following the normal rules for spellcasting, or the spell can be cast as a ritual. The ritual version of a spell takes 10 minutes longer to cast than normal. It also doesn’t expend a spell slot, which means the ritual version of a spell can’t be cast at a higher level."
-        $description += " " + $ritualText
+        $ritualText = "`n`nA ritual spell can be cast following the normal rules for spellcasting, or the spell can be cast as a ritual. The ritual version of a spell takes 10 minutes longer to cast than normal. It also doesn't expend a spell slot, which means the ritual version of a spell can't be cast at a higher level."
+        $description += $ritualText
     }
 
     # Extract saving throw from description

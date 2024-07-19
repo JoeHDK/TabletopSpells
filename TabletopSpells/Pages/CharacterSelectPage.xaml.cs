@@ -37,9 +37,9 @@ public partial class CharacterSelectPage : ContentPage
     {
         Characters.Clear();  // Clear existing items
         var characters = GetExistingCharacters();
-
+        
         bool charactersUpdated = false;
-
+        
         foreach (var character in characters)
         {
             // Assign an ID if it is null
