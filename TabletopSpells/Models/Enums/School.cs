@@ -2,13 +2,13 @@
 {
     public enum School
     {
-        abjuration,
-        conjuration,
-        divination,
-        enchantment,
-        evocation,
-        illusion,
-        necromancy,
-        transmutation,
+        Abjuration,
+        Conjuration,
+        Divination,
+        Enchantment,
+        Evocation,
+        Illusion,
+        Necromancy,
+        Transmutation,
     }
 }

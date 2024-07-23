@@ -85,8 +85,8 @@ namespace TabletopSpells.Pages
                     string updatedCharactersJson = JsonConvert.SerializeObject(characters);
                     Preferences.Set("characters", updatedCharactersJson);
 
-                    ViewModel.CharacterSpells.Remove(character.Name);
-                    Preferences.Remove($"spells_{character.Name}");
+                    ViewModel.CharacterSpells.Remove(character.ID);
+                    Preferences.Remove($"spells_{character.ID}");
                     
                     ViewModel.OnPropertyChanged(nameof(ViewModel.CharacterSpells));
                     await DisplayAlert("Success", $"{character.Name} has been removed.", "OK");

@@ -4,10 +4,8 @@
              Title="{Binding Name}">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem x:Name="CastSpellButton"
-                     IsEnabled="False"
-                     Clicked="OnCastSpellClicked" 
-                     Priority="0" 
+        <ToolbarItem x:Name="AddOrRemoveButton"
+                     Priority="0"
                      Order="Primary"/>
     </ContentPage.ToolbarItems>
 
@@ -20,117 +18,159 @@
         <ScrollView>
             <StackLayout Padding="10">
                 <!-- School -->
-                <StackLayout Orientation="Horizontal">
-                    <Label Text="School: " 
-                           FontAttributes="Bold"/>
-                    <Label Text="{Binding School}" />
+                <StackLayout Margin="0,0,0,10">
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="School: " FontAttributes="Bold"/>
+                                <Span Text="{Binding School}"/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
                 </StackLayout>
 
                 <!-- Level -->
-                <StackLayout Orientation="Horizontal">
-                    <Label Text="Level: " 
-                           FontAttributes="Bold"/>
-                    <Label Text="{Binding SpellLevel}" 
-                       LineBreakMode="WordWrap"
-                       HorizontalOptions="FillAndExpand"/>
+                <StackLayout Margin="0,0,0,10">
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Level: " FontAttributes="Bold"/>
+                                <Span Text="{Binding SpellLevel}"/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
                 </StackLayout>
 
                 <!-- Casting Time -->
-                <StackLayout Orientation="Horizontal">
-                    <Label Text="Casting Time: " 
-                           FontAttributes="Bold"/>
-                    <Label Text="{Binding CastingTime}" 
-                       LineBreakMode="WordWrap"
-                       HorizontalOptions="FillAndExpand"/>
+                <StackLayout Margin="0,0,0,10">
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Casting Time: " FontAttributes="Bold"/>
+                                <Span Text="{Binding CastingTime}"/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
                 </StackLayout>
 
                 <!-- Components -->
-                <StackLayout Orientation="Horizontal">
-                    <Label Text="Components: " 
-                           FontAttributes="Bold"/>
-                    <Label Text="{Binding Components}" 
-                       LineBreakMode="WordWrap"
-                       HorizontalOptions="FillAndExpand"/>
+                <StackLayout Margin="0,0,0,10">
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Components: " FontAttributes="Bold"/>
+                                <Span Text="{Binding Components}"/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
                 </StackLayout>
 
                 <!-- Range -->
-                <StackLayout Orientation="Horizontal">
-                    <Label Text="Range: " 
-                           FontAttributes="Bold"/>
-                    <Label Text="{Binding Range}" 
-                       LineBreakMode="WordWrap"
-                       HorizontalOptions="FillAndExpand"/>
+                <StackLayout Margin="0,0,0,10">
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Range: " FontAttributes="Bold"/>
+                                <Span Text="{Binding Range}"/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
                 </StackLayout>
 
                 <!-- Effect -->
-                <StackLayout Orientation="Horizontal">
-                    <Label Text="Effect: " 
-                           FontAttributes="Bold"/>
-                    <Label Text="{Binding Effect}" 
-                       LineBreakMode="WordWrap"
-                       HorizontalOptions="FillAndExpand"/>
+                <StackLayout Margin="0,0,0,10">
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Effect: " FontAttributes="Bold"/>
+                                <Span Text="{Binding Effect}"/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
                 </StackLayout>
 
                 <!-- Targets -->
-                <StackLayout Orientation="Horizontal">
-                    <Label Text="Targets: " 
-                           FontAttributes="Bold"/>
-                    <Label Text="{Binding Targets}" 
-                       LineBreakMode="WordWrap"
-                       HorizontalOptions="FillAndExpand"/>
+                <StackLayout Margin="0,0,0,10">
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Targets: " FontAttributes="Bold"/>
+                                <Span Text="{Binding Targets}"/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
                 </StackLayout>
 
                 <!-- Duration -->
-                <StackLayout Orientation="Horizontal">
-                    <Label Text="Duration: " 
-                           FontAttributes="Bold"/>
-                    <Label Text="{Binding Duration}" 
-                       LineBreakMode="WordWrap"
-                       HorizontalOptions="FillAndExpand"/>
+                <StackLayout Margin="0,0,0,10">
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Duration: " FontAttributes="Bold"/>
+                                <Span Text="{Binding Duration}"/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
                 </StackLayout>
 
                 <!-- Saving Throw -->
-                <StackLayout Orientation="Horizontal">
-                    <Label Text="Saving Throw: " 
-                           FontAttributes="Bold"/>
-                    <Label Text="{Binding SavingThrow}" 
-                           LineBreakMode="WordWrap"
-                           HorizontalOptions="FillAndExpand"/>
+                <StackLayout Margin="0,0,0,10">
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Saving Throw: " FontAttributes="Bold"/>
+                                <Span Text="{Binding SavingThrow}"/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
                 </StackLayout>
 
                 <!-- Source -->
-                <StackLayout Orientation="Horizontal">
-                    <Label Text="Source: " 
-                           FontAttributes="Bold"/>
-                    <Label Text="{Binding Source}" 
-                       LineBreakMode="WordWrap"
-                       HorizontalOptions="FillAndExpand"/>
+                <StackLayout Margin="0,0,0,10">
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Source: " FontAttributes="Bold"/>
+                                <Span Text="{Binding Source}"/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
                 </StackLayout>
 
                 <!-- Description -->
-                <StackLayout>
-                    <Label Text="Description: " 
-                           FontAttributes="Bold"/>
-                    <Label Text="{Binding Description}" 
-                       LineBreakMode="WordWrap" 
-                       HorizontalOptions="FillAndExpand" />
+                <StackLayout Margin="0,0,0,10">
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Description: " FontAttributes="Bold"/>
+                                <Span Text="{Binding Description}"/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
                 </StackLayout>
 
-                <StackLayout Orientation="Horizontal">
-                    <Label Text="Ritual: "
-                           FontAttributes="Bold"/>
-                    <Label Text="{Binding Ritual}"
-                           LineBreakMode="WordWrap"
-                           HorizontalOptions="FillAndExpand" />
+                <!-- Ritual -->
+                <StackLayout Margin="0,0,0,10">
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Ritual: " FontAttributes="Bold"/>
+                                <Span Text="{Binding Ritual}"/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
                 </StackLayout>
             </StackLayout>
         </ScrollView>
-        <Button x:Name="AddOrRemoveButton"
-                Text="Remove Spell"
+        <Button x:Name="CastSpellButton"
+                Text="Cast Spell"
                 HorizontalOptions="FillAndExpand"
                 VerticalOptions="End"
                 Grid.Row="1"
                 CornerRadius="25"
-                Margin="100, 0, 100, 5" />
+                Margin="100, 0, 100, 5" 
+                IsEnabled="False"
+                IsVisible="False"
+                Clicked="OnCastSpellClicked"/>
     </Grid>
 </ContentPage>

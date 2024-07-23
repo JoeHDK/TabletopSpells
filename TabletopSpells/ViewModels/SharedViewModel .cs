@@ -9,9 +9,8 @@ public class SharedViewModel : INotifyPropertyChanged
     private static SharedViewModel? instance;
     public static SharedViewModel Instance => instance ?? (instance = new SharedViewModel());
     public ObservableCollection<Grouping<int, SpellCastLog>> GroupedLogs { get; set; } = new ObservableCollection<Grouping<int, SpellCastLog>>();
-    
-    private Dictionary<string, ObservableCollection<Spell>> characterSpells = new Dictionary<string, ObservableCollection<Spell>>();
 
+    private Dictionary<Guid?, ObservableCollection<Spell>> characterSpells = new Dictionary<Guid?, ObservableCollection<Spell>>();
 
     private Character? currentCharacter;
     public Character? CurrentCharacter
@@ -26,12 +25,13 @@ public class SharedViewModel : INotifyPropertyChanged
                 if (currentCharacter != null)
                 {
                     LoadSpellsPerDayDetails(currentCharacter);  // Load spell details directly into the character
+                    MigrateSpellsIfNeeded(currentCharacter);    // Migrate spells from name-based keys to ID-based keys
                 }
             }
         }
     }
 
-    public Dictionary<string, ObservableCollection<Spell>> CharacterSpells
+    public Dictionary<Guid?, ObservableCollection<Spell>> CharacterSpells
     {
         get => characterSpells;
         set
@@ -44,47 +44,101 @@ public class SharedViewModel : INotifyPropertyChanged
         }
     }
 
-    public void AddSpell(Character character, Spell spell)
+    private void MigrateSpellsIfNeeded(Character character)
     {
-        if (!CharacterSpells.ContainsKey(character.Name))
+        var oldSpellKeys = Preferences.Get($"spellKeys_{character.Name}", string.Empty).Split(',').Where(key => !string.IsNullOrWhiteSpace(key)).ToList();
+        if (oldSpellKeys.Any())
         {
-            CharacterSpells[character.Name] = new ObservableCollection<Spell>();
-            CharacterSpells[character.Name].CollectionChanged += (s, e) => OnPropertyChanged(nameof(CharacterSpells));
-        }
+            var spells = new ObservableCollection<Spell>();
 
-        if (!CharacterSpells[character.Name].Any(s => s.Name == spell.Name))
-        {
-            CharacterSpells[character.Name].Add(spell);
-            SaveSpellsForCharacter(character);
+            foreach (var key in oldSpellKeys)
+            {
+                var compressedSpellJson = Preferences.Get(key, string.Empty);
+                if (!string.IsNullOrEmpty(compressedSpellJson))
+                {
+                    var spellJson = CompressionHelper.DecompressString(compressedSpellJson);
+                    var spell = JsonConvert.DeserializeObject<Spell>(spellJson);
+                    if (spell != null)
+                    {
+                        spells.Add(spell);
+                        SaveSpellForCharacter(character, spell);  // Save with new ID-based key
+                    }
+                }
+            }
+
+            // Remove old spell keys
+            Preferences.Remove($"spellKeys_{character.Name}");
+            foreach (var key in oldSpellKeys)
+            {
+                Preferences.Remove(key);
+            }
+
+            CharacterSpells[character.ID] = spells;
+            CharacterSpells[character.ID].CollectionChanged += (s, e) => OnPropertyChanged(nameof(CharacterSpells));
         }
     }
 
-    public void SaveSpellsForCharacter(Character character)
+    public void AddSpell(Character character, Spell spell)
     {
-        if (CharacterSpells.ContainsKey(character.Name))
+        if (!CharacterSpells.ContainsKey(character.ID))
         {
-            var spellsJson = JsonConvert.SerializeObject(CharacterSpells[character.Name]);
-            Preferences.Set($"spells_{character.Name}", spellsJson);
+            CharacterSpells[character.ID] = new ObservableCollection<Spell>();
+            CharacterSpells[character.ID].CollectionChanged += (s, e) => OnPropertyChanged(nameof(CharacterSpells));
         }
+
+        if (!CharacterSpells[character.ID].Any(s => s.Name == spell.Name))
+        {
+            CharacterSpells[character.ID].Add(spell);
+            SaveSpellForCharacter(character, spell);
+        }
+    }
+
+    public void SaveSpellForCharacter(Character character, Spell spell)
+    {
+        var spellJson = JsonConvert.SerializeObject(spell);
+        var compressedSpellJson = CompressionHelper.CompressString(spellJson);
+        Preferences.Set($"spell_{character.ID}_{spell.Name}", compressedSpellJson);
+
+        // Update the list of spell keys for this character
+        var spellKeys = Preferences.Get($"spellKeys_{character.ID}", string.Empty).Split(',').ToList();
+        if (!spellKeys.Contains($"spell_{character.ID}_{spell.Name}"))
+        {
+            spellKeys.Add($"spell_{character.ID}_{spell.Name}");
+            Preferences.Set($"spellKeys_{character.ID}", string.Join(",", spellKeys));
+        }
+    }
+
+    public void RemoveSpellForCharacter(Character character, Spell spell)
+    {
+        Preferences.Remove($"spell_{character.ID}_{spell.Name}");
+
+        // Update the list of spell keys for this character
+        var spellKeys = Preferences.Get($"spellKeys_{character.ID}", string.Empty).Split(',').ToList();
+        spellKeys.Remove($"spell_{character.ID}_{spell.Name}");
+        Preferences.Set($"spellKeys_{character.ID}", string.Join(",", spellKeys));
     }
 
     public void LoadSpellsForCharacter(Character character)
     {
-        var spellsJson = Preferences.Get($"spells_{character.Name}", string.Empty);
-        if (!string.IsNullOrEmpty(spellsJson))
+        var spellKeys = Preferences.Get($"spellKeys_{character.ID}", string.Empty).Split(',').Where(key => !string.IsNullOrWhiteSpace(key)).ToList();
+        var spells = new ObservableCollection<Spell>();
+
+        foreach (var key in spellKeys)
         {
-            var spells = JsonConvert.DeserializeObject<ObservableCollection<Spell>>(spellsJson);
-            if (spells != null)
+            var compressedSpellJson = Preferences.Get(key, string.Empty);
+            if (!string.IsNullOrEmpty(compressedSpellJson))
             {
-                CharacterSpells[character.Name] = spells;
-                CharacterSpells[character.Name].CollectionChanged += (s, e) => OnPropertyChanged(nameof(CharacterSpells));
+                var spellJson = CompressionHelper.DecompressString(compressedSpellJson);
+                var spell = JsonConvert.DeserializeObject<Spell>(spellJson);
+                if (spell != null)
+                {
+                    spells.Add(spell);
+                }
             }
         }
-        else
-        {
-            CharacterSpells[character.Name] = new ObservableCollection<Spell>();
-            CharacterSpells[character.Name].CollectionChanged += (s, e) => OnPropertyChanged(nameof(CharacterSpells));
-        }
+
+        CharacterSpells[character.ID] = spells;
+        CharacterSpells[character.ID].CollectionChanged += (s, e) => OnPropertyChanged(nameof(CharacterSpells));
     }
 
     public void SaveSpellsPerDayDetails(Character character, Dictionary<int, int> maxSpellsPerDay, Dictionary<int, int> spellsUsedToday)
@@ -104,11 +158,10 @@ public class SharedViewModel : INotifyPropertyChanged
         }
     }
 
-
     public void LoadSpellsPerDayDetails(Character character)
     {
         if (character == null) return;
-        
+
         var maxSpellsJson = Preferences.Get($"maxSpells_{character.ID}", "{}");
         var usedSpellsJson = Preferences.Get($"usedSpells_{character.ID}", "{}");
 
@@ -123,7 +176,7 @@ public class SharedViewModel : INotifyPropertyChanged
         // Increment session ID on reset
         var sessionId = Preferences.Get($"currentSession_{CurrentCharacter.ID}", 0);
         Preferences.Set($"currentSession_{CurrentCharacter.ID}", sessionId + 1);
-        
+
         foreach (var key in CurrentCharacter.SpellsUsedToday.Keys.ToList())
         {
             CurrentCharacter.SpellsUsedToday[key] = 0;
@@ -136,8 +189,7 @@ public class SharedViewModel : INotifyPropertyChanged
         OnPropertyChanged("SessionId");
     }
 
-
-    public void LogSpellCast(Character character, string spellName, int spellLevel)
+    public void LogSpellCast(Character character, string spellName, int spellLevel, bool castAsRitual = false)
     {
         var sessionId = Preferences.Get($"currentSession_{character.ID}", 0);
         var logEntry = new SpellCastLog
@@ -145,7 +197,8 @@ public class SharedViewModel : INotifyPropertyChanged
             CastTime = DateTime.Now,
             SpellName = spellName,
             SpellLevel = spellLevel,
-            SessionId = sessionId
+            SessionId = sessionId,
+            CastAsRitual = castAsRitual // Include castAsRitual in the log entry
         };
 
         UpdateLogs(character.Name, logEntry);
@@ -177,7 +230,7 @@ public class SharedViewModel : INotifyPropertyChanged
     public void LoadLogs(Character character)
     {
         var logsJson = Preferences.Get($"spellLogs_{character.Name}", "[]");
-        var logs = JsonConvert.DeserializeObject<List<SpellCastLog>>(logsJson);
+        var logs = JsonConvert.DeserializeObject<List<SpellCastLog>>(logsJson) ?? new List<SpellCastLog>();
 
         // Clear existing logs to avoid duplication
         GroupedLogs.Clear();
@@ -191,7 +244,7 @@ public class SharedViewModel : INotifyPropertyChanged
 
         foreach (var log in logs)
         {
-            Debug.WriteLine($"Log Time: {log.CastTime}, Name: {log.SpellName}");
+            Debug.WriteLine($"Log Time: {log.CastTime}, Name: {log.SpellName}, Ritual: {log.CastAsRitual}");
         }
 
         foreach (var group in groupedData)

@@ -9,7 +9,8 @@ public partial class SpellDetailPage : ContentPage
     private Character character;
     private readonly int spellLevel;
     private bool spellIsKnown;
-    
+    private bool castAsRitual;
+
     public SpellDetailPage(Spell spell, Character character, int spellLevel, Game gameType)
     {
         InitializeComponent();
@@ -19,35 +20,17 @@ public partial class SpellDetailPage : ContentPage
         this.BindingContext = spell;
         this.spellLevel = spellLevel;
         CheckIfSpellIsKnown();
-        UpdateButton();
-        ShowCastSpellButton();
+        UpdateButtons();
     }
 
     private void CheckIfSpellIsKnown()
     {
         var viewModel = SharedViewModel.Instance;
-        spellIsKnown = viewModel.CharacterSpells.ContainsKey(character.Name) &&
-                       viewModel.CharacterSpells[character.Name].Any(s => s.Name == spell.Name);
+        spellIsKnown = viewModel.CharacterSpells.ContainsKey(character.ID) &&
+                       viewModel.CharacterSpells[character.ID].Any(s => s.Name == spell.Name);
     }
 
-    private void ShowCastSpellButton()
-    {
-        CastSpellButton.Clicked -= OnCastSpellClicked;
-        if (spellIsKnown)
-        {
-            CastSpellButton.IsEnabled = true;
-            CastSpellButton.Text = "Cast";
-            CastSpellButton.Clicked += OnCastSpellClicked;
-        }
-        else
-        {
-            CastSpellButton.IsEnabled = false;
-            CastSpellButton.Text = "";
-            CastSpellButton.Clicked -= OnCastSpellClicked;
-        }
-    }
-    
-    private void UpdateButton()
+    private void UpdateButtons()
     {
         AddOrRemoveButton.Text = spellIsKnown ? "Remove Spell" : "Add Spell";
 
@@ -64,17 +47,55 @@ public partial class SpellDetailPage : ContentPage
         {
             AddOrRemoveButton.Clicked += OnAddSpellClicked;
         }
+
+        // Update the visibility and enabled status of the CastSpellButton
+        ShowCastSpellButton();
     }
 
-    private void OnCastSpellClicked(object? sender, EventArgs e)
+    private void ShowCastSpellButton()
+    {
+        if (spellIsKnown)
+        {
+            CastSpellButton.IsEnabled = true;
+            CastSpellButton.IsVisible = true;
+            CastSpellButton.Clicked -= OnCastSpellClicked; // Clear any existing subscriptions
+            CastSpellButton.Clicked += OnCastSpellClicked;
+        }
+        else
+        {
+            CastSpellButton.IsEnabled = false;
+            CastSpellButton.IsVisible = false;
+            CastSpellButton.Clicked -= OnCastSpellClicked;
+        }
+    }
+
+    private async void OnCastSpellClicked(object? sender, EventArgs e)
     {
         // Retrieve the character from the SharedViewModel using the character name
         var character = SharedViewModel.Instance.CurrentCharacter;
 
         if (character == null)
         {
-            DisplayAlert("Error", "No character selected.", "OK");
+            await DisplayAlert("Error", "No character selected.", "OK");
             return;
+        }
+
+        if (spell.Ritual)
+        {
+            bool confirmation = await DisplayAlert("Cast as Ritual",
+                                                  $"Do you want to cast '{spell.Name}' as a ritual?",
+                                                  "Yes",
+                                                  "No");
+
+            castAsRitual = confirmation;
+
+            if (castAsRitual)
+            {
+                await DisplayAlert("Ritual Cast", $"{spell.Name} has been cast as a ritual.", "OK");
+                // Log the ritual cast
+                SharedViewModel.Instance.LogSpellCast(character, spell.Name, spellLevel, castAsRitual);
+                return;
+            }
         }
 
         // Use the CastSpell method from the Character model
@@ -82,15 +103,21 @@ public partial class SpellDetailPage : ContentPage
 
         if (success)
         {
-            // Update the spells used information in the SharedViewModel
-            SharedViewModel.Instance.SaveSpellsPerDayDetails(character, character.MaxSpellsPerDay, character.SpellsUsedToday);
+            // Log the spell cast
             SharedViewModel.Instance.LogSpellCast(character, spell.Name, spellLevel);
-            DisplayAlert("Spell Cast", $"{spell.Name} has been cast.", "OK");
+
+            // Update the spells used information in the SharedViewModel (if not cast as ritual)
+            if (!castAsRitual)
+            {
+                SharedViewModel.Instance.SaveSpellsPerDayDetails(character, character.MaxSpellsPerDay, character.SpellsUsedToday);
+            }
+
+            await DisplayAlert("Spell Cast", $"{spell.Name} has been cast.", "OK");
         }
         else
         {
             SharedViewModel.Instance.LogFailedSpellCast(character, spell.Name, spellLevel, "No more spells of this level available");
-            DisplayAlert("Failed", "404: Available spell slot not found", "OK");
+            await DisplayAlert("Failed", "404: Available spell slot not found", "OK");
         }
     }
 
@@ -106,8 +133,10 @@ public partial class SpellDetailPage : ContentPage
         {
             var viewModel = SharedViewModel.Instance;
             viewModel.AddSpell(character, spell);
-            viewModel.SaveSpellsForCharacter(character);
+            viewModel.SaveSpellForCharacter(character, spell);
             await DisplayAlert("Spell Added", $"{spell.Name} has been added to {character.Name}.", "OK");
+            CheckIfSpellIsKnown(); // Re-check if the spell is known
+            UpdateButtons(); // Update buttons after adding the spell
             await Navigation.PopAsync();
         }
     }
@@ -124,11 +153,13 @@ public partial class SpellDetailPage : ContentPage
         {
             // Logic to remove the spell from the character's known spells
             var viewModel = SharedViewModel.Instance;
-            if (viewModel.CharacterSpells.ContainsKey(character.Name))
+            if (viewModel.CharacterSpells.ContainsKey(character.ID))
             {
-                viewModel.CharacterSpells[character.Name].Remove(spell);
-                viewModel.SaveSpellsForCharacter(character);
+                viewModel.CharacterSpells[character.ID].Remove(spell);
+                viewModel.SaveSpellForCharacter(character, spell);
                 await DisplayAlert("Spell Removed", $"{spell.Name} has been removed from {character.Name}.", "OK");
+                CheckIfSpellIsKnown(); // Re-check if the spell is known
+                UpdateButtons(); // Update buttons after removing the spell
                 await Navigation.PopAsync();
             }
         }

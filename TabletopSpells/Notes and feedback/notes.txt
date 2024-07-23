@@ -1,0 +1,5 @@
+﻿Reverse ok, cancel in pop-ups
+
+Add newlines in spellDetail 
+
+Switch remove/add spell with cast button

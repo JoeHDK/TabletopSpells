@@ -30,11 +30,20 @@
                 <ViewCell>
                     <StackLayout Orientation="Vertical">
                         <Label Text="{Binding SpellName}" FontAttributes="Bold" TextColor="White"/>
+                        <Label TextColor="White">
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <Span Text="Spell level: " />
+                                    <Span Text="{Binding SpellLevel}" />
+                                </FormattedString>
+                            </Label.FormattedText>
+                        </Label>
                         <Label Text="{Binding CastTime, StringFormat='{0:G}'}" TextColor="DarkGrey"/>
                         <Label Text="{Binding FailedReason}" TextColor="Red"/>
                     </StackLayout>
                 </ViewCell>
             </DataTemplate>
         </ListView.ItemTemplate>
+
     </ListView>
 </ContentPage>

@@ -1,24 +1,30 @@
-﻿namespace TabletopSpells.Models;
-public class SpellCastLog
+﻿namespace TabletopSpells.Models
 {
-    public DateTime CastTime
+    public class SpellCastLog
     {
-        get; set;
-    }
-    public string? SpellName
-    {
-        get; set;
-    }
-    public int SpellLevel
-    {
-        get; set;
-    }
-    public int SessionId
-    {
-        get; set;
-    }
-    public string? FailedReason
-    {
-        get; set;
+        public DateTime CastTime
+        {
+            get; set;
+        }
+        public string? SpellName
+        {
+            get; set;
+        }
+        public int SpellLevel
+        {
+            get; set;
+        }
+        public int SessionId
+        {
+            get; set;
+        }
+        public string? FailedReason
+        {
+            get; set;
+        }
+        public bool CastAsRitual
+        {
+            get; set;
+        } 
     }
 }

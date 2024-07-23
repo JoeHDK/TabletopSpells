@@ -37,7 +37,7 @@ namespace TabletopSpells.Pages
             this.BindingContext = ViewModel;
             ViewModel.LoadSpellsForCharacter(character);
             
-            if (ViewModel.CharacterSpells.ContainsKey(character.Name))
+            if (ViewModel.CharacterSpells.ContainsKey(character.ID))
             {
                 CreateList();
             }
@@ -54,7 +54,7 @@ namespace TabletopSpells.Pages
 
         private void CreateList()
         {
-            var groupedSpells = ViewModel.CharacterSpells[character.Name]
+            var groupedSpells = ViewModel.CharacterSpells[character.ID]
                 .GroupBy(spell => ParseSpellLevel(spell.SpellLevel, CharacterClass))
                 .OrderBy(group => group.Key)
                 .Select(group => new { Level = group.Key, Spells = group.OrderBy(spell => spell.Name) }) // Add sorting by name within each level
@@ -67,7 +67,7 @@ namespace TabletopSpells.Pages
                 var spellsSortedAlphabetically = group.Spells.OrderBy(spell => spell.Name).ToList(); // Ensure spells are sorted alphabetically
                 groupedCollection.Add(new Grouping<int, Spell>(group.Level, spellsSortedAlphabetically));
             }
-
+            
             SpellListView.ItemsSource = groupedCollection;
         }
 
@@ -97,16 +97,9 @@ namespace TabletopSpells.Pages
             if (selectedSpell != null)
             {
                 int spellLevel = ParseSpellLevel(selectedSpell.SpellLevel, CharacterClass);
-                //if (spellLevel >= 0) 
-                //{
-                    await Navigation.PushAsync(new SpellDetailPage(selectedSpell, character, spellLevel, gameType));
-                //}
-                //else
-                //{
-                //    await DisplayAlert("Error", "Failed to determine spell level for the selected spell.", "OK");
-                //}
-            }
+                await Navigation.PushAsync(new SpellDetailPage(selectedSpell, character, spellLevel, gameType));
 
+            }
         ((CollectionView)sender).SelectedItem = null;
         }
     }
