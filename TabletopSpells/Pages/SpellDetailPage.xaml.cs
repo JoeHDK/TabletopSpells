@@ -134,10 +134,10 @@ public partial class SpellDetailPage : ContentPage
             var viewModel = SharedViewModel.Instance;
             viewModel.AddSpell(character, spell);
             viewModel.SaveSpellForCharacter(character, spell);
-            await DisplayAlert("Spell Added", $"{spell.Name} has been added to {character.Name}.", "OK");
+            //await DisplayAlert("Spell Added", $"{spell.Name} has been added to {character.Name}.", "OK");
             CheckIfSpellIsKnown(); // Re-check if the spell is known
             UpdateButtons(); // Update buttons after adding the spell
-            await Navigation.PopAsync();
+            //await Navigation.PopAsync();
         }
     }
 
@@ -156,11 +156,11 @@ public partial class SpellDetailPage : ContentPage
             if (viewModel.CharacterSpells.ContainsKey(character.ID))
             {
                 viewModel.CharacterSpells[character.ID].Remove(spell);
-                viewModel.SaveSpellForCharacter(character, spell);
-                await DisplayAlert("Spell Removed", $"{spell.Name} has been removed from {character.Name}.", "OK");
+                viewModel.RemoveSpellForCharacter(character, spell);
+                //await DisplayAlert("Spell Removed", $"{spell.Name} has been removed from {character.Name}.", "OK");
                 CheckIfSpellIsKnown(); // Re-check if the spell is known
                 UpdateButtons(); // Update buttons after removing the spell
-                await Navigation.PopAsync();
+                //await Navigation.PopAsync();
             }
         }
     }

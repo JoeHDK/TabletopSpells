@@ -100,35 +100,63 @@ public class SharedViewModel : INotifyPropertyChanged
         Preferences.Set($"spell_{character.ID}_{spell.Name}", compressedSpellJson);
 
         // Update the list of spell keys for this character
-        var spellKeys = Preferences.Get($"spellKeys_{character.ID}", string.Empty).Split(',').ToList();
-        if (!spellKeys.Contains($"spell_{character.ID}_{spell.Name}"))
+        var spellKeys = Preferences.Get($"spellKeys_{character.ID}", string.Empty)
+                                    .Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries)
+                                    .ToList();
+
+        var spellKey = $"spell_{character.ID}_{spell.Name}";
+
+        if (!spellKeys.Contains(spellKey))
         {
-            spellKeys.Add($"spell_{character.ID}_{spell.Name}");
-            Preferences.Set($"spellKeys_{character.ID}", string.Join(",", spellKeys));
+            spellKeys.Add(spellKey);
+            Preferences.Set($"spellKeys_{character.ID}", string.Join("|", spellKeys));
         }
     }
 
+
     public void RemoveSpellForCharacter(Character character, Spell spell)
     {
+        // Remove the specific spell from Preferences
         Preferences.Remove($"spell_{character.ID}_{spell.Name}");
 
-        // Update the list of spell keys for this character
-        var spellKeys = Preferences.Get($"spellKeys_{character.ID}", string.Empty).Split(',').ToList();
+        // Retrieve the list of spell keys for this character, using the pipe '|' delimiter
+        var spellKeys = Preferences.Get($"spellKeys_{character.ID}", string.Empty)
+                                    .Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries)
+                                    .ToList();
+
+        // Remove the spell key from the list
         spellKeys.Remove($"spell_{character.ID}_{spell.Name}");
-        Preferences.Set($"spellKeys_{character.ID}", string.Join(",", spellKeys));
+
+        // Save the updated list of spell keys back to Preferences, joined with the pipe '|' delimiter
+        Preferences.Set($"spellKeys_{character.ID}", string.Join("|", spellKeys));
     }
+
 
     public void LoadSpellsForCharacter(Character character)
     {
-        var spellKeys = Preferences.Get($"spellKeys_{character.ID}", string.Empty).Split(',').Where(key => !string.IsNullOrWhiteSpace(key)).ToList();
+        // Retrieve the stored spell keys for the character
+        var spellKeysRaw = Preferences.Get($"spellKeys_{character.ID}", string.Empty);
+
+        // Determine the delimiter used (comma for old format, pipe for new format)
+        char delimiter = spellKeysRaw.Contains('|') ? '|' : ',';
+
+        // Split the keys using the detected delimiter
+        var spellKeys = spellKeysRaw.Split(new[] { delimiter }, StringSplitOptions.RemoveEmptyEntries)
+                                    .Where(key => !string.IsNullOrWhiteSpace(key))
+                                    .ToList();
+
+        // Initialize the ObservableCollection to hold the spells
         var spells = new ObservableCollection<Spell>();
 
         foreach (var key in spellKeys)
         {
+            // Retrieve and decompress the spell JSON
             var compressedSpellJson = Preferences.Get(key, string.Empty);
             if (!string.IsNullOrEmpty(compressedSpellJson))
             {
                 var spellJson = CompressionHelper.DecompressString(compressedSpellJson);
+
+                // Deserialize the spell JSON to a Spell object
                 var spell = JsonConvert.DeserializeObject<Spell>(spellJson);
                 if (spell != null)
                 {
@@ -137,9 +165,18 @@ public class SharedViewModel : INotifyPropertyChanged
             }
         }
 
+        // If the delimiter was a comma (old format), migrate to the new format
+        if (delimiter == ',')
+        {
+            Preferences.Set($"spellKeys_{character.ID}", string.Join("|", spellKeys));
+        }
+
+        // Store the spells in the CharacterSpells dictionary and handle changes
         CharacterSpells[character.ID] = spells;
         CharacterSpells[character.ID].CollectionChanged += (s, e) => OnPropertyChanged(nameof(CharacterSpells));
     }
+
+
 
     public void SaveSpellsPerDayDetails(Character character, Dictionary<int, int> maxSpellsPerDay, Dictionary<int, int> spellsUsedToday)
     {
