@@ -54,20 +54,37 @@ public partial class SpellDetailPage : ContentPage
 
     private void ShowCastSpellButton()
     {
-        if (spellIsKnown)
+        // Initially hide and disable the cast spell button
+        CastSpellButton.IsVisible = false;
+        CastSpellButton.IsEnabled = false;
+        CastSpellButton.Clicked -= OnCastSpellClicked; // Clear any existing event subscriptions
+
+        // If the spell isn't known to the character, no further action is needed
+        if (!spellIsKnown)
         {
+            return;
+        }
+
+        // Determine if there are any available spell slots for the current spell level
+        bool hasAvailableSpellSlots = character.MaxSpellsPerDay.TryGetValue(spellLevel, out int maxSpells) &&
+                                      maxSpells > character.SpellsUsedToday.GetValueOrDefault(spellLevel, 0);
+
+        // Show the cast spell button since the spell is known
+        CastSpellButton.IsVisible = true;
+
+        if (spell.Ritual || hasAvailableSpellSlots)
+        {
+            // Enable the button and attach the event handler if slots are available
             CastSpellButton.IsEnabled = true;
-            CastSpellButton.IsVisible = true;
-            CastSpellButton.Clicked -= OnCastSpellClicked; // Clear any existing subscriptions
             CastSpellButton.Clicked += OnCastSpellClicked;
         }
         else
         {
-            CastSpellButton.IsEnabled = false;
-            CastSpellButton.IsVisible = false;
-            CastSpellButton.Clicked -= OnCastSpellClicked;
+            // Keep the button disabled and reduce its opacity to indicate it's unavailable
+            CastSpellButton.Opacity = 0.5;
         }
     }
+
 
     private async void OnCastSpellClicked(object? sender, EventArgs e)
     {
@@ -80,46 +97,67 @@ public partial class SpellDetailPage : ContentPage
             return;
         }
 
+        // Check if the spell can be cast as a ritual and ask the user for confirmation
         if (spell.Ritual)
         {
-            bool confirmation = await DisplayAlert("Cast as Ritual",
-                                                  $"Do you want to cast '{spell.Name}' as a ritual?",
-                                                  "Yes",
-                                                  "No");
+            bool castAsRitualConfirmation = await DisplayAlert("Cast as Ritual",
+                                                               $"Do you want to cast '{spell.Name}' as a ritual?",
+                                                               "Yes",
+                                                               "No");
 
-            castAsRitual = confirmation;
-
-            if (castAsRitual)
+            if (castAsRitualConfirmation)
             {
+                castAsRitual = true;
                 await DisplayAlert("Ritual Cast", $"{spell.Name} has been cast as a ritual.", "OK");
-                // Log the ritual cast
                 SharedViewModel.Instance.LogSpellCast(character, spell.Name, spellLevel, castAsRitual);
-                return;
+                ReloadUI();
+                return; // Exit after casting as a ritual
             }
         }
 
-        // Use the CastSpell method from the Character model
+        // If not cast as a ritual, check if there are available spell slots
+        bool hasAvailableSpellSlots = character.MaxSpellsPerDay.TryGetValue(spellLevel, out int maxSpells) &&
+                                      maxSpells > character.SpellsUsedToday.GetValueOrDefault(spellLevel, 0);
+
+        if (!hasAvailableSpellSlots)
+        {
+            // Log the failed spell cast due to no available slots
+            SharedViewModel.Instance.LogFailedSpellCast(character, spell.Name, spellLevel, "No more spells of this level available");
+            await DisplayAlert("Failed", "Available spell slot not found", "OK");
+            return;
+        }
+
+        // Cast the spell normally (not as a ritual) since we have available slots
         bool success = character.CastSpell(spellLevel);
 
         if (success)
         {
-            // Log the spell cast
             SharedViewModel.Instance.LogSpellCast(character, spell.Name, spellLevel);
 
-            // Update the spells used information in the SharedViewModel (if not cast as ritual)
-            if (!castAsRitual)
-            {
-                SharedViewModel.Instance.SaveSpellsPerDayDetails(character, character.MaxSpellsPerDay, character.SpellsUsedToday);
-            }
+            // Update the spells used information in the SharedViewModel
+            SharedViewModel.Instance.SaveSpellsPerDayDetails(character, character.MaxSpellsPerDay, character.SpellsUsedToday);
 
             await DisplayAlert("Spell Cast", $"{spell.Name} has been cast.", "OK");
         }
         else
         {
             SharedViewModel.Instance.LogFailedSpellCast(character, spell.Name, spellLevel, "No more spells of this level available");
-            await DisplayAlert("Failed", "404: Available spell slot not found", "OK");
+            await DisplayAlert("Failed", "Available spell slot not found", "OK");
         }
+
+        ReloadUI();
     }
+
+
+
+    private void ReloadUI()
+    {
+        CheckIfSpellIsKnown(); // Re-check if the spell is known
+        UpdateButtons();       // Update the buttons based on the current state
+        OnPropertyChanged(nameof(character.SpellsUsedToday)); // Trigger UI update for spells used today
+        OnPropertyChanged(nameof(character.MaxSpellsPerDay)); // Trigger UI update for max spells per day
+    }
+
 
     private async void OnAddSpellClicked(object? sender, EventArgs e)
     {

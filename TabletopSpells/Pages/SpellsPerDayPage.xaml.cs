@@ -106,7 +106,7 @@ public partial class SpellsPerDayPage : ContentPage
         if (confirm)
         {
             sharedViewModel.ResetSpellsUsedToday();
-            await Navigation.PopAsync();
+            LoadSpellLevels();
         }
     }
 }
