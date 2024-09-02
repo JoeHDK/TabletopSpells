@@ -7,6 +7,7 @@
     <ContentPage.Resources>
         <ResourceDictionary>
             <converters:NonClassSpellConverter x:Key="NonClassSpellConverter"/>
+            <converters:SpellColorConverter x:Key="SpellColorConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -48,8 +49,7 @@
                                FontSize="Title"
                                FontAttributes="Bold"
                                TextColor="LightGray"
-                               HorizontalTextAlignment="Center"
-                               Margin="10, 5"
+                               HorizontalTextAlignment="Start"
                                Grid.Row="0"
                                />
 
@@ -74,9 +74,10 @@
                         <Label Text="{Binding Name}" 
                                FontSize="Large" 
                                FontAttributes="None" 
-                               HorizontalTextAlignment="Center" 
-                               Margin="0,0,0,10" 
-                               Grid.Row="0"/>
+                               HorizontalTextAlignment="Start" 
+                               Margin="10,0,0,10" 
+                               Grid.Row="0"
+                               TextColor="{Binding IsNativeSpell, Converter={StaticResource SpellColorConverter}}" />
 
                         <!-- Horizontal Divider Line -->
                         <!--<BoxView BackgroundColor="Gray" HeightRequest="1" Margin="30, 0" Grid.Row="1"/>-->
@@ -84,8 +85,5 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-
-        <!-- Remove Characters Button -->
-        <!--<Button Text="Delete character" Grid.Column="1" Grid.Row="2" Clicked="OnDeleteCharacterClicked" CornerRadius="25" Margin="100, 0, 100, 5"/>-->
     </Grid>
 </ContentPage>

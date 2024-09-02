@@ -63,5 +63,10 @@ public class Spell
         get; set;
     }
 
+    public bool IsNativeSpell
+    {
+        get; set;
+    }
+
     // Additional fields can be added as needed
 }
