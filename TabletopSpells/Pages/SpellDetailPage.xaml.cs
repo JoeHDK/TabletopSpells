@@ -115,42 +115,61 @@ public partial class SpellDetailPage : ContentPage
             }
         }
 
-        // If not cast as a ritual, check if there are available spell slots
-        bool hasAvailableSpellSlots = character.MaxSpellsPerDay.TryGetValue(spellLevel, out int maxSpells) &&
-                                      maxSpells > character.SpellsUsedToday.GetValueOrDefault(spellLevel, 0) || spellLevel == 0;
+        // Only prompt for modifiers if the game type is Pathfinder 1e
+        int modifiedSpellLevel = spellLevel; // Default to the original spell level
+        if (gameType == Game.pathfinder1e) // Assuming 'gameType' is a variable representing the current game
+        {
+            bool applyModifier = await DisplayAlert("Modify spell",
+                                                    "",
+                                                    "Yes",
+                                                    "No");
 
-        //if (spellLevel == 0)
-        //    hasAvailableSpellSlots = true;
-        
+            if (applyModifier)
+            {
+                // Example logic for applying "Quicken Spell" modifier, which increases the spell slot level by 4
+                string selectedModifier = await DisplayActionSheet("Select Modifier", "Cancel", null, "Quicken Spell");
+                if (selectedModifier == "Quicken Spell")
+                {
+                    modifiedSpellLevel += 4; // Increase spell level for slot consumption
+                }
+
+                // Additional modifiers can be handled here with more options
+            }
+        }
+
+        // Check if there are available spell slots for the modified spell level
+        bool hasAvailableSpellSlots = character.MaxSpellsPerDay.TryGetValue(modifiedSpellLevel, out int maxSpells) &&
+                                      maxSpells > character.SpellsUsedToday.GetValueOrDefault(modifiedSpellLevel, 0);
+
         if (!hasAvailableSpellSlots)
         {
             // Log the failed spell cast due to no available slots
-            SharedViewModel.Instance.LogFailedSpellCast(character, spell.Name, spellLevel, "No more spells of this level available");
-            await DisplayAlert("Failed", "Available spell slot not found", "OK");
+            SharedViewModel.Instance.LogFailedSpellCast(character, spell.Name, modifiedSpellLevel, "No more spells of this level available");
+            await DisplayAlert("Failed", "No available spell slots", "OK");
             return;
         }
 
-        // Cast the spell normally (not as a ritual) since we have available slots
-        bool success = character.CastSpell(spellLevel);
+        // Cast the spell normally (not as a ritual) using the modified spell level
+        bool success = character.CastSpell(modifiedSpellLevel);
 
         if (success)
         {
-            SharedViewModel.Instance.LogSpellCast(character, spell.Name, spellLevel);
+            SharedViewModel.Instance.LogSpellCast(character, spell.Name, modifiedSpellLevel);
 
             // Update the spells used information in the SharedViewModel
-            if(spellLevel != 0)
-                SharedViewModel.Instance.SaveSpellsPerDayDetails(character, character.MaxSpellsPerDay, character.SpellsUsedToday);
+            SharedViewModel.Instance.SaveSpellsPerDayDetails(character, character.MaxSpellsPerDay, character.SpellsUsedToday);
 
             await DisplayAlert("Spell Cast", $"{spell.Name} has been cast.", "OK");
         }
         else
         {
-            SharedViewModel.Instance.LogFailedSpellCast(character, spell.Name, spellLevel, "No more spells of this level available");
-            await DisplayAlert("Failed", "Available spell slot not found", "OK");
+            SharedViewModel.Instance.LogFailedSpellCast(character, spell.Name, modifiedSpellLevel, "No more spells of this level available");
+            await DisplayAlert("Failed", "404: Available spell slot not found", "OK");
         }
 
         ReloadUI();
     }
+
 
     private void ReloadUI()
     {
