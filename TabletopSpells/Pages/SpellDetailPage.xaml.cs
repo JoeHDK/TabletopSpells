@@ -72,7 +72,7 @@ public partial class SpellDetailPage : ContentPage
         // Show the cast spell button since the spell is known
         CastSpellButton.IsVisible = true;
 
-        if (spell.Ritual || hasAvailableSpellSlots)
+        if (spell.Ritual || hasAvailableSpellSlots || spellLevel == 0)
         {
             // Enable the button and attach the event handler if slots are available
             CastSpellButton.IsEnabled = true;
@@ -117,8 +117,11 @@ public partial class SpellDetailPage : ContentPage
 
         // If not cast as a ritual, check if there are available spell slots
         bool hasAvailableSpellSlots = character.MaxSpellsPerDay.TryGetValue(spellLevel, out int maxSpells) &&
-                                      maxSpells > character.SpellsUsedToday.GetValueOrDefault(spellLevel, 0);
+                                      maxSpells > character.SpellsUsedToday.GetValueOrDefault(spellLevel, 0) || spellLevel == 0;
 
+        //if (spellLevel == 0)
+        //    hasAvailableSpellSlots = true;
+        
         if (!hasAvailableSpellSlots)
         {
             // Log the failed spell cast due to no available slots
@@ -135,7 +138,8 @@ public partial class SpellDetailPage : ContentPage
             SharedViewModel.Instance.LogSpellCast(character, spell.Name, spellLevel);
 
             // Update the spells used information in the SharedViewModel
-            SharedViewModel.Instance.SaveSpellsPerDayDetails(character, character.MaxSpellsPerDay, character.SpellsUsedToday);
+            if(spellLevel != 0)
+                SharedViewModel.Instance.SaveSpellsPerDayDetails(character, character.MaxSpellsPerDay, character.SpellsUsedToday);
 
             await DisplayAlert("Spell Cast", $"{spell.Name} has been cast.", "OK");
         }
@@ -148,8 +152,6 @@ public partial class SpellDetailPage : ContentPage
         ReloadUI();
     }
 
-
-
     private void ReloadUI()
     {
         CheckIfSpellIsKnown(); // Re-check if the spell is known
@@ -158,16 +160,15 @@ public partial class SpellDetailPage : ContentPage
         OnPropertyChanged(nameof(character.MaxSpellsPerDay)); // Trigger UI update for max spells per day
     }
 
-
     private async void OnAddSpellClicked(object? sender, EventArgs e)
     {
         bool confirmation = await DisplayAlert("Add Spell",
                                               $"Do you want to add '{spell.Name}' " +
                                               $"to {character.Name}?",
-                                              "Add",
-                                              "Cancel");
+                                              "Cancel",
+                                              "Add");
 
-        if (confirmation)
+        if (!confirmation)
         {
             var viewModel = SharedViewModel.Instance;
             viewModel.AddSpell(character, spell);
@@ -184,10 +185,10 @@ public partial class SpellDetailPage : ContentPage
         bool confirmation = await DisplayAlert("Remove Spell",
                                               $"Are you sure you want to remove '{spell.Name}' " +
                                               $"from {character.Name}?",
-                                              "Remove",
-                                              "Cancel");
+                                              "Cancel",
+                                              "Remove");
 
-        if (confirmation)
+        if (!confirmation)
         {
             // Logic to remove the spell from the character's known spells
             var viewModel = SharedViewModel.Instance;

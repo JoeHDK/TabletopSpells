@@ -57,11 +57,11 @@ namespace TabletopSpells.Pages
             bool deleteConfirmed = await DisplayAlert(
                 "Confirm Delete",
                 $"Are you sure you want to delete {character.Name}?",
-                "Yes",
-                "No"
+                "No",
+                "Yes"
             );
 
-            if (deleteConfirmed)
+            if (!deleteConfirmed)
             {
                 await DeleteCharacter(character);
                 Device.BeginInvokeOnMainThread(async () =>

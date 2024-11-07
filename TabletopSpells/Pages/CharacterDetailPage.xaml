@@ -56,7 +56,8 @@
                         <!-- Horizontal Divider Line -->
                         <BoxView BackgroundColor="Gray"
                                  HeightRequest="1"
-                                 Margin="30, 0"
+                                 Margin="0, 0, 305, 0"
+                                 
                                  Grid.Row="1"/>
                     </Grid>
                 </DataTemplate>
@@ -75,7 +76,7 @@
                                FontSize="Large" 
                                FontAttributes="None" 
                                HorizontalTextAlignment="Start" 
-                               Margin="10,0,0,10" 
+                               Margin="0,0,0,10" 
                                Grid.Row="0"
                                TextColor="{Binding IsNativeSpell, Converter={StaticResource SpellColorConverter}}" />
 
