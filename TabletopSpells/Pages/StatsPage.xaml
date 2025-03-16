@@ -1,0 +1,54 @@
+﻿<!-- SpellsPerDayPage.xaml -->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TabletopSpells.Pages.SpellsPerDayPage"
+             Title="Spells per day">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Reset"
+                     Clicked="OnResetSpellsPerDayClicked"
+                     Priority="0" 
+                     Order="Primary"/>
+    </ContentPage.ToolbarItems>
+
+    <StackLayout>
+        <ListView x:Name="lvSpellsPerDay" 
+                  ItemSelected="OnSpellLevelSelected"
+                  HasUnevenRows="True"
+                  VerticalScrollBarVisibility="Never">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <ViewCell>
+                        <StackLayout Orientation="Vertical">
+                            <Label Text="{Binding DisplayText}" 
+                                   FontAttributes="Bold"
+                                   Margin="0,10,0,0"
+                                   HorizontalTextAlignment="Center"/>
+                            <Frame BorderColor="Gray"
+                                   Padding="1"
+                                   HorizontalOptions="FillAndExpand"
+                                   VerticalOptions="Center"
+                                   BackgroundColor="Transparent"
+                                   HeightRequest="30">
+                                <!-- Frame as the border provider -->
+                                <Grid Padding="0">
+                                    <!-- Grid to hold the ProgressBar and Label -->
+                                    <ProgressBar Progress="{Binding ProgressValue}" 
+                                                 ProgressColor="Blue" 
+                                                 BackgroundColor="Transparent"
+                                                 HorizontalOptions="FillAndExpand"
+                                                 VerticalOptions="FillAndExpand"
+                                                 ScaleY="30"/>
+                                    <Label Text="{Binding DetailText}" 
+                                           HorizontalOptions="Center" 
+                                           VerticalOptions="Center"
+                                           TextColor="White"/>
+                                </Grid>
+                            </Frame>
+                        </StackLayout>
+                    </ViewCell>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </StackLayout>
+</ContentPage>
