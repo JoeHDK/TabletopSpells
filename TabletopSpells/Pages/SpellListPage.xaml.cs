@@ -8,13 +8,15 @@ using TabletopSpells.Models;
 using TabletopSpells.Models.Enums;
 
 namespace TabletopSpells.Pages;
+
 [XamlCompilation(XamlCompilationOptions.Compile)]
 public partial class SpellListPage : ContentPage
 {
-    private Game gameType;
-    private Character? character;
+    private readonly Game gameType;
+    private readonly Character? character;
     private int? selectedSpellLevel = null;
     private string currentSearchText = "";
+
     public SpellListPage(Character character, Game gameType)
     {
         InitializeComponent();
@@ -25,14 +27,8 @@ public partial class SpellListPage : ContentPage
         this.character = character;
     }
 
-    public ObservableCollection<Spell> Spells
-    {
-        get; set;
-    }
-    public ObservableCollection<Spell> FilteredSpells
-    {
-        get; set;
-    }
+    public ObservableCollection<Spell> Spells { get; set; }
+    public ObservableCollection<Spell> FilteredSpells { get; set; }
 
     private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
     {
@@ -59,9 +55,9 @@ public partial class SpellListPage : ContentPage
         };
 
         // Highlight the active filter with an asterisk
-        for (int i = 0; i < levels.Count; i++)
+        for (var i = 0; i < levels.Count; i++)
         {
-            int levelNumber = i; // Cantrips are level 0
+            var levelNumber = i; // Cantrips are level 0
             if (selectedSpellLevel.HasValue && selectedSpellLevel.Value == levelNumber)
             {
                 levels[i] = $"* {levels[i]}"; // Append an asterisk to highlight the active filter
@@ -69,7 +65,7 @@ public partial class SpellListPage : ContentPage
         }
 
         // Show the action sheet with the dynamically generated options
-        string action = await DisplayActionSheet("Filters", null, null, levels.ToArray());
+        var action = await DisplayActionSheet("Filters", null, null, levels.ToArray());
 
         // Early exit if 'Cancel' is selected or no action is returned
         if (action == "Cancel" || string.IsNullOrEmpty(action))
@@ -78,8 +74,8 @@ public partial class SpellListPage : ContentPage
         }
 
         // Strip any asterisk and extra spaces from the action to clean it up for parsing
-        string cleanAction = action.Replace("*", "").Trim();
-        int selectedLevel = 0; // Default to Cantrips if no number found
+        var cleanAction = action.Replace("*", "").Trim();
+        var selectedLevel = 0; // Default to Cantrips if no number found
         var match = Regex.Match(cleanAction, @"\d+"); // Find the first number
         if (match.Success)
         {
@@ -100,14 +96,13 @@ public partial class SpellListPage : ContentPage
         }
 
         FilterSpells(); // Re-apply filters based on the updated selected level
-        UpdateTitle();  // Update the title to reflect the current filter status
+        UpdateTitle(); // Update the title to reflect the current filter status
     }
 
     private void UpdateTitle()
     {
         switch (selectedSpellLevel)
         {
-
             case null:
                 Title = "Spells";
                 break;
@@ -133,7 +128,8 @@ public partial class SpellListPage : ContentPage
     {
         var filtered = Spells.Where(spell =>
             (string.IsNullOrEmpty(currentSearchText) || spell.Name.ToLower().Contains(currentSearchText)) &&
-            (!selectedSpellLevel.HasValue || ParseSpellLevel(spell.SpellLevel, character.CharacterClass.ToString() ?? "") == selectedSpellLevel.Value)
+            (!selectedSpellLevel.HasValue ||
+             ParseSpellLevel(spell.SpellLevel, character.CharacterClass.ToString() ?? "") == selectedSpellLevel.Value)
         ).OrderBy(spell => spell.Name).ToList(); // Sort here and convert to list once
 
         FilteredSpells.Clear();
@@ -151,14 +147,14 @@ public partial class SpellListPage : ContentPage
             return -1; // Indicate no specific class level found
         }
 
-        string classLowerCase = characterClass.Trim().ToLower();
-        string[] entries = spellLevel.Split(',');
+        var classLowerCase = characterClass.Trim().ToLower();
+        var entries = spellLevel.Split(',');
 
         foreach (var entry in entries)
         {
             var trimmedEntry = entry.Trim().ToLower();
             // Split the entry into parts to isolate class names and level number
-            string[] parts = trimmedEntry.Split(' ');
+            var parts = trimmedEntry.Split(' ');
             if (parts.Length < 2)
             {
                 Debug.WriteLine($"Invalid spell level format in entry: '{entry}'");
@@ -166,46 +162,34 @@ public partial class SpellListPage : ContentPage
             }
 
             // Checking for the presence of the class name in the combined class names section
-            string combinedClasses = parts[0];
-            if (combinedClasses.Contains(classLowerCase))
+            var combinedClasses = parts[0];
+            // Extract the level number which is supposed to be the last part after a space
+            if (!combinedClasses.Contains(classLowerCase)) continue;
+            var levelPart = parts[1];
+            var match = MyRegex().Match(levelPart);
+            if (match.Success)
             {
-                // Extract the level number which is supposed to be the last part after a space
-                string levelPart = parts[1];
-                var match = Regex.Match(levelPart, @"\d+");
-                if (match.Success)
-                {
-                    return int.Parse(match.Value);
-                }
-                else
-                {
-                    Debug.WriteLine($"No numeric level found for class {characterClass} in part '{entry}'.");
-                }
+                return int.Parse(match.Value);
             }
         }
 
         Debug.WriteLine($"Class {characterClass} not found in spellLevel '{spellLevel}'.");
         return -1; // Return an invalid level if not found
     }
-    
 
-    private List<Spell> GetAllSpellsFromJson(Game gameType)
+
+    private static List<Spell> GetAllSpellsFromJson(Game gameType)
     {
         try
         {
             Stream? stream = null;
-            var assembly = IntrospectionExtensions.GetTypeInfo(typeof(App)).Assembly;
-            switch (gameType)
+            var assembly = typeof(App).GetTypeInfo().Assembly;
+            stream = gameType switch
             {
-                case Game.pathfinder1e:
-                    stream = assembly.GetManifestResourceStream("TabletopSpells.Spells.Pathfinder1e.json");
-                    break;
-                case Game.dnd5e:
-                    stream = assembly.GetManifestResourceStream("TabletopSpells.Spells.dnd 5e.json");
-                    break;
-                default:
-                    stream = null;
-                    break;
-            }
+                Game.pathfinder1e => assembly.GetManifestResourceStream("TabletopSpells.Spells.Pathfinder1e.json"),
+                Game.dnd5e => assembly.GetManifestResourceStream("TabletopSpells.Spells.dnd 5e.json"),
+                _ => null
+            };
 
             if (stream == null)
             {
@@ -229,13 +213,10 @@ public partial class SpellListPage : ContentPage
 
             var spells = JsonConvert.DeserializeObject<List<Spell>>(jsonContent, settings);
 
-            if (spells == null)
-            {
-                Debug.WriteLine("Failed to deserialize spells.");
-                return new List<Spell>();
-            }
+            if (spells != null) return spells;
+            Debug.WriteLine("Failed to deserialize spells.");
+            return new List<Spell>();
 
-            return spells;
         }
         catch (Exception ex)
         {
@@ -250,10 +231,13 @@ public partial class SpellListPage : ContentPage
         if (selectedSpell != null)
         {
             int spellLevel = ParseSpellLevel(selectedSpell.SpellLevel, character.CharacterClass.ToString() ?? "");
-            
+
             await Navigation.PushAsync(new SpellDetailPage(selectedSpell, character, spellLevel, gameType));
-            
+
             ((CollectionView)sender).SelectedItem = null;
         }
     }
+
+    [GeneratedRegex(@"\d+")]
+    private static partial Regex MyRegex();
 }

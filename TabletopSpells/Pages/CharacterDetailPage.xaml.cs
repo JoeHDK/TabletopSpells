@@ -1,14 +1,14 @@
 ﻿using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Text.RegularExpressions;
 using TabletopSpells.Models;
 using TabletopSpells.Models.Enums;
+using TabletopSpells.ViewModels;
 
 namespace TabletopSpells.Pages
 {
     public partial class CharacterDetailPage : ContentPage
     {
-        private Game gameType;
+        private readonly Game gameType;
         private string CharacterClass
         {
             get;
@@ -17,7 +17,7 @@ namespace TabletopSpells.Pages
         {
             get; set;
         }
-        private Character character;
+        private readonly Character character;
 
         protected override void OnAppearing()
         {
@@ -30,11 +30,11 @@ namespace TabletopSpells.Pages
             InitializeComponent();
             this.gameType = gameType;
             this.character = character;
-            this.Title = $"{character.Name}'s spells";
+            Title = $"{character.Name}'s spells";
             ViewModel = viewModel;  // Use the passed viewModel
-            this.CharacterClass = ViewModel.CurrentCharacter.CharacterClass.ToString();
+            CharacterClass = ViewModel.CurrentCharacter.CharacterClass.ToString();
 
-            this.BindingContext = ViewModel;
+            BindingContext = ViewModel;
             ViewModel.LoadSpellsForCharacter(character);
             
             if (ViewModel.CharacterSpells.ContainsKey(character.ID))
@@ -55,17 +55,17 @@ namespace TabletopSpells.Pages
         private void CreateList()
         {
             // Get the character's class in lowercase for easier comparison
-            string characterClassLower = CharacterClass.ToLower();
+            var characterClassLower = CharacterClass.ToLower();
 
             // Group spells by their level for the current character, setting the IsNativeSpell property
             var groupedSpells = ViewModel.CharacterSpells[character.ID]
                 .Select(spell =>
                 {
                     // Determine the level for the character's class
-                    int spellLevelForClass = ParseSpellLevel(spell.SpellLevel, CharacterClass);
+                    var spellLevelForClass = ParseSpellLevel(spell.SpellLevel, CharacterClass);
 
                     // Check if this spell is native to the character's class
-                    spell.IsNativeSpell = spell.SpellLevel?.ToLower().Contains(characterClassLower) ?? false;
+                    spell.IsNativeSpell = spell.SpellLevel?.ToLower().Contains(characterClassLower, StringComparison.CurrentCultureIgnoreCase) ?? false;
 
                     return new
                     {
@@ -134,7 +134,7 @@ namespace TabletopSpells.Pages
                 await Navigation.PushAsync(new SpellDetailPage(selectedSpell, character, spellLevel, gameType));
 
             }
-        ((CollectionView)sender).SelectedItem = null;
+            ((CollectionView)sender).SelectedItem = null;
         }
     }
 }

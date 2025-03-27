@@ -1,54 +1,63 @@
-﻿<!-- SpellsPerDayPage.xaml -->
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="TabletopSpells.Pages.SpellsPerDayPage"
-             Title="Spells per day">
+             Title="Character Stats"
+             x:Class="TabletopSpells.Pages.StatsPage">
+    <ScrollView>
+        <VerticalStackLayout Padding="10">
+            <!-- Level Field -->
+            <HorizontalStackLayout Spacing="10" Margin="0,0,0,10">
+                <Label Text="Level" VerticalTextAlignment="Center" WidthRequest="150" />
+                <Entry x:Name="LevelEntry" Keyboard="Numeric" Placeholder="Enter level" />
+            </HorizontalStackLayout>
 
-    <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Reset"
-                     Clicked="OnResetSpellsPerDayClicked"
-                     Priority="0" 
-                     Order="Primary"/>
-    </ContentPage.ToolbarItems>
+            <!-- Strength Field -->
+            <HorizontalStackLayout Spacing="10" Margin="0, 0, 0, 10">
+                <Label Text="Strength" VerticalTextAlignment="Center" WidthRequest="150" />
+                <Entry x:Name="StrengthEntry" Keyboard="Numeric" />
+                <Label x:Name="StrengthModifierLabel" Text="Modifier: +0" VerticalTextAlignment="Center" />
+            </HorizontalStackLayout>
 
-    <StackLayout>
-        <ListView x:Name="lvSpellsPerDay" 
-                  ItemSelected="OnSpellLevelSelected"
-                  HasUnevenRows="True"
-                  VerticalScrollBarVisibility="Never">
-            <ListView.ItemTemplate>
-                <DataTemplate>
-                    <ViewCell>
-                        <StackLayout Orientation="Vertical">
-                            <Label Text="{Binding DisplayText}" 
-                                   FontAttributes="Bold"
-                                   Margin="0,10,0,0"
-                                   HorizontalTextAlignment="Center"/>
-                            <Frame BorderColor="Gray"
-                                   Padding="1"
-                                   HorizontalOptions="FillAndExpand"
-                                   VerticalOptions="Center"
-                                   BackgroundColor="Transparent"
-                                   HeightRequest="30">
-                                <!-- Frame as the border provider -->
-                                <Grid Padding="0">
-                                    <!-- Grid to hold the ProgressBar and Label -->
-                                    <ProgressBar Progress="{Binding ProgressValue}" 
-                                                 ProgressColor="Blue" 
-                                                 BackgroundColor="Transparent"
-                                                 HorizontalOptions="FillAndExpand"
-                                                 VerticalOptions="FillAndExpand"
-                                                 ScaleY="30"/>
-                                    <Label Text="{Binding DetailText}" 
-                                           HorizontalOptions="Center" 
-                                           VerticalOptions="Center"
-                                           TextColor="White"/>
-                                </Grid>
-                            </Frame>
-                        </StackLayout>
-                    </ViewCell>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
-    </StackLayout>
+            <!-- Dexterity Field -->
+            <HorizontalStackLayout Spacing="10" Margin="0, 0, 0, 10">
+                <Label Text="Dexterity" VerticalTextAlignment="Center" WidthRequest="150" />
+                <Entry x:Name="DexterityEntry" Keyboard="Numeric" />
+                <Label x:Name="DexterityModifierLabel" Text="Modifier: +0" VerticalTextAlignment="Center" />
+            </HorizontalStackLayout>
+
+            <!-- Constitution Field -->
+            <HorizontalStackLayout Spacing="10" Margin="0, 0, 0, 10">
+                <Label Text="Constitution" VerticalTextAlignment="Center" WidthRequest="150" />
+                <Entry x:Name="ConstitutionEntry" Keyboard="Numeric" />
+                <Label x:Name="ConstitutionModifierLabel" Text="Modifier: +0" VerticalTextAlignment="Center" />
+            </HorizontalStackLayout>
+
+            <!-- Intelligence Field -->
+            <HorizontalStackLayout Spacing="10" Margin="0, 0, 0, 10">
+                <Label Text="Intelligence" VerticalTextAlignment="Center" WidthRequest="150" />
+                <Entry x:Name="IntelligenceEntry" Keyboard="Numeric" />
+                <Label x:Name="IntelligenceModifierLabel" Text="Modifier: +0" VerticalTextAlignment="Center" />
+            </HorizontalStackLayout>
+
+            <!-- Wisdom Field -->
+            <HorizontalStackLayout Spacing="10" Margin="0, 0, 0, 10">
+                <Label Text="Wisdom" VerticalTextAlignment="Center" WidthRequest="150" />
+                <Entry x:Name="WisdomEntry" Keyboard="Numeric" />
+                <Label x:Name="WisdomModifierLabel" Text="Modifier: +0" VerticalTextAlignment="Center" />
+            </HorizontalStackLayout>
+
+            <!-- Charisma Field -->
+            <HorizontalStackLayout Spacing="10" Margin="0, 0, 0, 10">
+                <Label Text="Charisma" VerticalTextAlignment="Center" WidthRequest="150" />
+                <Entry x:Name="CharismaEntry" Keyboard="Numeric" />
+                <Label x:Name="CharismaModifierLabel" Text="Modifier: +0" VerticalTextAlignment="Center" />
+            </HorizontalStackLayout>
+
+            <!-- Save Button -->
+            <Button Text="Save Stats"
+                    Clicked="OnSaveClicked"
+                    BackgroundColor="Blue"
+                    TextColor="White"
+                    Margin="0,20,0,0" />
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

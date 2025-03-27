@@ -1,112 +1,88 @@
-﻿using System.Collections.ObjectModel;
-using System.Security.Cryptography.X509Certificates;
+﻿using TabletopSpells.ViewModels;
 using TabletopSpells.Models;
 
 namespace TabletopSpells.Pages;
-[XamlCompilation(XamlCompilationOptions.Compile)]
-public partial class SpellsPerDayPage : ContentPage
-{
-    private ObservableCollection<SpellLevelViewModel> spellLevels;
 
-    public SpellsPerDayPage()
+public partial class StatsPage : ContentPage
+{
+    private readonly SharedViewModel sharedViewModel;
+    private Character character;
+
+    public StatsPage(Character character, SharedViewModel viewModel)
     {
         InitializeComponent();
-        BindingContext = SharedViewModel.Instance;
-        spellLevels = new ObservableCollection<SpellLevelViewModel>();
-        LoadSpellLevels();
-        lvSpellsPerDay.ItemsSource = spellLevels;
+        this.sharedViewModel = viewModel;
+        this.character = character;
+
+        // Populate fields with existing character data
+        LevelEntry.Text = character.Level.ToString();
+        StrengthEntry.Text = character.AbilityScores["Strength"].ToString();
+        DexterityEntry.Text = character.AbilityScores["Dexterity"].ToString();
+        ConstitutionEntry.Text = character.AbilityScores["Constitution"].ToString();
+        IntelligenceEntry.Text = character.AbilityScores["Intelligence"].ToString();
+        WisdomEntry.Text = character.AbilityScores["Wisdom"].ToString();
+        CharismaEntry.Text = character.AbilityScores["Charisma"].ToString();
+
+        // Update UI modifiers
+        UpdateModifiers();
     }
 
-    private void LoadSpellLevels()
+    /// <summary>
+    /// Updates the modifier labels based on the ability score values entered.
+    /// </summary>
+    private void UpdateModifiers()
     {
-        Character character = SharedViewModel.Instance.CurrentCharacter;
-        if (character == null)
-        {
-            DisplayAlert("Error", "No character loaded.", "OK");
-            return;
-        }
-
-        spellLevels.Clear();
-
-        // Ensure all spell levels are initialized (0 to 9 as example)
-        for (int level = 1; level <= 9; level++)
-        {
-            // Get or set default max spells and spells used
-            int maxSpells = character.MaxSpellsPerDay.TryGetValue(level, out int max) ? max : 0;
-            int spellsUsed = character.SpellsUsedToday.TryGetValue(level, out int used) ? used : 0;
-
-            spellLevels.Add(new SpellLevelViewModel
-            {
-                Level = level,
-                MaxSpells = maxSpells,
-                SpellsUsed = spellsUsed,
-                DisplayText = $"Level {level} Spells"
-                // DetailText is computed automatically, no need to set it here
-            });
-
-            // Check and update defaults if necessary
-            if (!character.MaxSpellsPerDay.ContainsKey(level))
-            {
-                character.MaxSpellsPerDay[level] = 0;  // Ensure defaults are set if missing
-            }
-            if (!character.SpellsUsedToday.ContainsKey(level))
-            {
-                character.SpellsUsedToday[level] = 0;  // Ensure defaults are set if missing
-            }
-        }
-
-        // Save any changes if defaults were added
-        SharedViewModel.Instance.SaveSpellsPerDayDetails(character, character.MaxSpellsPerDay, character.SpellsUsedToday);
+        StrengthModifierLabel.Text = $"Modifier: {GetModifier(StrengthEntry.Text)}";
+        DexterityModifierLabel.Text = $"Modifier: {GetModifier(DexterityEntry.Text)}";
+        ConstitutionModifierLabel.Text = $"Modifier: {GetModifier(ConstitutionEntry.Text)}";
+        IntelligenceModifierLabel.Text = $"Modifier: {GetModifier(IntelligenceEntry.Text)}";
+        WisdomModifierLabel.Text = $"Modifier: {GetModifier(WisdomEntry.Text)}";
+        CharismaModifierLabel.Text = $"Modifier: {GetModifier(CharismaEntry.Text)}";
     }
 
-    private async void OnSpellLevelSelected(object sender, SelectedItemChangedEventArgs e)
+    /// <summary>
+    /// Calculates the modifier for a given ability score.
+    /// </summary>
+    private int GetModifier(string scoreText)
     {
-        if (e.SelectedItem is SpellLevelViewModel selectedLevel)
+        if (int.TryParse(scoreText, out int score))
+            return (score - 10) / 2;
+        return 0;
+    }
+
+    /// <summary>
+    /// Saves the updated stats back to the character through the SharedViewModel.
+    /// </summary>
+    private async void OnSaveClicked(object sender, EventArgs e)
+    {
+        try
         {
-            // Deselect the item
-            ((ListView)sender).SelectedItem = null;
+            // Update character's stats
+            character.Level = int.Parse(LevelEntry.Text);
+            character.AbilityScores["Strength"] = int.Parse(StrengthEntry.Text);
+            character.AbilityScores["Dexterity"] = int.Parse(DexterityEntry.Text);
+            character.AbilityScores["Constitution"] = int.Parse(ConstitutionEntry.Text);
+            character.AbilityScores["Intelligence"] = int.Parse(IntelligenceEntry.Text);
+            character.AbilityScores["Wisdom"] = int.Parse(WisdomEntry.Text);
+            character.AbilityScores["Charisma"] = int.Parse(CharismaEntry.Text);
 
-            // Display prompt to edit max spells with the current max spells as the placeholder
-            string result = await DisplayPromptAsync("Max Spells",
-                                                     $"Enter a new max spells value for level {selectedLevel.Level} (current: {selectedLevel.MaxSpells})",
-                                                     accept: "Save",
-                                                     cancel: "Cancel",
-                                                     initialValue: "", // Start with an empty input
-                                                     placeholder: selectedLevel.MaxSpells.ToString()); // Show current max as a placeholder
+            // Save changes using the shared view model
+            await sharedViewModel.SaveCharacterAsync(character);
 
-            if (int.TryParse(result, out int newMax) && newMax != selectedLevel.MaxSpells)
-            {
-                // Update the model if the new value is different
-                selectedLevel.MaxSpells = newMax;
-
-                // Update the actual character model or ViewModel here as needed
-                Character character = SharedViewModel.Instance.CurrentCharacter;
-                if (character != null)
-                {
-                    character.MaxSpellsPerDay[selectedLevel.Level] = newMax;
-                    SharedViewModel.Instance.SaveSpellsPerDayDetails(character,
-                                                                    character.MaxSpellsPerDay,
-                                                                    character.SpellsUsedToday);
-                }
-
-                // Refresh the UI
-                OnPropertyChanged(nameof(SpellLevelViewModel.DetailText)); // Ensure the UI updates
-            }
+            await DisplayAlert("Success", "Character stats have been updated and saved successfully!", "OK");
+            await Navigation.PopAsync();
+        }
+        catch
+        {
+            await DisplayAlert("Error", "Please ensure all stats are valid numbers.", "OK");
         }
     }
-    
-    public async void OnResetSpellsPerDayClicked(object sender, EventArgs e)
+
+    /// <summary>
+    /// Event handler to update the modifier labels in real-time when fields change.
+    /// </summary>
+    private void OnStatChanged(object sender, TextChangedEventArgs e)
     {
-        SharedViewModel sharedViewModel = SharedViewModel.Instance;
-        bool confirm = await Application.Current.MainPage.DisplayAlert(
-            "Confirm Reset",
-            "Reset all spells used today to zero?",
-            "Yes", "No");
-        
-        if (confirm)
-        {
-            sharedViewModel.ResetSpellsUsedToday();
-            LoadSpellLevels();
-        }
+        UpdateModifiers();
     }
 }

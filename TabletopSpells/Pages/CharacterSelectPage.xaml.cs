@@ -5,6 +5,7 @@ using TabletopSpells.Helpers;
 using TabletopSpells.Models;
 using TabletopSpells.Models.Enums;
 using TabletopSpells.Pages;
+using TabletopSpells.ViewModels;
 
 namespace TabletopSpells;
 public partial class CharacterSelectPage : ContentPage

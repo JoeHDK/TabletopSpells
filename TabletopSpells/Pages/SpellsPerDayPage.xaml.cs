@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Security.Cryptography.X509Certificates;
 using TabletopSpells.Models;
+using TabletopSpells.ViewModels;
 
 namespace TabletopSpells.Pages;
 [XamlCompilation(XamlCompilationOptions.Compile)]

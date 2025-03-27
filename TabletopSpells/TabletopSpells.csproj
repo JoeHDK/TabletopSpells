@@ -80,6 +80,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Maui" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
@@ -100,6 +101,10 @@
 	  <Compile Update="Pages\SpellsPerDayPage.xaml.cs">
 	    <DependentUpon>SpellsPerDayPage.xaml</DependentUpon>
 	  </Compile>
+	  <Compile Update="Pages\StatsPage.xaml.cs">
+	    <DependentUpon>StatsPage.xaml</DependentUpon>
+	    <SubType>Code</SubType>
+	  </Compile>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -119,6 +124,10 @@
 	    <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Pages\SpellListPage.xaml">
+	    <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Pages\StatsPage.xaml">
+	    <SubType>Designer</SubType>
 	    <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
 	  </MauiXaml>
 	</ItemGroup>

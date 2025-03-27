@@ -25,5 +25,6 @@
         Psychic,
         Mesmerist,
         Warlock,
+        Artificer,
     }
 }

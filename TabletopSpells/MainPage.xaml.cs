@@ -1,4 +1,5 @@
 ﻿using TabletopSpells.Models.Enums;
+using TabletopSpells.ViewModels;
 
 namespace TabletopSpells;
 public partial class MainPage : ContentPage
