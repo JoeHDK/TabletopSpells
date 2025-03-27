@@ -54,46 +54,53 @@ namespace TabletopSpells.Pages
 
         private void CreateList()
         {
-            // Get the character's class in lowercase for easier comparison
             var characterClassLower = CharacterClass.ToLower();
+            var spellsToShow = new List<Spell>();
 
-            // Group spells by their level for the current character, setting the IsNativeSpell property
-            var groupedSpells = ViewModel.CharacterSpells[character.ID]
+            if (character.IsDivineCaster)
+            {
+                // Use prepared spells + auto-prepared
+                spellsToShow = character.GetPreparedSpells().ToList();
+
+                foreach (var spellName in character.AlwaysPreparedSpells)
+                {
+                    var alwaysPrepared = ViewModel.SpellsForCharacter(character)
+                        .FirstOrDefault(s => s.Name.Equals(spellName, StringComparison.OrdinalIgnoreCase));
+                    if (alwaysPrepared != null && !spellsToShow.Contains(alwaysPrepared))
+                    {
+                        spellsToShow.Add(alwaysPrepared);
+                    }
+                }
+            }
+            else
+            {
+                spellsToShow = ViewModel.CharacterSpells[character.ID].ToList();
+            }
+
+            var groupedSpells = spellsToShow
                 .Select(spell =>
                 {
-                    // Determine the level for the character's class
                     var spellLevelForClass = ParseSpellLevel(spell.SpellLevel, CharacterClass);
-
-                    // Check if this spell is native to the character's class
-                    spell.IsNativeSpell = spell.SpellLevel?.ToLower().Contains(characterClassLower, StringComparison.CurrentCultureIgnoreCase) ?? false;
-
+                    spell.IsNativeSpell = spell.SpellLevel?.ToLower().Contains(characterClassLower) ?? false;
                     return new
                     {
                         Level = spellLevelForClass,
                         Spell = spell
                     };
                 })
-                .Where(spellInfo => spellInfo.Level != -1) // Exclude spells that couldn't be parsed or are irrelevant
+                .Where(spellInfo => spellInfo.Level != -1)
                 .GroupBy(spellInfo => spellInfo.Level)
                 .OrderBy(group => group.Key)
-                .Select(group => new
-                {
-                    Level = group.Key,
-                    Spells = group.Select(spellInfo => spellInfo.Spell).OrderBy(spell => spell.Name).ToList()
-                })
+                .Select(group => new Grouping<int, Spell>(
+                    group.Key,
+                    group.Select(spellInfo => spellInfo.Spell).OrderBy(s => s.Name).ToList()))
                 .ToList();
 
-            // Create the grouped collection to display in the CollectionView
-            var groupedCollection = new ObservableCollection<Grouping<int, Spell>>();
-
-            foreach (var group in groupedSpells)
-            {
-                groupedCollection.Add(new Grouping<int, Spell>(group.Level, group.Spells));
-            }
-
-            // Set the ItemsSource of the CollectionView to the grouped collection
+            var groupedCollection = new ObservableCollection<Grouping<int, Spell>>(groupedSpells);
             SpellListView.ItemsSource = groupedCollection;
+
         }
+
 
 
         private int ParseSpellLevel(string spellLevel, string characterClass)

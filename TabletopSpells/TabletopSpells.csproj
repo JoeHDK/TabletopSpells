@@ -105,6 +105,10 @@
 	    <DependentUpon>StatsPage.xaml</DependentUpon>
 	    <SubType>Code</SubType>
 	  </Compile>
+	  <Compile Update="Pages\PrepareSpellsPopup.xaml.cs">
+	    <DependentUpon>PrepareSpellsPopup.xaml</DependentUpon>
+	    <SubType>Code</SubType>
+	  </Compile>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -129,6 +133,9 @@
 	  <MauiXaml Update="Pages\StatsPage.xaml">
 	    <SubType>Designer</SubType>
 	    <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Pages\PrepareSpellsPopup.xaml">
+	    <SubType>Designer</SubType>
 	  </MauiXaml>
 	</ItemGroup>
 

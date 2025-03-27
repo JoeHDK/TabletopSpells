@@ -12,6 +12,9 @@ public class Character
     public Dictionary<int, int> SpellsUsedToday { get; set; } = new();
     public Game GameType { get; init; }
     public int Level { get; set; }
+    public bool IsDivineCaster { get; set; }
+    public List<string> AlwaysPreparedSpells { get; set; } = new List<string>();
+
 
     // Stores the prepared spells explicitly chosen by the user
     private List<Spell> _manuallyPreparedSpells = new();

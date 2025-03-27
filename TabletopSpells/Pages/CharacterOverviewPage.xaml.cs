@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using CommunityToolkit.Maui.Views;
 using TabletopSpells.Models;
 using TabletopSpells.Models.Enums;
 using TabletopSpells.ViewModels;
@@ -100,62 +101,49 @@ public partial class CharacterOverviewPage : ContentPage
     }
 
     private async void OnPrepareSpellsClicked(object sender, EventArgs e)
-{
-    // Load character's spells into memory (Spells available for selection)
-    viewModel.LoadPreparedSpells(character);
-
-    // All spells the character can see
-    var allSpellNames = viewModel.SpellsForCharacter(character)
-        .Select(spell => spell.Name) // Extract names
-        .ToList();
-
-    // Fetch currently prepared spells for the dialog
-    var preparedSpellNames = character.GetPreparedSpells()
-        .Select(spell => spell.Name) // Extract names of prepared spells
-        .ToList();
-
-    // Show dialog to let the user select prepared spells
-    var selectedSpellNames = await DisplayMultipleChoiceDialog("Prepare Spells", allSpellNames, preparedSpellNames);
-
-    // If user closed the dialog or made no changes, stop further processing
-    if (selectedSpellNames == null) return;
-
-    // Update the character's prepared spells based on user selection
-    foreach (var spell in viewModel.SpellsForCharacter(character))
     {
-        if (selectedSpellNames.Contains(spell.Name))
+        viewModel.LoadPreparedSpells(character);
+
+        // Divine casters use full class spell list; others use added spells
+        List<Spell> allSpells = character.IsDivineCaster
+            ? SpellLibrary.GetSpellsForClass(character.CharacterClass)
+            : viewModel.SpellsForCharacter(character).ToList();
+
+        var preparedSpells = character.GetPreparedSpells();
+
+        // Show the popup
+        var popup = new PrepareSpellsPopup(character, allSpells, preparedSpells);
+        await this.ShowPopupAsync(popup);
+
+        var selectedSpells = popup.SelectedSpells;
+        if (selectedSpells == null) return;
+
+        // Unprepare all non-manual spells (i.e., ones from the spell list)
+        var currentlyPrepared = character.GetPreparedSpells().ToList();
+        foreach (var spell in currentlyPrepared)
         {
-            // Attempt to prepare the spell if it isn't already prepared
-            if (!character.GetPreparedSpells().Contains(spell))
+            // Don't unprepare manually added innate spells
+            if (character.IsDivineCaster &&
+                !allSpells.Any(s => s.Name.Equals(spell.Name, StringComparison.OrdinalIgnoreCase)))
             {
-                var success = character.TogglePreparedSpell(spell);
-                if (!success)
-                {
-                    // Inform the user if the spell preparation limit is reached
-                    await DisplayAlert(
-                        "Spell Limit Reached",
-                        $"You cannot prepare more than {character.Level + character.GetRelevantAbilityModifier()} spells.",
-                        "OK"
-                    );
-                }
+                continue;
             }
+
+            character.TogglePreparedSpell(spell);
         }
-        else
+
+        // Prepare newly selected spells
+        foreach (var spell in selectedSpells)
         {
-            // If the spell was prepared but is no longer selected, unprepare it
-            if (character.GetPreparedSpells().Contains(spell))
-            {
-                character.TogglePreparedSpell(spell);
-            }
+            character.TogglePreparedSpell(spell);
         }
+
+        // Save to preferences
+        viewModel.SavePreparedSpells(character);
+
+        await DisplayAlert("Prepared Spells Updated", "Your prepared spells have been successfully updated!", "OK");
     }
 
-    // Save changes to the prepared spells list
-    SavePreparedSpells(character);
-
-    // Notify the user changes have been saved
-    await DisplayAlert("Prepared Spells Updated", "Your prepared spells have been successfully updated!", "OK");
-}
 
     /// <summary>
     /// Display a multi-choice dialog to let the user prepare spells.

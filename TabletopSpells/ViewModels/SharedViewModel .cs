@@ -214,9 +214,17 @@ public class SharedViewModel : INotifyPropertyChanged
         }
 
         if (CharacterSpells[character.ID].Any(s => s.Name == spell.Name)) return;
+
         CharacterSpells[character.ID].Add(spell);
         SaveSpellForCharacter(character, spell);
+
+        // If this is a divine caster, treat newly added spells as always prepared
+        if (character.IsDivineCaster && !character.GetPreparedSpells().Contains(spell))
+        {
+            character.TogglePreparedSpell(spell);
+        }
     }
+
 
     public void SaveSpellForCharacter(Character character, Spell spell)
     {
@@ -573,4 +581,13 @@ public class SharedViewModel : INotifyPropertyChanged
             Debug.WriteLine($"Error saving prepared spells: {ex.Message}");
         }
     }
+    
+    public void SavePreparedSpells(Character character)
+    {
+        if (character == null || character.ID == null) return;
+
+        SaveCharacterPreparedSpells(character.ID, character.GetPreparedSpells());
+    }
+
+
 }
