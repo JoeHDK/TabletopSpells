@@ -1,1 +1,3 @@
-﻿
+sort prepare spells by last used, alphabetical, level
+
+allow favorites and sort then at the top ﻿
