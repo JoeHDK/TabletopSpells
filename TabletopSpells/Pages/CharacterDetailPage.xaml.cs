@@ -6,7 +6,7 @@ using TabletopSpells.ViewModels;
 
 namespace TabletopSpells.Pages
 {
-    public partial class CharacterDetailPage : ContentPage
+    public partial class SpellsPage : ContentPage
     {
         private readonly Game gameType;
         private string CharacterClass
@@ -25,7 +25,7 @@ namespace TabletopSpells.Pages
             CreateList();
         }
 
-        public CharacterDetailPage(Character character, SharedViewModel viewModel, Game gameType)
+        public SpellsPage(Character character, SharedViewModel viewModel, Game gameType)
         {
             InitializeComponent();
             this.gameType = gameType;
@@ -57,25 +57,7 @@ namespace TabletopSpells.Pages
             var characterClassLower = CharacterClass.ToLower();
             var spellsToShow = new List<Spell>();
 
-            if (character.IsDivineCaster)
-            {
-                // Use prepared spells + auto-prepared
-                spellsToShow = character.GetPreparedSpells().ToList();
-
-                foreach (var spellName in character.AlwaysPreparedSpells)
-                {
-                    var alwaysPrepared = ViewModel.SpellsForCharacter(character)
-                        .FirstOrDefault(s => s.Name.Equals(spellName, StringComparison.OrdinalIgnoreCase));
-                    if (alwaysPrepared != null && !spellsToShow.Contains(alwaysPrepared))
-                    {
-                        spellsToShow.Add(alwaysPrepared);
-                    }
-                }
-            }
-            else
-            {
-                spellsToShow = ViewModel.CharacterSpells[character.ID].ToList();
-            }
+            spellsToShow = ViewModel.CharacterSpells[character.ID].ToList();
 
             var groupedSpells = spellsToShow
                 .Select(spell =>

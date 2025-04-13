@@ -30,9 +30,9 @@ public partial class CharacterOverviewPage : ContentPage
     }
 
     [Obsolete]
-    private void OnCharacterSelected(object sender, EventArgs e)
+    private void OnSpellsSelected(object sender, EventArgs e)
     {
-        Navigation.PushAsync(new CharacterDetailPage(character, SharedViewModel.Instance, gameType));
+        Navigation.PushAsync(new SpellsPage(character, SharedViewModel.Instance, gameType));
     }
 
     private void OnSpellPerDaySelected(object sender, EventArgs e)
