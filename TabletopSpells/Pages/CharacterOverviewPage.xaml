@@ -29,15 +29,6 @@
                 Clicked="OnCharacterSelected"
                 BackgroundColor="green"
                 Margin="10, 0, 10, 0" />
-        
-        <Button Text="Prepare Spells"
-                HeightRequest="75"
-                Grid.Column="0"
-                Grid.Row="1"
-                Clicked="OnPrepareSpellsClicked"
-                BackgroundColor="blue"
-                Margin="10, 10, 10, 0" />
-
 
         <Button Text="Spells per day"
                 HeightRequest="75"
