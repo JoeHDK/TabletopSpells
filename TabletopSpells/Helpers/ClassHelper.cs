@@ -30,12 +30,29 @@ namespace TabletopSpells.Helpers
             { Class.Occultist, [Game.pathfinder1e] },
             { Class.Psychic, [Game.pathfinder1e] },
             { Class.Mesmerist, [Game.pathfinder1e] },
-
         };
+        
+        public static readonly Class[] DivineCasters =
+        {
+            Class.Cleric,
+            Class.Druid,
+            Class.Paladin,
+            //Class.Ranger, // Rangers may be semi-divine in some contexts
+            Class.Oracle,
+            Class.Shaman,
+            Class.Inquisitor // Additional divine casters specific to Pathfinder
+        };
+
 
         public static IEnumerable<Class> GetClassesByGame(Game game)
         {
             return ClassGameMapping.Where(kvp => kvp.Value.Contains(game)).Select(kvp => kvp.Key);
         }
+        
+        public static bool IsDivineCaster(Class characterClass)
+        {
+            return DivineCasters.Contains(characterClass);
+        }
+
     }
 }
