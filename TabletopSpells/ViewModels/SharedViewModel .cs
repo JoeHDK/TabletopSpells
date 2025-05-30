@@ -310,6 +310,23 @@ public class SharedViewModel : INotifyPropertyChanged
     }
     
     /// <summary>
+    /// Toggles a spell's prepared state for the current character and persists the change.
+    /// Returns true if the toggle was successful (added or removed), false if blocked (e.g., limit reached).
+    /// </summary>
+    public bool TogglePreparedSpellAndSave(Character character, Spell spell)
+    {
+        if (character == null || spell == null) return false;
+    
+        var success = character.TogglePreparedSpell(spell);
+    
+        if (success)
+            SavePreparedSpells(character);
+    
+        return success;
+    }
+
+    
+    /// <summary>
     /// Retrieves all spells for the given character from the in-memory dictionary.
     /// If not already loaded, initializes them from persistent storage.
     /// </summary>

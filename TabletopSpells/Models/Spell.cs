@@ -18,4 +18,6 @@ public class Spell
     public bool IsNativeSpell { get; set; }
     public bool IsAlwaysPrepared { get; set; }
     public bool IsPrepared { get; set; }
+    public bool IsDomainSpell { get; set; }
+    public bool IsFavoriteSpell { get; set; }
 }
