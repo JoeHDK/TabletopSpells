@@ -3,14 +3,15 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using TabletopSpells.Models;
+using TabletopSpells.Pages;
 
 namespace TabletopSpells.ViewModels;
 
 public class SharedViewModel : INotifyPropertyChanged
 {
     #region Singleton Pattern
-    private static SharedViewModel? instance;
-    public static SharedViewModel Instance => instance ??= new SharedViewModel();
+    private static SharedViewModel? _instance;
+    public static SharedViewModel Instance => _instance ??= new SharedViewModel();
     #endregion
 
     #region Fields & Constants
@@ -204,6 +205,8 @@ public class SharedViewModel : INotifyPropertyChanged
             CharacterSpells[character.ID].CollectionChanged += (s, e) => OnPropertyChanged(nameof(CharacterSpells));
         }
     }
+    
+    public Action? SpellsChanged { get; set; }
 
     public void AddSpell(Character character, Spell spell)
     {
@@ -332,15 +335,34 @@ public class SharedViewModel : INotifyPropertyChanged
     /// </summary>
     public ObservableCollection<Spell> SpellsForCharacter(Character character)
     {
-        // Check if spells for the character already exist in memory
         if (!CharacterSpells.ContainsKey(character.ID))
         {
-            // Load spells for the character if not already cached
             LoadSpellsForCharacter(character);
+
+            // Auto-fill divine casters with all class spells
+            if (character.IsDivineCaster && (!CharacterSpells[character.ID]?.Any() ?? true))
+            {
+                var allSpells = LoadAllClassSpells(character); // helper method below
+                foreach (var spell in allSpells)
+                {
+                    AddSpell(character, spell);
+                }
+            }
         }
 
-        // Return the in-memory list of spells for this character
         return CharacterSpells[character.ID];
+    }
+    
+    public List<Spell> LoadAllClassSpells(Character character)
+    {
+        var allSpells = SpellListPage.GetAllSpellsFromJson(character.GameType); // reuse your loader
+        var className = character.CharacterClass.ToString().ToLower();
+
+        return allSpells
+            .Where(spell =>
+                !string.IsNullOrEmpty(spell.SpellLevel) &&
+                spell.SpellLevel.ToLower().Contains(className))
+            .ToList();
     }
     
     /// <summary>

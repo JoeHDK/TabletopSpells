@@ -1,206 +1,224 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using TabletopSpells.Models;
 using TabletopSpells.Models.Enums;
+using TabletopSpells.ViewModels;
 
 namespace TabletopSpells.Pages;
 
 [XamlCompilation(XamlCompilationOptions.Compile)]
-public partial class SpellListPage : ContentPage
+public partial class SpellListPage : ContentPage, INotifyPropertyChanged
 {
     private readonly Game gameType;
     private readonly Character? character;
     private int? selectedSpellLevel = null;
     private string currentSearchText = "";
 
+    public ObservableCollection<Spell> Spells { get; set; }
+    public ObservableCollection<Spell> FilteredSpells { get; set; }
+    public ObservableCollection<SpellViewModel> SpellViewModels { get; set; } = new();
+
+    public bool IsDivineCaster => character?.IsDivineCaster ?? false;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    public string PreparedSpellCountText =>
+        $"Prepared: {character?.GetPreparedSpells().Count ?? 0} / {character?.Level + character?.GetRelevantAbilityModifier() ?? 0}";
+
     public SpellListPage(Character character, Game gameType)
     {
         InitializeComponent();
+        this.character = character;
         this.gameType = gameType;
+
+        SharedViewModel.Instance.CurrentCharacter = character;
+        SharedViewModel.Instance.LoadPreparedSpells(character);
+
+        SharedViewModel.Instance.SpellsChanged = () =>
+        {
+            if (!IsDivineCaster) return;
+
+            var allSpells = GetAllSpellsFromJson(gameType);
+            var className = character.CharacterClass.ToString().ToLower();
+
+            var legalSpells = allSpells
+                .Where(spell =>
+                    !string.IsNullOrEmpty(spell.SpellLevel) &&
+                    spell.SpellLevel.ToLower().Contains(className))
+                .ToList();
+
+            SpellViewModels = new ObservableCollection<SpellViewModel>(
+                legalSpells
+                    .Select(spell => new SpellViewModel(spell, character))
+                    .OrderByDescending(vm => vm.IsPrepared)
+                    .ThenBy(vm => vm.Spell.SpellLevel)
+                    .ThenBy(vm => vm.Spell.Name));
+
+            OnPropertyChanged(nameof(SpellViewModels));
+            OnPropertyChanged(nameof(PreparedSpellCountText));
+        };
+
+
         Spells = new ObservableCollection<Spell>(GetAllSpellsFromJson(gameType));
         FilteredSpells = new ObservableCollection<Spell>(Spells);
-        BindingContext = this;
-        this.character = character;
-    }
 
-    public ObservableCollection<Spell> Spells { get; set; }
-    public ObservableCollection<Spell> FilteredSpells { get; set; }
+        if (character.IsDivineCaster)
+        {
+            var allSpells = GetAllSpellsFromJson(gameType);
+            var className = character.CharacterClass.ToString().ToLower();
+
+            var legalSpells = allSpells
+                .Where(spell =>
+                    !string.IsNullOrEmpty(spell.SpellLevel) &&
+                    spell.SpellLevel.ToLower().Contains(className))
+                .ToList();
+
+            SpellViewModels = new ObservableCollection<SpellViewModel>(
+                legalSpells
+                    .Select(spell => new SpellViewModel(spell, character))
+                    .OrderByDescending(vm => vm.IsPrepared)
+                    .ThenBy(vm => vm.Spell.SpellLevel)
+                    .ThenBy(vm => vm.Spell.Name));
+
+            OnPropertyChanged(nameof(SpellViewModels));
+            OnPropertyChanged(nameof(IsDivineCaster));
+            OnPropertyChanged(nameof(PreparedSpellCountText));
+        }
+
+        BindingContext = this;
+    }
 
     private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
     {
         currentSearchText = e.NewTextValue.ToLower();
-        FilterSpells(); // Apply all filters whenever search text changes
+        FilterSpells();
     }
 
     [Obsolete]
     private async void OnMenuClicked(object sender, EventArgs e)
     {
-        // List of level options including Cantrips
         var levels = new List<string>
         {
-            "Cantrips",
-            "1st level",
-            "2nd level",
-            "3rd level",
-            "4th level",
-            "5th level",
-            "6th level",
-            "7th level",
-            "8th level",
-            "9th level"
+            "Cantrips", "1st level", "2nd level", "3rd level",
+            "4th level", "5th level", "6th level", "7th level",
+            "8th level", "9th level"
         };
 
-        // Highlight the active filter with an asterisk
         for (var i = 0; i < levels.Count; i++)
         {
-            var levelNumber = i; // Cantrips are level 0
+            var levelNumber = i;
             if (selectedSpellLevel.HasValue && selectedSpellLevel.Value == levelNumber)
-            {
-                levels[i] = $"* {levels[i]}"; // Append an asterisk to highlight the active filter
-            }
+                levels[i] = $"* {levels[i]}";
         }
 
-        // Show the action sheet with the dynamically generated options
         var action = await DisplayActionSheet("Filters", null, null, levels.ToArray());
+        if (action == "Cancel" || string.IsNullOrEmpty(action)) return;
 
-        // Early exit if 'Cancel' is selected or no action is returned
-        if (action == "Cancel" || string.IsNullOrEmpty(action))
-        {
-            return;
-        }
-
-        // Strip any asterisk and extra spaces from the action to clean it up for parsing
         var cleanAction = action.Replace("*", "").Trim();
-        var selectedLevel = 0; // Default to Cantrips if no number found
-        var match = Regex.Match(cleanAction, @"\d+"); // Find the first number
-        if (match.Success)
-        {
-            selectedLevel = int.Parse(match.Value);
-        }
-        else if (cleanAction == "Cantrips")
-        {
-            selectedLevel = 0; // Cantrips are considered level 0
-        }
+        var match = Regex.Match(cleanAction, @"\d+");
+        var selectedLevel = match.Success ? int.Parse(match.Value) : (cleanAction == "Cantrips" ? 0 : -1);
 
-        if (selectedSpellLevel.HasValue && selectedSpellLevel.Value == selectedLevel)
-        {
-            selectedSpellLevel = null; // Toggle off if the same level is selected again
-        }
+        if (selectedSpellLevel == selectedLevel)
+            selectedSpellLevel = null;
         else
-        {
-            selectedSpellLevel = selectedLevel; // Set the selected level
-        }
+            selectedSpellLevel = selectedLevel;
 
-        FilterSpells(); // Re-apply filters based on the updated selected level
-        UpdateTitle(); // Update the title to reflect the current filter status
+        FilterSpells();
+        UpdateTitle();
     }
 
     private void UpdateTitle()
     {
-        switch (selectedSpellLevel)
+        Title = selectedSpellLevel switch
         {
-            case null:
-                Title = "Spells";
-                break;
-            case 0:
-                Title = "Cantrips";
-                break;
-            case 1:
-                Title = "1st level spells";
-                break;
-            case 2:
-                Title = "2nd level spells";
-                break;
-            case 3:
-                Title = "3rd level spells";
-                break;
-            default:
-                Title = $"{selectedSpellLevel}th level spells";
-                break;
-        }
+            null => "Spells",
+            0 => "Cantrips",
+            1 => "1st level spells",
+            2 => "2nd level spells",
+            3 => "3rd level spells",
+            _ => $"{selectedSpellLevel}th level spells"
+        };
     }
 
     private void FilterSpells()
     {
-        var filtered = Spells.Where(spell =>
-            (string.IsNullOrEmpty(currentSearchText) || spell.Name.ToLower().Contains(currentSearchText)) &&
-            (!selectedSpellLevel.HasValue ||
-             ParseSpellLevel(spell.SpellLevel, character.CharacterClass.ToString() ?? "") == selectedSpellLevel.Value)
-        ).OrderBy(spell => spell.Name).ToList(); // Sort here and convert to list once
+        if (IsDivineCaster)
+        {
+            Debug.WriteLine("Rendering divine caster spell list");
+            var filtered = SpellViewModels
+                .Where(vm =>
+                    (string.IsNullOrEmpty(currentSearchText) || vm.Spell.Name.ToLower().Contains(currentSearchText)) &&
+                    (!selectedSpellLevel.HasValue || ParseSpellLevel(vm.Spell.SpellLevel, character.CharacterClass.ToString()) == selectedSpellLevel))
+                .OrderByDescending(vm => vm.IsPrepared)
+                .ThenBy(vm => vm.Spell.SpellLevel)
+                .ThenBy(vm => vm.Spell.Name)
+                .ToList();
+
+            SpellViewModels.Clear();
+            foreach (var vm in filtered)
+                SpellViewModels.Add(vm);
+            return;
+        }
+
+        var filteredSpells = Spells
+            .Where(spell =>
+                (string.IsNullOrEmpty(currentSearchText) || spell.Name.ToLower().Contains(currentSearchText)) &&
+                (!selectedSpellLevel.HasValue || ParseSpellLevel(spell.SpellLevel, character.CharacterClass.ToString()) == selectedSpellLevel))
+            .OrderBy(spell => spell.Name)
+            .ToList();
 
         FilteredSpells.Clear();
-        foreach (var spell in filtered)
-        {
+        foreach (var spell in filteredSpells)
             FilteredSpells.Add(spell);
-        }
     }
 
     private int ParseSpellLevel(string spellLevel, string characterClass)
     {
-        if (string.IsNullOrWhiteSpace(characterClass))
-        {
-            Debug.WriteLine("Character class is not specified.");
-            return -1; // Indicate no specific class level found
-        }
+        if (string.IsNullOrWhiteSpace(characterClass)) return -1;
 
-        var classLowerCase = characterClass.Trim().ToLower();
+        var classLower = characterClass.ToLower();
         var entries = spellLevel.Split(',');
 
         foreach (var entry in entries)
         {
-            var trimmedEntry = entry.Trim().ToLower();
-            // Split the entry into parts to isolate class names and level number
-            var parts = trimmedEntry.Split(' ');
-            if (parts.Length < 2)
-            {
-                Debug.WriteLine($"Invalid spell level format in entry: '{entry}'");
-                continue;
-            }
+            var parts = entry.Trim().ToLower().Split(' ');
+            if (parts.Length < 2) continue;
+            if (!parts[0].Contains(classLower)) continue;
 
-            // Checking for the presence of the class name in the combined class names section
-            var combinedClasses = parts[0];
-            // Extract the level number which is supposed to be the last part after a space
-            if (!combinedClasses.Contains(classLowerCase)) continue;
-            var levelPart = parts[1];
-            var match = MyRegex().Match(levelPart);
-            if (match.Success)
-            {
-                return int.Parse(match.Value);
-            }
+            var match = MyRegex().Match(parts[1]);
+            if (match.Success) return int.Parse(match.Value);
         }
 
-        Debug.WriteLine($"Class {characterClass} not found in spellLevel '{spellLevel}'.");
-        return -1; // Return an invalid level if not found
+        return -1;
     }
 
-
-    private static List<Spell> GetAllSpellsFromJson(Game gameType)
+    public static List<Spell> GetAllSpellsFromJson(Game gameType)
     {
         try
         {
-            Stream? stream = null;
             var assembly = typeof(App).GetTypeInfo().Assembly;
-            stream = gameType switch
+            using var stream = gameType switch
             {
                 Game.pathfinder1e => assembly.GetManifestResourceStream("TabletopSpells.Spells.Pathfinder1e.json"),
                 Game.dnd5e => assembly.GetManifestResourceStream("TabletopSpells.Spells.dnd 5e.json"),
                 _ => null
             };
 
-            if (stream == null)
-            {
-                Debug.WriteLine("Spell data stream not found.");
-                return new List<Spell>();
-            }
+            if (stream == null) return new List<Spell>();
 
             using var reader = new StreamReader(stream);
-            var jsonContent = reader.ReadToEnd();
+            var json = reader.ReadToEnd();
 
-            var settings = new JsonSerializerSettings
+            return JsonConvert.DeserializeObject<List<Spell>>(json, new JsonSerializerSettings
             {
                 Converters = new List<JsonConverter> { new StringEnumConverter() },
                 NullValueHandling = NullValueHandling.Ignore,
@@ -209,31 +227,21 @@ public partial class SpellListPage : ContentPage
                     Debug.WriteLine("JSON Error: " + args.ErrorContext.Error.Message);
                     args.ErrorContext.Handled = true;
                 }
-            };
-
-            var spells = JsonConvert.DeserializeObject<List<Spell>>(jsonContent, settings);
-
-            if (spells != null) return spells;
-            Debug.WriteLine("Failed to deserialize spells.");
-            return new List<Spell>();
-
+            }) ?? new List<Spell>();
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Exception occurred while loading spells: {ex}");
+            Debug.WriteLine($"Exception loading spells: {ex}");
             return new List<Spell>();
         }
     }
 
     private async void OnSpellSelected(object sender, SelectionChangedEventArgs e)
     {
-        var selectedSpell = e.CurrentSelection.FirstOrDefault() as Spell;
-        if (selectedSpell != null)
+        if (e.CurrentSelection.FirstOrDefault() is Spell selectedSpell)
         {
-            int spellLevel = ParseSpellLevel(selectedSpell.SpellLevel, character.CharacterClass.ToString() ?? "");
-
-            await Navigation.PushAsync(new SpellDetailPage(selectedSpell, character, spellLevel, gameType));
-
+            int level = ParseSpellLevel(selectedSpell.SpellLevel, character?.CharacterClass.ToString() ?? "");
+            await Navigation.PushAsync(new SpellDetailPage(selectedSpell, character, level, gameType));
             ((CollectionView)sender).SelectedItem = null;
         }
     }

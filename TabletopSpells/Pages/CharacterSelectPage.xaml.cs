@@ -8,53 +8,52 @@ using TabletopSpells.Pages;
 using TabletopSpells.ViewModels;
 
 namespace TabletopSpells;
+
 public partial class CharacterSelectPage : ContentPage
 {
     public Game gameType;
     public Character character;
-    ObservableCollection<Character> Characters
-    {
-        get; set;
-    }
     
+    public ObservableCollection<Character> Characters { get; set; } = new();
+
     public CharacterSelectPage(Game gameType)
     {
         InitializeComponent();
-        Characters = new ObservableCollection<Character>();
-        LoadCharacters();
-        CharacterListView.ItemsSource = Characters;
-        this.BindingContext = this; // Set the BindingContext
         this.gameType = gameType;
 
+        LoadCharacters();
+        CharacterListView.ItemsSource = Characters;
+        BindingContext = this;
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        LoadCharacters();  // Reload characters each time the page appears
+        LoadCharacters();
     }
 
     private void LoadCharacters()
     {
-        Characters.Clear();  // Clear existing items
+        Characters.Clear();
         var characters = GetExistingCharacters();
-        
+
         bool charactersUpdated = false;
-        
+
         foreach (var character in characters)
         {
-            // Assign an ID if it is null
             if (character.ID == null || character.ID == Guid.Empty)
             {
                 character.ID = Guid.NewGuid();
                 charactersUpdated = true;
             }
 
+            // Ensure IsDivineCaster is set (covers edge cases where it might be missing from storage)
+            character.IsDivineCaster = ClassHelper.IsDivineCaster(character.CharacterClass);
+
             if (character.GameType == gameType)
                 Characters.Add(character);
         }
 
-        // Save updated characters back to preferences if any character was updated
         if (charactersUpdated)
         {
             SaveCharacters(characters);
@@ -63,65 +62,22 @@ public partial class CharacterSelectPage : ContentPage
 
     private void SaveCharacters(List<Character> characters)
     {
-        string updatedCharactersJson = JsonConvert.SerializeObject(characters);
-        Preferences.Set("characters", updatedCharactersJson);
+        var json = JsonConvert.SerializeObject(characters);
+        Preferences.Set("characters", json);
     }
 
-    private async void OnCreateNewCharacterClicked(object sender, EventArgs e)
+    private List<Character> GetExistingCharacters()
     {
-        string? characterName = await DisplayPromptAsync("New Character", "Enter character name:");
-
-        if (!string.IsNullOrWhiteSpace(characterName))
+        try
         {
-            // Get the names of the classes from the enum
-            var classOptions = ClassHelper.GetClassesByGame(gameType)
-                                          .Select(c => c.ToString())
-                                          .OrderBy(c => c)
-                                          .ToArray();
-
-            if (classOptions == null || classOptions.Length == 0)
-            {
-                await DisplayAlert("Error", "No classes available for the selected game.", "OK");
-                return;
-            }
-
-            // Display a list of classes to choose from
-            string selectedClass = await DisplayActionSheet("Select Class", "Cancel", null, classOptions);
-
-            if (!string.IsNullOrWhiteSpace(selectedClass) && selectedClass != "Cancel")
-            {
-                // Parse the selected class
-                if (Enum.TryParse(selectedClass, out Class characterClass))
-                {
-                    // Create a new character with the entered name and selected class
-                    var newCharacter = new Character
-                    {
-                        Name = characterName,
-                        CharacterClass = characterClass,
-                        GameType = gameType,
-                        ID = Guid.NewGuid() // Assign a new unique ID
-                    };
-
-                    SaveCharacter(newCharacter);
-                }
-            }
+            var json = Preferences.Get("characters", "[]");
+            return JsonConvert.DeserializeObject<List<Character>>(json) ?? new();
         }
-    }
-
-
-    [Obsolete]
-    private async void OnCharacterSelected(object sender, SelectionChangedEventArgs e)
-    {
-        var selectedCharacter = e.CurrentSelection.FirstOrDefault() as Character;
-        if (selectedCharacter != null)
+        catch (JsonException ex)
         {
-            SharedViewModel.Instance.CurrentCharacter = selectedCharacter;
-            await Navigation.PushAsync(new CharacterOverviewPage(selectedCharacter, SharedViewModel.Instance, gameType));
-
-            LoadCharacters();
+            Debug.WriteLine($"JSON Error: {ex.Message}");
+            return new();
         }
-
-    ((CollectionView)sender).SelectedItem = null;
     }
 
     private void SaveCharacter(Character character)
@@ -130,29 +86,61 @@ public partial class CharacterSelectPage : ContentPage
 
         if (characters.All(c => c.Name != character.Name))
         {
-            
-            var newCharacter = new Character { Name = character.Name, CharacterClass = character.CharacterClass, GameType = gameType, ID = new Guid() };
-            characters.Add(newCharacter);
-
-            string updatedCharactersJson = JsonConvert.SerializeObject(characters);
-            Preferences.Set("characters", updatedCharactersJson);
-
-            Characters.Add(newCharacter); // Add the whole character object to the ObservableCollection
+            characters.Add(character);
+            SaveCharacters(characters);
+            Characters.Add(character);
         }
     }
 
-    private List<Character> GetExistingCharacters()
+    private async void OnCreateNewCharacterClicked(object sender, EventArgs e)
     {
-        try
+        string? characterName = await DisplayPromptAsync("New Character", "Enter character name:");
+
+        if (string.IsNullOrWhiteSpace(characterName))
+            return;
+
+        var classOptions = ClassHelper.GetClassesByGame(gameType)
+                                      .Select(c => c.ToString())
+                                      .OrderBy(c => c)
+                                      .ToArray();
+
+        if (classOptions.Length == 0)
         {
-            string existingCharactersJson = Preferences.Get("characters", "[]");
-            return JsonConvert.DeserializeObject<List<Character>>(existingCharactersJson) ?? new List<Character>();
+            await DisplayAlert("Error", "No classes available for the selected game.", "OK");
+            return;
         }
-        catch (JsonException ex)
+
+        string selectedClass = await DisplayActionSheet("Select Class", "Cancel", null, classOptions);
+
+        if (string.IsNullOrWhiteSpace(selectedClass) || selectedClass == "Cancel")
+            return;
+
+        if (Enum.TryParse(selectedClass, out Class characterClass))
         {
-            Debug.WriteLine($"JSON Error: {ex.Message}");
-            return new List<Character>();
+            var newCharacter = new Character
+            {
+                Name = characterName,
+                CharacterClass = characterClass,
+                GameType = gameType,
+                ID = Guid.NewGuid(),
+                IsDivineCaster = ClassHelper.IsDivineCaster(characterClass)
+            };
+
+            SaveCharacter(newCharacter);
         }
     }
 
+    [Obsolete]
+    private async void OnCharacterSelected(object sender, SelectionChangedEventArgs e)
+    {
+        if (e.CurrentSelection.FirstOrDefault() is Character selectedCharacter)
+        {
+            SharedViewModel.Instance.CurrentCharacter = selectedCharacter;
+            SharedViewModel.Instance.LoadPreparedSpells(selectedCharacter);
+            await Navigation.PushAsync(new CharacterOverviewPage(selectedCharacter, SharedViewModel.Instance, gameType));
+            LoadCharacters();
+        }
+
+        ((CollectionView)sender).SelectedItem = null;
+    }
 }

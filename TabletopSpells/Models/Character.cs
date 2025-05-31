@@ -1,4 +1,5 @@
-﻿using TabletopSpells.Models.Enums;
+﻿using TabletopSpells.Helpers;
+using TabletopSpells.Models.Enums;
 
 namespace TabletopSpells.Models;
 
@@ -6,56 +7,84 @@ public class Character
 {
     public Guid? ID { get; set; }
     public required string Name { get; set; }
-    private List<Spell> Spells { get; } = new();
-    public Class CharacterClass { get; init; }
-    public Dictionary<int, int> MaxSpellsPerDay { get; set; } = new();
-    public Dictionary<int, int> SpellsUsedToday { get; set; } = new();
-    public Game GameType { get; init; }
-    public int Level { get; set; }
-    public bool IsDivineCaster { get; set; }
-    public List<string> AlwaysPreparedSpells { get; set; } = new List<string>();
 
-
-    // Stores the prepared spells explicitly chosen by the user
-    private List<Spell> _manuallyPreparedSpells = new();
-
-    // New property for ability scores and modifiers
-    public Dictionary<string, int> AbilityScores { get; set; } = new()
+    private Class _characterClass;
+    public Class CharacterClass
     {
-        { "Strength", 10 },
-        { "Dexterity", 10 },
-        { "Constitution", 10 },
-        { "Intelligence", 10 },
-        { "Wisdom", 10 },
-        { "Charisma", 10 }
-    };
-
-    // Derived property to calculate ability modifiers
-    private Dictionary<string, int>? AbilityModifiers =>
-        AbilityScores?.ToDictionary(
-            kvp => kvp.Key,
-            kvp => (kvp.Value - 10) / 2
-        );
-
-    public void AddSpell(Spell spell)
-    {
-        if (!Spells.Contains(spell))
+        get => _characterClass;
+        set
         {
-            Spells.Add(spell);
+            _characterClass = value;
+            IsDivineCaster = ClassHelper.IsDivineCaster(value);
         }
     }
 
-    public void RemoveSpell(Spell spell)
+    public Game GameType { get; init; }
+    public int Level { get; set; }
+
+    /// <summary>
+    /// Whether the character prepares spells from the divine list (Cleric, Druid, etc.)
+    /// Determined automatically when CharacterClass is set.
+    /// </summary>
+    public bool IsDivineCaster { get; set; }
+
+    public Dictionary<int, int> MaxSpellsPerDay { get; set; } = new();
+    public Dictionary<int, int> SpellsUsedToday { get; set; } = new();
+    public List<string> AlwaysPreparedSpells { get; init; } = new();
+
+    /// <summary>
+    /// The character's full spellbook / known spells.
+    /// </summary>
+    private readonly List<Spell> _knownSpells = new();
+
+    /// <summary>
+    /// The manually prepared spells the player has selected.
+    /// </summary>
+    private readonly List<Spell> _manuallyPreparedSpells = new();
+
+    /// <summary>
+    /// Basic D&D/PF ability scores.
+    /// </summary>
+    public Dictionary<string, int> AbilityScores { get; set; } = new()
     {
-        Spells.Remove(spell);
+        ["Strength"] = 10,
+        ["Dexterity"] = 10,
+        ["Constitution"] = 10,
+        ["Intelligence"] = 10,
+        ["Wisdom"] = 10,
+        ["Charisma"] = 10
+    };
+
+    /// <summary>
+    /// Calculates modifiers from ability scores.
+    /// </summary>
+    private Dictionary<string, int> AbilityModifiers =>
+        AbilityScores.ToDictionary(kvp => kvp.Key, kvp => (kvp.Value - 10) / 2);
+
+    /// <summary>
+    /// Adds a spell to the known list (not prepared).
+    /// </summary>
+    public void AddSpell(Spell spell)
+    {
+        if (!_knownSpells.Contains(spell))
+            _knownSpells.Add(spell);
     }
 
+    /// <summary>
+    /// Removes a spell from the known list.
+    /// </summary>
+    public void RemoveSpell(Spell spell) => _knownSpells.Remove(spell);
+
+    /// <summary>
+    /// Attempts to cast a spell of a given level. Returns true if a spell slot was available.
+    /// </summary>
     public bool CastSpell(int spellLevel)
     {
-        if (spellLevel is 0 or -1)
-            return true;
+        if (spellLevel is 0 or -1) return true;
 
-        if (!SpellsUsedToday.TryGetValue(spellLevel, out var value) || value >= MaxSpellsPerDay[spellLevel])
+        if (!SpellsUsedToday.TryGetValue(spellLevel, out var used) ||
+            !MaxSpellsPerDay.TryGetValue(spellLevel, out var max) ||
+            used >= max)
             return false;
 
         SpellsUsedToday[spellLevel]++;
@@ -63,64 +92,54 @@ public class Character
     }
 
     /// <summary>
-    /// Retrieve the relevant ability modifier for a specific class.
-    /// This determines how many spells a character can prepare, among other class-based mechanics.
+    /// Gets the modifier used for spellcasting and preparation for this class.
     /// </summary>
     public int GetRelevantAbilityModifier()
     {
-        var relevantAbility = CharacterClass switch
+        string relevant = CharacterClass switch
         {
             Class.Wizard => "Intelligence",
-            Class.Cleric => "Wisdom",
-            Class.Druid => "Wisdom",
             Class.Artificer => "Intelligence",
-            Class.Paladin => "Charisma",
-            Class.Sorcerer => "Charisma",
-            Class.Bard => "Charisma",
-            _ => "Strength" // Default to Strength if class not recognized
+            Class.Cleric or Class.Druid => "Wisdom",
+            Class.Paladin or Class.Sorcerer or Class.Bard => "Charisma",
+            _ => "Strength"
         };
 
-        return AbilityModifiers != null && AbilityModifiers.TryGetValue(relevantAbility, out var value) ? value : 0;
+        return AbilityModifiers.TryGetValue(relevant, out var mod) ? mod : 0;
     }
 
     /// <summary>
-    /// Retrieves or displays the spells currently prepared by a character.
-    /// This pulls from the manually prepared spells and enforces the limit based on rules.
+    /// Returns the list of prepared spells within limit (Level + modifier).
     /// </summary>
     public List<Spell> GetPreparedSpells()
     {
-        // Enforce the preparation limit dynamically
-        var spellsPreparedLimit = Level + GetRelevantAbilityModifier();
+        int limit = Level + GetRelevantAbilityModifier();
 
         return _manuallyPreparedSpells
             .OrderByDescending(spell => spell.SpellLevel)
-            .Take(spellsPreparedLimit)
+            .Take(limit)
             .ToList();
     }
 
     /// <summary>
-    /// Toggles a spell's prepared status.
-    /// Adds the spell if it is not already prepared, or removes it if it is.
-    /// Enforces the preparation limit dynamically.
+    /// Toggles a spell as prepared/unprepared within current limit.
     /// </summary>
     public bool TogglePreparedSpell(Spell spell)
     {
-        var spellsPreparedLimit = Level + GetRelevantAbilityModifier();
+        int limit = Level + GetRelevantAbilityModifier();
 
         if (_manuallyPreparedSpells.Contains(spell))
         {
-            // If already prepared, unprepare it
             _manuallyPreparedSpells.Remove(spell);
             return true;
         }
-        else if (_manuallyPreparedSpells.Count < spellsPreparedLimit)
+
+        if (_manuallyPreparedSpells.Count < limit)
         {
-            // If not prepared and under limit, prepare it
             _manuallyPreparedSpells.Add(spell);
             return true;
         }
 
-        // Spell limit exceeded, cannot add new spell
         return false;
     }
 }
