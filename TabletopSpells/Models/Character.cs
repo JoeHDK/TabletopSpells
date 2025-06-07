@@ -127,10 +127,11 @@ public class Character
     public bool TogglePreparedSpell(Spell spell)
     {
         int limit = Level + GetRelevantAbilityModifier();
+        var existing = _manuallyPreparedSpells.FirstOrDefault(s => s.Id == spell.Id);
 
-        if (_manuallyPreparedSpells.Contains(spell))
+        if (existing != null)
         {
-            _manuallyPreparedSpells.Remove(spell);
+            _manuallyPreparedSpells.Remove(existing);
             return true;
         }
 
@@ -142,4 +143,5 @@ public class Character
 
         return false;
     }
+
 }

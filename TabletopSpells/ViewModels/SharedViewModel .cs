@@ -292,16 +292,18 @@ public class SharedViewModel : INotifyPropertyChanged
 
         try
         {
-            // Retrieve the stored prepared spells JSON for the character
-            var preparedSpellsJson = Preferences.Get($"preparedSpells_{character.ID}", "[]");
+            var stored = Preferences.Get($"preparedSpells_{character.ID}", "[]");
+            var preparedSpellIds = JsonConvert.DeserializeObject<List<Guid>>(stored) ?? new List<Guid>();
 
-            // Deserialize into a list of spells
-            var preparedSpells = JsonConvert.DeserializeObject<List<Spell>>(preparedSpellsJson) ?? new List<Spell>();
+            if (!CharacterSpells.TryGetValue(character.ID, out var liveSpells)) return;
 
-            // Ensure prepared spells are updated in the character
-            foreach (var spell in preparedSpells)
+            foreach (var savedId in preparedSpellIds)
             {
-                character.TogglePreparedSpell(spell); // Dynamically prepare the spells
+                var match = liveSpells.FirstOrDefault(s => s.Id == savedId);
+                if (match != null)
+                {
+                    character.TogglePreparedSpell(match);
+                }
             }
 
             Debug.WriteLine($"Prepared spells loaded successfully for {character.Name}");
@@ -310,22 +312,6 @@ public class SharedViewModel : INotifyPropertyChanged
         {
             Debug.WriteLine($"Error loading prepared spells for {character.Name}: {ex.Message}");
         }
-    }
-    
-    /// <summary>
-    /// Toggles a spell's prepared state for the current character and persists the change.
-    /// Returns true if the toggle was successful (added or removed), false if blocked (e.g., limit reached).
-    /// </summary>
-    public bool TogglePreparedSpellAndSave(Character character, Spell spell)
-    {
-        if (character == null || spell == null) return false;
-    
-        var success = character.TogglePreparedSpell(spell);
-    
-        if (success)
-            SavePreparedSpells(character);
-    
-        return success;
     }
 
     
@@ -609,24 +595,21 @@ public class SharedViewModel : INotifyPropertyChanged
 
         try
         {
-            // Serialize the prepared spells list
-            var preparedSpellsJson = JsonConvert.SerializeObject(preparedSpells);
+            var ids = preparedSpells.Select(s => s.Id).ToList();
+            var json = JsonConvert.SerializeObject(ids);
+            Preferences.Set($"preparedSpells_{characterId}", json);
 
-            // Persist the prepared spells using the character's ID as the key
-            Preferences.Set($"preparedSpells_{characterId}", preparedSpellsJson);
+            Debug.WriteLine($"Saving prepared spells: {ids.Count} for {characterId}");
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"Error saving prepared spells: {ex.Message}");
         }
     }
-    
+
     public void SavePreparedSpells(Character character)
     {
-        if (character == null || character.ID == null) return;
-
+        if (character?.ID == null) return;
         SaveCharacterPreparedSpells(character.ID, character.GetPreparedSpells());
     }
-
-
 }

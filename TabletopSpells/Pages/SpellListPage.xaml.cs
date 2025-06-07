@@ -19,17 +19,15 @@ public partial class SpellListPage : ContentPage, INotifyPropertyChanged
     private int? selectedSpellLevel = null;
     private string currentSearchText = "";
 
-    public ObservableCollection<Spell> Spells { get; set; }
-    public ObservableCollection<Spell> FilteredSpells { get; set; }
+    public ObservableCollection<Spell> Spells { get; set; } = new();
+    public ObservableCollection<Spell> FilteredSpells { get; set; } = new();
     public ObservableCollection<SpellViewModel> SpellViewModels { get; set; } = new();
 
     public bool IsDivineCaster => character?.IsDivineCaster ?? false;
 
     public event PropertyChangedEventHandler? PropertyChanged;
     protected void OnPropertyChanged(string propertyName)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
     public string PreparedSpellCountText =>
         $"Prepared: {character?.GetPreparedSpells().Count ?? 0} / {character?.Level + character?.GetRelevantAbilityModifier() ?? 0}";
@@ -41,60 +39,53 @@ public partial class SpellListPage : ContentPage, INotifyPropertyChanged
         this.gameType = gameType;
 
         SharedViewModel.Instance.CurrentCharacter = character;
+        SharedViewModel.Instance.LoadSpellsForCharacter(character);
         SharedViewModel.Instance.LoadPreparedSpells(character);
-
-        SharedViewModel.Instance.SpellsChanged = () =>
-        {
-            if (!IsDivineCaster) return;
-
-            var allSpells = GetAllSpellsFromJson(gameType);
-            var className = character.CharacterClass.ToString().ToLower();
-
-            var legalSpells = allSpells
-                .Where(spell =>
-                    !string.IsNullOrEmpty(spell.SpellLevel) &&
-                    spell.SpellLevel.ToLower().Contains(className))
-                .ToList();
-
-            SpellViewModels = new ObservableCollection<SpellViewModel>(
-                legalSpells
-                    .Select(spell => new SpellViewModel(spell, character))
-                    .OrderByDescending(vm => vm.IsPrepared)
-                    .ThenBy(vm => vm.Spell.SpellLevel)
-                    .ThenBy(vm => vm.Spell.Name));
-
-            OnPropertyChanged(nameof(SpellViewModels));
-            OnPropertyChanged(nameof(PreparedSpellCountText));
-        };
-
 
         Spells = new ObservableCollection<Spell>(GetAllSpellsFromJson(gameType));
         FilteredSpells = new ObservableCollection<Spell>(Spells);
 
-        if (character.IsDivineCaster)
+        if (IsDivineCaster)
         {
-            var allSpells = GetAllSpellsFromJson(gameType);
-            var className = character.CharacterClass.ToString().ToLower();
-
-            var legalSpells = allSpells
-                .Where(spell =>
-                    !string.IsNullOrEmpty(spell.SpellLevel) &&
-                    spell.SpellLevel.ToLower().Contains(className))
-                .ToList();
-
-            SpellViewModels = new ObservableCollection<SpellViewModel>(
-                legalSpells
-                    .Select(spell => new SpellViewModel(spell, character))
-                    .OrderByDescending(vm => vm.IsPrepared)
-                    .ThenBy(vm => vm.Spell.SpellLevel)
-                    .ThenBy(vm => vm.Spell.Name));
-
-            OnPropertyChanged(nameof(SpellViewModels));
-            OnPropertyChanged(nameof(IsDivineCaster));
-            OnPropertyChanged(nameof(PreparedSpellCountText));
+            ReloadDivineSpellViewModels();
         }
 
         BindingContext = this;
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+
+        SharedViewModel.Instance.SpellsChanged = () =>
+        {
+            if (!IsDivineCaster) return;
+            ReloadDivineSpellViewModels();
+        };
+
+        ReloadDivineSpellViewModels();
+    }
+
+    private void ReloadDivineSpellViewModels()
+    {
+        if (character == null) return;
+
+        var spells = SharedViewModel.Instance.SpellsForCharacter(character);
+        var viewModels = spells
+            .Select(s => new SpellViewModel(s, character))
+            .OrderByDescending(vm => vm.IsPrepared)
+            .ThenBy(vm => vm.Spell.SpellLevel)
+            .ThenBy(vm => vm.Spell.Name)
+            .ToList();
+
+        SpellViewModels.Clear();
+        foreach (var vm in viewModels)
+        {
+            SpellViewModels.Add(vm);
+        }
+        
+        OnPropertyChanged(nameof(SpellViewModels));
+        OnPropertyChanged(nameof(PreparedSpellCountText));
     }
 
     private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
@@ -127,10 +118,7 @@ public partial class SpellListPage : ContentPage, INotifyPropertyChanged
         var match = Regex.Match(cleanAction, @"\d+");
         var selectedLevel = match.Success ? int.Parse(match.Value) : (cleanAction == "Cantrips" ? 0 : -1);
 
-        if (selectedSpellLevel == selectedLevel)
-            selectedSpellLevel = null;
-        else
-            selectedSpellLevel = selectedLevel;
+        selectedSpellLevel = (selectedSpellLevel == selectedLevel) ? null : selectedLevel;
 
         FilterSpells();
         UpdateTitle();
@@ -153,7 +141,6 @@ public partial class SpellListPage : ContentPage, INotifyPropertyChanged
     {
         if (IsDivineCaster)
         {
-            Debug.WriteLine("Rendering divine caster spell list");
             var filtered = SpellViewModels
                 .Where(vm =>
                     (string.IsNullOrEmpty(currentSearchText) || vm.Spell.Name.ToLower().Contains(currentSearchText)) &&
@@ -166,20 +153,27 @@ public partial class SpellListPage : ContentPage, INotifyPropertyChanged
             SpellViewModels.Clear();
             foreach (var vm in filtered)
                 SpellViewModels.Add(vm);
-            return;
+
+            OnPropertyChanged(nameof(SpellViewModels));
+            OnPropertyChanged(nameof(PreparedSpellCountText));
         }
+        else
+        {
+            var filteredSpells = Spells
+                .Where(spell =>
+                    (string.IsNullOrEmpty(currentSearchText) || spell.Name.ToLower().Contains(currentSearchText)) &&
+                    (!selectedSpellLevel.HasValue || ParseSpellLevel(spell.SpellLevel, character.CharacterClass.ToString()) == selectedSpellLevel))
+                .OrderBy(spell => spell.Name)
+                .ToList();
 
-        var filteredSpells = Spells
-            .Where(spell =>
-                (string.IsNullOrEmpty(currentSearchText) || spell.Name.ToLower().Contains(currentSearchText)) &&
-                (!selectedSpellLevel.HasValue || ParseSpellLevel(spell.SpellLevel, character.CharacterClass.ToString()) == selectedSpellLevel))
-            .OrderBy(spell => spell.Name)
-            .ToList();
+            FilteredSpells.Clear();
+            foreach (var spell in filteredSpells)
+                FilteredSpells.Add(spell);
 
-        FilteredSpells.Clear();
-        foreach (var spell in filteredSpells)
-            FilteredSpells.Add(spell);
+            OnPropertyChanged(nameof(FilteredSpells));
+        }
     }
+
 
     private int ParseSpellLevel(string spellLevel, string characterClass)
     {
