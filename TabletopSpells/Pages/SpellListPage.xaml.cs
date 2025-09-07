@@ -93,8 +93,7 @@ public partial class SpellListPage : ContentPage, INotifyPropertyChanged
         currentSearchText = e.NewTextValue.ToLower();
         FilterSpells();
     }
-
-    [Obsolete]
+    
     private async void OnMenuClicked(object sender, EventArgs e)
     {
         var levels = new List<string>
@@ -106,8 +105,7 @@ public partial class SpellListPage : ContentPage, INotifyPropertyChanged
 
         for (var i = 0; i < levels.Count; i++)
         {
-            var levelNumber = i;
-            if (selectedSpellLevel.HasValue && selectedSpellLevel.Value == levelNumber)
+            if (selectedSpellLevel == i)
                 levels[i] = $"* {levels[i]}";
         }
 
