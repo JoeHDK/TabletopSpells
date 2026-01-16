@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using TabletopSpells.Models;
 using TabletopSpells.Pages;
+using TabletopSpells.Repositories;
 
 namespace TabletopSpells.ViewModels;
 
@@ -328,7 +329,7 @@ public class SharedViewModel : INotifyPropertyChanged
             // Auto-fill divine casters with all class spells
             if (character.IsDivineCaster && (!CharacterSpells[character.ID]?.Any() ?? true))
             {
-                var allSpells = LoadAllClassSpells(character); // helper method below
+                var allSpells = SpellRepository.GetAllSpellsFromJson(character.GameType); // reuse your loader
                 foreach (var spell in allSpells)
                 {
                     AddSpell(character, spell);
@@ -341,7 +342,7 @@ public class SharedViewModel : INotifyPropertyChanged
     
     public List<Spell> LoadAllClassSpells(Character character)
     {
-        var allSpells = SpellListPage.GetAllSpellsFromJson(character.GameType); // reuse your loader
+        var allSpells = SpellRepository.GetAllSpellsFromJson(character.GameType); // reuse your loader
         var className = character.CharacterClass.ToString().ToLower();
 
         return allSpells
@@ -613,3 +614,4 @@ public class SharedViewModel : INotifyPropertyChanged
         SaveCharacterPreparedSpells(character.ID, character.GetPreparedSpells());
     }
 }
+

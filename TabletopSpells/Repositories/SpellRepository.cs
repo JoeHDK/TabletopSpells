@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using TabletopSpells.Models.Enums;
 
 namespace TabletopSpells.Repositories;
 public class SpellRepository
@@ -40,5 +41,24 @@ public class SpellRepository
         return spells.Where(spell => spell.Name.Equals(name, StringComparison.OrdinalIgnoreCase)).ToList();
     }
 
-    
+    public static List<Spell> GetAllSpellsFromJson(Game gameType)
+    {
+        string fileName = gameType switch
+        {
+            Game.dnd5e => "dnd 5e.json",
+            Game.pathfinder1e => "Pathfinder1e.json",
+            _ => throw new ArgumentException($"Unknown game type: {gameType}")
+        };
+        string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Spells", fileName);
+        try
+        {
+            string json = File.ReadAllText(filePath);
+            return JsonSerializer.Deserialize<List<Spell>>(json) ?? new List<Spell>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading spells from JSON: {ex.Message}");
+            return new List<Spell>();
+        }
+    }
 }

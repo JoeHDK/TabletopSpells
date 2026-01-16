@@ -43,7 +43,7 @@
         <!-- 🛐 Divine caster spell list -->
         <CollectionView Grid.Row="2"
                         IsVisible="{Binding IsDivineCaster}"
-                        ItemsSource="{Binding SpellViewModels}"
+                        ItemsSource="{Binding FilteredSpellViewModels}"
                         SelectionMode="None">
             <CollectionView.ItemTemplate>
                 <DataTemplate>

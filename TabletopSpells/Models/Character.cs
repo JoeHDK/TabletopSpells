@@ -36,6 +36,7 @@ public class Character
     /// The character's full spellbook / known spells.
     /// </summary>
     private readonly List<Spell> _knownSpells = new();
+    public IEnumerable<Spell> KnownSpells => _knownSpells;
 
     /// <summary>
     /// The manually prepared spells the player has selected.

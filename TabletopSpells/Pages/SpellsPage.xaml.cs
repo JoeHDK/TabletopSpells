@@ -2,6 +2,7 @@
 using System.Text.RegularExpressions;
 using TabletopSpells.Models;
 using TabletopSpells.Models.Enums;
+using TabletopSpells.Repositories;
 using TabletopSpells.ViewModels;
 
 namespace TabletopSpells.Pages;
@@ -41,7 +42,7 @@ public partial class SpellsPage : ContentPage
 
     private List<Spell> GetCastableSpells(Character character, Game game)
     {
-        var allSpellsFromJson = SpellListPage.GetAllSpellsFromJson(game);
+        var allSpellsFromJson = SpellRepository.GetAllSpellsFromJson(game);
         var castable = new List<Spell>();
 
         // Always prepared
