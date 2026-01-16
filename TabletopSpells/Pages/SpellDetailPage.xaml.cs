@@ -126,6 +126,8 @@ public partial class SpellDetailPage : ContentPage
     var spellSlots = new List<string>();
     foreach (var (level, maxSpells) in currentCharacter.MaxSpellsPerDay)
     {
+        if (level < spellLevel) continue;
+        
         var usedSpells = currentCharacter.SpellsUsedToday.GetValueOrDefault(level, 0);
         var remainingSpells = maxSpells - usedSpells;
 

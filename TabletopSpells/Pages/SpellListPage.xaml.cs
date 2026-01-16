@@ -1,10 +1,4 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Reflection;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using TabletopSpells.Models;
 using TabletopSpells.Models.Enums;
 using TabletopSpells.ViewModels;
@@ -19,7 +13,7 @@ public partial class SpellListPage : ContentPage
     public SpellListPage(Character character, Game gameType)
     {
         InitializeComponent();
-        viewModel = new SpellListPageViewModel(character, character.IsDivineCaster);
+        viewModel = new SpellListPageViewModel(character, character.IsDivineCaster, gameType);
         BindingContext = viewModel;
     }
 
@@ -75,8 +69,63 @@ public partial class SpellListPage : ContentPage
         if (e.CurrentSelection.FirstOrDefault() is Spell selectedSpell)
         {
             int level = viewModel.ParseSpellLevel(selectedSpell.SpellLevel, viewModel.Character?.CharacterClass.ToString() ?? "");
-            await Navigation.PushAsync(new SpellDetailPage(selectedSpell, viewModel.Character, level, viewModel.GameType));
+            
+            // For divine casters, show preparation dialog instead of detail page
+            if (viewModel.IsDivineCaster)
+            {
+                await HandleDivineCasterSpellSelection(selectedSpell);
+            }
+            else
+            {
+                // Non-divine casters go to detail page as before
+                await Navigation.PushAsync(new SpellDetailPage(selectedSpell, viewModel.Character, level, viewModel.GameType));
+            }
+            
             ((CollectionView)sender).SelectedItem = null;
+        }
+    }
+
+    private async Task HandleDivineCasterSpellSelection(Spell selectedSpell)
+    {
+        var confirmation = await DisplayAlert("Prepare Spell",
+            $"Do you want to add '{selectedSpell.Name}' to your prepared spells?",
+            "Yes",
+            "No");
+
+        if (!confirmation)
+            return;
+
+        // Check if we're at the prepared spell limit
+        if (!viewModel.CanPrepareMoReSpells())
+        {
+            // Show replacement dialog
+            var preparedSpells = viewModel.GetPreparedSpells();
+            var replacementDialog = new PrepareSpellReplacementDialog(preparedSpells, selectedSpell.Name);
+            await Navigation.PushAsync(replacementDialog);
+            
+            // Wait for user selection (using a simple polling approach)
+            await Task.Delay(1000);
+            var selectedReplacement = replacementDialog.GetSelectedReplacement();
+            
+            if (selectedReplacement != null)
+            {
+                viewModel.ReplacePrepareddSpell(selectedReplacement, selectedSpell);
+                SharedViewModel.Instance.SavePreparedSpells(viewModel.Character);
+                await DisplayAlert("Success", $"'{selectedReplacement.Name}' has been replaced with '{selectedSpell.Name}'.", "OK");
+            }
+            
+            await Navigation.PopAsync();
+        }
+        else
+        {
+            // Prepare the spell directly
+            var spellViewModel = viewModel.SpellViewModels.FirstOrDefault(s => s.Spell.Id == selectedSpell.Id);
+            if (spellViewModel != null)
+            {
+                spellViewModel.IsPrepared = true;
+                SharedViewModel.Instance.SavePreparedSpells(viewModel.Character);
+                await DisplayAlert("Success", $"'{selectedSpell.Name}' has been added to your prepared spells.", "OK");
+            }
         }
     }
 

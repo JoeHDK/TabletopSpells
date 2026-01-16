@@ -40,6 +40,7 @@ public class SharedViewModel : INotifyPropertyChanged
                 {
                     LoadSpellsPerDayDetails(currentCharacter);  // Load spell details directly into the character
                     MigrateSpellsIfNeeded(currentCharacter);    // Migrate spells from name-based keys to ID-based keys
+                    LoadPreparedSpells(currentCharacter);        // Load prepared spells for the character
                 }
             }
         }

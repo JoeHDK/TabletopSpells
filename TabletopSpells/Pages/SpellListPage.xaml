@@ -44,11 +44,12 @@
         <CollectionView Grid.Row="2"
                         IsVisible="{Binding IsDivineCaster}"
                         ItemsSource="{Binding FilteredSpellViewModels}"
-                        SelectionMode="None">
+                        SelectionMode="Single"
+                        SelectionChanged="OnSpellSelected">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Grid Padding="10" ColumnDefinitions="*,Auto">
-                        <StackLayout>
+                    <Grid Padding="10" ColumnDefinitions="*,Auto" RowSpacing="5">
+                        <StackLayout Grid.Column="0">
                             <Label FontAttributes="Bold"
                                    FontSize="16"
                                    Text="{Binding Spell.Name}">
