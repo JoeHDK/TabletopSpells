@@ -11,6 +11,7 @@ public partial class PrepareSpellReplacementDialog : ContentPage
     public bool IsSelectionValid { get; set; }
 
     private Spell? selectedReplacement;
+    private TaskCompletionSource<Spell?>? _tcs;
 
     public PrepareSpellReplacementDialog(List<Spell> preparedSpells, string newSpellName)
     {
@@ -25,6 +26,15 @@ public partial class PrepareSpellReplacementDialog : ContentPage
         BindingContext = this;
     }
 
+    public static async Task<Spell?> ShowAsync(List<Spell> preparedSpells, string newSpellName)
+    {
+        var dialog = new PrepareSpellReplacementDialog(preparedSpells, newSpellName);
+        dialog._tcs = new TaskCompletionSource<Spell?>();
+        await Shell.Current.Navigation.PushModalAsync(dialog);
+        var result = await dialog._tcs.Task;
+        return result;
+    }
+
     private void OnSpellSelected(object sender, SelectionChangedEventArgs e)
     {
         if (e.CurrentSelection.FirstOrDefault() is Spell selectedSpell)
@@ -37,15 +47,17 @@ public partial class PrepareSpellReplacementDialog : ContentPage
 
     private async void OnCancelClicked(object sender, EventArgs e)
     {
-        await Navigation.PopAsync();
+        // Return null result
+        if (_tcs != null && !_tcs.Task.IsCompleted) _tcs.SetResult(null);
+        await Shell.Current.Navigation.PopModalAsync();
     }
 
     private async void OnReplaceClicked(object sender, EventArgs e)
     {
         if (selectedReplacement != null)
         {
-            await Navigation.PopAsync();
-            Shell.Current.SendBackButtonPressed(); // Signal completion
+            if (_tcs != null && !_tcs.Task.IsCompleted) _tcs.SetResult(selectedReplacement);
+            await Shell.Current.Navigation.PopModalAsync();
         }
     }
 

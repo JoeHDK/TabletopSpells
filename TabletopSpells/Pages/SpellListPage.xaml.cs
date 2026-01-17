@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Collections.ObjectModel;
+using System.Text.RegularExpressions;
 using TabletopSpells.Models;
 using TabletopSpells.Models.Enums;
 using TabletopSpells.ViewModels;
@@ -66,20 +67,14 @@ public partial class SpellListPage : ContentPage
 
     private async void OnSpellSelected(object sender, SelectionChangedEventArgs e)
     {
-        if (e.CurrentSelection.FirstOrDefault() is Spell selectedSpell)
+        if (e.CurrentSelection.FirstOrDefault() is SpellViewModel selectedViewModel)
         {
+            var selectedSpell = selectedViewModel.Spell;
             int level = viewModel.ParseSpellLevel(selectedSpell.SpellLevel, viewModel.Character?.CharacterClass.ToString() ?? "");
             
-            // For divine casters, show preparation dialog instead of detail page
-            if (viewModel.IsDivineCaster)
-            {
-                await HandleDivineCasterSpellSelection(selectedSpell);
-            }
-            else
-            {
-                // Non-divine casters go to detail page as before
-                await Navigation.PushAsync(new SpellDetailPage(selectedSpell, viewModel.Character, level, viewModel.GameType));
-            }
+            // All casters (divine and non-divine) go to spell detail page
+            // The detail page handles the Prepare/Add logic based on caster type
+            await Navigation.PushAsync(new SpellDetailPage(selectedSpell, viewModel.Character, level, viewModel.GameType));
             
             ((CollectionView)sender).SelectedItem = null;
         }
@@ -134,5 +129,57 @@ public partial class SpellListPage : ContentPage
         // Forward the search text to the ViewModel for filtering
         viewModel.SearchText = e.NewTextValue;
         viewModel.FilterSpells();
+    }
+
+    private async void OnFavoriteClicked(object sender, EventArgs e)
+    {
+        try
+        {
+            if (sender is ImageButton btn && btn.CommandParameter is Spell spell)
+            {
+                var shared = SharedViewModel.Instance;
+                // Toggle favorite in shared storage; ensure character is present
+                var character = shared.CurrentCharacter ?? shared.Characters.FirstOrDefault();
+                if (character == null) return;
+
+                // Ensure the spell is present in character spells collection
+                if (!shared.CharacterSpells.ContainsKey(character.ID))
+                    shared.CharacterSpells[character.ID] = new ObservableCollection<Spell>();
+
+                var existing = shared.CharacterSpells[character.ID].FirstOrDefault(s => s.Id == spell.Id);
+                if (existing == null)
+                {
+                    // If spell not present, add it (but do not prepare)
+                    shared.AddSpell(character, spell);
+                    shared.SaveSpellForCharacter(character, spell);
+                    existing = shared.CharacterSpells[character.ID].FirstOrDefault(s => s.Id == spell.Id);
+                }
+
+                if (existing != null)
+                {
+                    shared.ToggleSpellFavorite(character, existing);
+                }
+
+                // Visual feedback: pulse animation on the button
+                try
+                {
+                    await btn.ScaleTo(1.3, 120, Easing.CubicOut);
+                    await btn.ScaleTo(1.0, 120, Easing.CubicIn);
+                }
+                catch
+                {
+                    // ignore animation errors on unsupported platforms
+                }
+
+                // Refresh page view model's list and UI
+                shared.SpellsChanged?.Invoke();
+                this.viewModel.ReloadDivineSpellViewModels();
+                this.viewModel.FilterSpells();
+            }
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", $"Unable to toggle favorite: {ex.Message}", "OK");
+        }
     }
 }

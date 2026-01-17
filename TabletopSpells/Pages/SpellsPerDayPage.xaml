@@ -1,6 +1,7 @@
 ﻿<!-- SpellsPerDayPage.xaml -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:TabletopSpells.ViewModels"
              x:Class="TabletopSpells.Pages.SpellsPerDayPage"
              Title="Spells per day">
 
@@ -13,11 +14,12 @@
 
     <StackLayout>
         <ListView x:Name="lvSpellsPerDay" 
+                  ItemsSource="{Binding SpellLevels}"
                   ItemSelected="OnSpellLevelSelected"
                   HasUnevenRows="True"
                   VerticalScrollBarVisibility="Never">
             <ListView.ItemTemplate>
-                <DataTemplate>
+                <DataTemplate x:DataType="vm:SpellLevelViewModel">
                     <ViewCell>
                         <StackLayout Orientation="Vertical">
                             <Label Text="{Binding DisplayText}" 
@@ -37,8 +39,7 @@
                                                  ProgressColor="Blue" 
                                                  BackgroundColor="Transparent"
                                                  HorizontalOptions="FillAndExpand"
-                                                 VerticalOptions="FillAndExpand"
-                                                 ScaleY="30"/>
+                                                 VerticalOptions="FillAndExpand"/>
                                     <Label Text="{Binding DetailText}" 
                                            HorizontalOptions="Center" 
                                            VerticalOptions="Center"

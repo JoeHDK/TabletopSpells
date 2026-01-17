@@ -65,28 +65,27 @@ public partial class SpellsPage : ContentPage
 
         // Deduplicate
         return castable
-            .GroupBy(spell => (spell.Name.ToLowerInvariant(), spell.SpellLevel))
-            .Select(g => g.First())
-            .OrderBy(s => s.SpellLevel)
-            .ThenBy(s => s.Name)
+            .GroupBy(spell => (spell.Name?.ToLowerInvariant(), spell.SpellLevel))
+            .Select(grouping => grouping.First())
+            .OrderBy(spell => spell.SpellLevel)
+            .ThenBy(spell => spell.Name)
             .ToList();
     }
 
     private int ParseSpellLevel(string spellLevel, string characterClass)
     {
-        string[] parts = spellLevel.Split(',');
-        int minLevel = int.MaxValue;
+        var parts = spellLevel.Split(',');
+        var minLevel = int.MaxValue;
 
         foreach (var part in parts)
         {
-            var match = Regex.Match(part, @"\d+");
-            if (match.Success && int.TryParse(match.Value, out int level))
-            {
-                if (part.Trim().ToLower().Contains(characterClass.ToLower()))
-                    return level;
+            var match = MyRegex().Match(part);
+            if (!match.Success || !int.TryParse(match.Value, out var level)) continue;
+            if (part.Trim()
+                .Contains(characterClass, StringComparison.CurrentCultureIgnoreCase))
+                return level;
 
-                minLevel = Math.Min(minLevel, level);
-            }
+            minLevel = Math.Min(minLevel, level);
         }
 
         return minLevel == int.MaxValue ? -1 : minLevel;
@@ -98,14 +97,17 @@ public partial class SpellsPage : ContentPage
         await Navigation.PushAsync(new SpellListPage(character, gameType));
     }
 
-    private async void OnSpellSelected(object sender, SelectionChangedEventArgs e)
+    private async void OnSpellSelected(object sender, SelectionChangedEventArgs selectionChangedEventArgs)
     {
-        if (e.CurrentSelection.FirstOrDefault() is Spell selectedSpell)
+        if (selectionChangedEventArgs.CurrentSelection.FirstOrDefault() is Spell { SpellLevel: not null } selectedSpell)
         {
-            int spellLevel = ParseSpellLevel(selectedSpell.SpellLevel, character.CharacterClass.ToString());
+            var spellLevel = ParseSpellLevel(selectedSpell.SpellLevel, character.CharacterClass.ToString());
             await Navigation.PushAsync(new SpellDetailPage(selectedSpell, character, spellLevel, gameType));
         }
 
         ((CollectionView)sender).SelectedItem = null;
     }
+
+    [GeneratedRegex(@"\d+")]
+    private static partial Regex MyRegex();
 }

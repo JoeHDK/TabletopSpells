@@ -29,12 +29,7 @@ public class SpellViewModel : INotifyPropertyChanged
                 MainThread.BeginInvokeOnMainThread(async () =>
                 {
                     var preparedSpells = character.GetPreparedSpells();
-                    var dialog = new TabletopSpells.Pages.PrepareSpellReplacementDialog(preparedSpells, Spell.Name);
-                    await Shell.Current.Navigation.PushAsync(dialog);
-                    
-                    // Wait for user to make selection
-                    await Task.Delay(100);
-                    var selectedReplacement = dialog.GetSelectedReplacement();
+                    var selectedReplacement = await TabletopSpells.Pages.PrepareSpellReplacementDialog.ShowAsync(preparedSpells, Spell.Name);
                     
                     if (selectedReplacement != null)
                     {
@@ -45,9 +40,6 @@ public class SpellViewModel : INotifyPropertyChanged
                         OnPropertyChanged(nameof(IsPrepared));
                         SharedViewModel.Instance.SpellsChanged?.Invoke();
                     }
-                    
-                    // Pop the dialog
-                    await Shell.Current.Navigation.PopAsync();
                 });
                 return;
             }

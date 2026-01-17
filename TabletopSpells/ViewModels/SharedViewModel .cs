@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using TabletopSpells.Helpers;
 using TabletopSpells.Models;
 using TabletopSpells.Pages;
 using TabletopSpells.Repositories;
@@ -11,22 +12,30 @@ namespace TabletopSpells.ViewModels;
 public class SharedViewModel : INotifyPropertyChanged
 {
     #region Singleton Pattern
+
     private static SharedViewModel? _instance;
     public static SharedViewModel Instance => _instance ??= new SharedViewModel();
+
     #endregion
 
     #region Fields & Constants
-    private const string CharactersKey = "characters";
-    public ObservableCollection<Grouping<int, SpellCastLog>> GroupedLogs { get; set; } = new ObservableCollection<Grouping<int, SpellCastLog>>();
 
-    private Dictionary<Guid?, ObservableCollection<Spell>> characterSpells = new Dictionary<Guid?, ObservableCollection<Spell>>();
+    private const string CharactersKey = "characters";
+
+    public ObservableCollection<Grouping<int, SpellCastLog>> GroupedLogs { get; set; } =
+        new ObservableCollection<Grouping<int, SpellCastLog>>();
+
+    private Dictionary<Guid?, ObservableCollection<Spell>> characterSpells = new();
 
     // List of all characters
     public ObservableCollection<Character> Characters { get; private set; }
+
     #endregion
 
     #region Properties
+
     private Character? currentCharacter;
+
     public Character? CurrentCharacter
     {
         get => currentCharacter;
@@ -38,9 +47,9 @@ public class SharedViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(CurrentCharacter));
                 if (currentCharacter != null)
                 {
-                    LoadSpellsPerDayDetails(currentCharacter);  // Load spell details directly into the character
-                    MigrateSpellsIfNeeded(currentCharacter);    // Migrate spells from name-based keys to ID-based keys
-                    LoadPreparedSpells(currentCharacter);        // Load prepared spells for the character
+                    LoadSpellsPerDayDetails(currentCharacter); // Load spell details directly into the character
+                    MigrateSpellsIfNeeded(currentCharacter); // Migrate spells from name-based keys to ID-based keys
+                    LoadPreparedSpells(currentCharacter); // Load prepared spells for the character
                 }
             }
         }
@@ -58,14 +67,17 @@ public class SharedViewModel : INotifyPropertyChanged
             }
         }
     }
+
     #endregion
 
     #region Constructor
+
     public SharedViewModel()
     {
         // Load all characters into the ObservableCollection at startup
         Characters = new ObservableCollection<Character>(LoadCharacters());
     }
+
     #endregion
 
     #region Character-Related Persistence Methods
@@ -75,9 +87,25 @@ public class SharedViewModel : INotifyPropertyChanged
     /// </summary>
     private List<Character> LoadCharacters()
     {
-        // Retrieve characters from preferences or return an empty list
-        string charactersJson = Preferences.Get(CharactersKey, "[]");
-        return JsonConvert.DeserializeObject<List<Character>>(charactersJson) ?? new List<Character>();
+        // Prefer file-based characters storage; fall back to Preferences for migration
+        try
+        {
+            var fromFile = LocalStorageHelper.LoadCharactersFromFile();
+            if (fromFile != null && fromFile.Count > 0)
+                return fromFile;
+
+            // Fallback to older Preferences-based storage if file storage is empty
+            string charactersJson = Preferences.Get(CharactersKey, "[]");
+            var fromPref = JsonConvert.DeserializeObject<List<Character>>(charactersJson) ?? new List<Character>();
+
+            // Persist migrated characters to file for future runs
+            if (fromPref.Any()) LocalStorageHelper.SaveCharactersToFile(fromPref);
+            return fromPref;
+        }
+        catch (Exception)
+        {
+            return new List<Character>();
+        }
     }
 
     /// <summary>
@@ -102,9 +130,8 @@ public class SharedViewModel : INotifyPropertyChanged
             characters.Add(character);
         }
 
-        // Save updated characters to Preferences
-        string updatedCharactersJson = JsonConvert.SerializeObject(characters);
-        Preferences.Set(CharactersKey, updatedCharactersJson);
+        // Save updated characters to file storage
+        LocalStorageHelper.SaveCharactersToFile(characters);
 
         // Update the in-memory collection
         RefreshInMemoryCharacters(characters);
@@ -144,74 +171,102 @@ public class SharedViewModel : INotifyPropertyChanged
         // Remove the character from the list
         characters.RemoveAll(c => c.ID == character.ID);
 
-        // Save the updated character list back to storage
-        string updatedCharactersJson = JsonConvert.SerializeObject(characters);
-        Preferences.Set(CharactersKey, updatedCharactersJson);
+        // Save the updated character list back to file storage
+        LocalStorageHelper.SaveCharactersToFile(characters);
 
         // Cleanup associated persistent data for the deleted character
-        var spellKeysKey = $"spellKeys_{character.ID}";
-        Preferences.Remove(spellKeysKey); // Remove the list of spell keys
-
-        // Remove each spell stored for this character
-        var spellKeys = Preferences.Get(spellKeysKey, string.Empty)
-            .Split(new[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
-
-        foreach (var spellKey in spellKeys)
+        // Remove stored spell files for this character
+        if (character.ID != null)
         {
-            Preferences.Remove(spellKey); // Remove the individual spell
+            LocalStorageHelper.DeleteCharacterFolder(character.ID.Value);
         }
 
-        // Remove stored logs for the character
-        var logsKey = $"spellLogs_{character.Name}";
-        Preferences.Remove(logsKey);
+        // Remove stored logs for the character (legacy key)
+        // Also remove any legacy preferences keys if present (best-effort)
+        try
+        {
+            Preferences.Remove($"spellLogs_{character.Name}");
+        }
+        catch
+        {
+        }
 
         // Remove the character from the in-memory collection
         Characters.Remove(character);
-    
+
         // Notify observers
         OnPropertyChanged(nameof(Characters));
     }
+
     #endregion
 
     #region Spell Management & Migration
+
     private void MigrateSpellsIfNeeded(Character character)
     {
-        var oldSpellKeys = Preferences.Get($"spellKeys_{character.Name}", string.Empty).Split(',').Where(key => !string.IsNullOrWhiteSpace(key)).ToList();
-        if (oldSpellKeys.Any())
+        // Migrate legacy preference-based spell storage (if present)
+        try
         {
-            var spells = new ObservableCollection<Spell>();
-
-            foreach (var key in oldSpellKeys)
+            var oldSpellKeysRaw = Preferences.Get($"spellKeys_{character.Name}", string.Empty);
+            var oldSpellKeys = oldSpellKeysRaw.Split(',').Where(key => !string.IsNullOrWhiteSpace(key)).ToList();
+            if (oldSpellKeys.Any())
             {
-                var compressedSpellJson = Preferences.Get(key, string.Empty);
-                if (!string.IsNullOrEmpty(compressedSpellJson))
+                var spells = new ObservableCollection<Spell>();
+
+                foreach (var key in oldSpellKeys)
                 {
-                    var spellJson = CompressionHelper.DecompressString(compressedSpellJson);
-                    var spell = JsonConvert.DeserializeObject<Spell>(spellJson);
-                    if (spell != null)
+                    var compressedSpellJson = Preferences.Get(key, string.Empty);
+                    if (!string.IsNullOrEmpty(compressedSpellJson))
                     {
-                        spells.Add(spell);
-                        SaveSpellForCharacter(character, spell);  // Save with new ID-based key
+                        var spellJson = CompressionHelper.DecompressString(compressedSpellJson);
+                        var spell = JsonConvert.DeserializeObject<Spell>(spellJson);
+                        if (spell != null)
+                        {
+                            spells.Add(spell);
+                            SaveSpellForCharacter(character, spell); // Save with new file-based storage
+                        }
                     }
                 }
-            }
 
-            // Remove old spell keys
-            Preferences.Remove($"spellKeys_{character.Name}");
-            foreach (var key in oldSpellKeys)
-            {
-                Preferences.Remove(key);
-            }
+                // Remove old preference keys after migration
+                try
+                {
+                    Preferences.Remove($"spellKeys_{character.Name}");
+                }
+                catch
+                {
+                }
 
-            CharacterSpells[character.ID] = spells;
-            CharacterSpells[character.ID].CollectionChanged += (s, e) => OnPropertyChanged(nameof(CharacterSpells));
+                foreach (var key in oldSpellKeys)
+                {
+                    try
+                    {
+                        Preferences.Remove(key);
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                CharacterSpells[character.ID] = spells;
+                CharacterSpells[character.ID].CollectionChanged += (s, e) => OnPropertyChanged(nameof(CharacterSpells));
+            }
+        }
+        catch
+        {
+            // ignore migration errors
         }
     }
-    
+
     public Action? SpellsChanged { get; set; }
 
     public void AddSpell(Character character, Spell spell)
     {
+        if (character.ID == null)
+        {
+            character.ID = Guid.NewGuid();
+        }
+
         if (!CharacterSpells.ContainsKey(character.ID))
         {
             CharacterSpells[character.ID] = new ObservableCollection<Spell>();
@@ -220,37 +275,28 @@ public class SharedViewModel : INotifyPropertyChanged
 
         if (CharacterSpells[character.ID].Any(s => s.Name == spell.Name)) return;
 
+        // Add to character's own known spells (sets IsAlwaysPrepared for divine casters)
+        // Defensive: ensure character.IsDivineCaster reflects the class
+        character.IsDivineCaster = ClassHelper.IsDivineCaster(character.CharacterClass);
+
+        character.AddSpell(spell);
+
+        // Defensive: ensure always-prepared flag is set for divine casters
+        if (ClassHelper.IsDivineCaster(character.CharacterClass) && !spell.IsAlwaysPrepared)
+        {
+            spell.IsAlwaysPrepared = true;
+        }
+
+        // Also keep the in-memory CharacterSpells collection in sync
         CharacterSpells[character.ID].Add(spell);
-        SaveSpellForCharacter(character, spell);
 
-        // If this is a divine caster, treat newly added spells as always prepared
-        if (character.IsDivineCaster && !character.GetPreparedSpells().Contains(spell))
+        // Persist the spell to file storage
+        if (character.ID != null)
         {
-            character.TogglePreparedSpell(spell);
+            LocalStorageHelper.SaveSpellToFile(character.ID.Value, spell);
         }
     }
 
-
-    public void SaveSpellForCharacter(Character character, Spell spell)
-    {
-        var spellJson = JsonConvert.SerializeObject(spell);
-        var compressedSpellJson = CompressionHelper.CompressString(spellJson);
-        Preferences.Set($"spell_{character.ID}_{spell.Name}", compressedSpellJson);
-
-        // Update the list of spell keys for this character
-        var spellKeys = Preferences.Get($"spellKeys_{character.ID}", string.Empty)
-                                    .Split(['|'], StringSplitOptions.RemoveEmptyEntries)
-                                    .ToList();
-
-        var spellKey = $"spell_{character.ID}_{spell.Name}";
-
-        if (!spellKeys.Contains(spellKey))
-        {
-            spellKeys.Add(spellKey);
-            Preferences.Set($"spellKeys_{character.ID}", string.Join("|", spellKeys));
-        }
-    }
-    
     /// <summary>
     /// Loads spells for the given character from persistent storage.
     /// </summary>
@@ -258,44 +304,36 @@ public class SharedViewModel : INotifyPropertyChanged
     {
         if (character == null) return;
 
-        // Retrieve the stored spell keys for the character
-        var spellKeysRaw = Preferences.Get($"spellKeys_{character.ID}", string.Empty);
-
-        // Determine the delimiter used (comma for old format, pipe for new format)
-        char delimiter = spellKeysRaw.Contains('|') ? '|' : ',';
-
-        // Split the keys using the detected delimiter
-        var spellKeys = spellKeysRaw.Split(new[] { delimiter }, StringSplitOptions.RemoveEmptyEntries)
-            .Where(key => !string.IsNullOrWhiteSpace(key))
-            .ToList();
-
-        // Initialize the ObservableCollection to hold the spells
+        // Load spells from file-based storage for the character
         var spells = new ObservableCollection<Spell>();
 
-        foreach (var spell in (from key in spellKeys select Preferences.Get(key, string.Empty) into compressedSpellJson where !string.IsNullOrEmpty(compressedSpellJson) select CompressionHelper.DecompressString(compressedSpellJson) into spellJson select JsonConvert.DeserializeObject<Spell>(spellJson)).OfType<Spell>())
+        if (character.ID != null)
         {
-            spells.Add(spell);
+            try
+            {
+                var list = LocalStorageHelper.LoadSpellFiles(character.ID.Value);
+                foreach (var sp in list)
+                {
+                    spells.Add(sp);
+                }
+            }
+            catch
+            {
+                // ignore file read errors
+            }
         }
 
-        // If the delimiter was a comma (old format), migrate to the new format
-        if (delimiter == ',')
-        {
-            Preferences.Set($"spellKeys_{character.ID}", string.Join("|", spellKeys));
-        }
-
-        // Store the spells in the CharacterSpells dictionary and handle changes
         CharacterSpells[character.ID] = spells;
         CharacterSpells[character.ID].CollectionChanged += (s, e) => OnPropertyChanged(nameof(CharacterSpells));
     }
-    
+
     public void LoadPreparedSpells(Character character)
     {
         if (character == null || character.ID == null) return;
 
         try
         {
-            var stored = Preferences.Get($"preparedSpells_{character.ID}", "[]");
-            var preparedSpellIds = JsonConvert.DeserializeObject<List<Guid>>(stored) ?? new List<Guid>();
+            var preparedSpellIds = LocalStorageHelper.LoadPreparedSpellIds(character.ID.Value);
 
             if (!CharacterSpells.TryGetValue(character.ID, out var liveSpells)) return;
 
@@ -316,7 +354,7 @@ public class SharedViewModel : INotifyPropertyChanged
         }
     }
 
-    
+
     /// <summary>
     /// Retrieves all spells for the given character from the in-memory dictionary.
     /// If not already loaded, initializes them from persistent storage.
@@ -340,7 +378,7 @@ public class SharedViewModel : INotifyPropertyChanged
 
         return CharacterSpells[character.ID];
     }
-    
+
     public List<Spell> LoadAllClassSpells(Character character)
     {
         var allSpells = SpellRepository.GetAllSpellsFromJson(character.GameType); // reuse your loader
@@ -352,43 +390,49 @@ public class SharedViewModel : INotifyPropertyChanged
                 spell.SpellLevel.ToLower().Contains(className))
             .ToList();
     }
-    
-    /// <summary>
-    /// Removes the specified spell for the given character.
-    /// Updates both the in-memory data and persistent storage.
-    /// </summary>
-    public void RemoveSpellForCharacter(Character character, Spell spell)
+
+    public void SaveSpellForCharacter(Character character, Spell spell)
     {
-        // Ensure the character exists in the dictionary
-        if (!CharacterSpells.TryGetValue(character.ID, out var spells)) return;
-        // Remove the spell from the in-memory collection
-        if (!spells.Contains(spell)) return;
-        spells.Remove(spell);
-
-        // Update the persistent storage
-        var spellKeys = Preferences.Get($"spellKeys_{character.ID}", string.Empty)
-            .Split(['|'], StringSplitOptions.RemoveEmptyEntries)
-            .ToList();
-
-        var spellKey = GenerateSpellKey(character, spell);
-        if (spellKeys.Remove(spellKey))
+        // Persist spell to per-character file storage
+        if (character?.ID != null)
         {
-            // Update the spell keys in preferences
-            Preferences.Set($"spellKeys_{character.ID}", string.Join("|", spellKeys));
-            Preferences.Remove(spellKey); // Remove the stored JSON of the removed spell
+            LocalStorageHelper.SaveSpellToFile(character.ID.Value, spell);
+        }
+    }
+
+    public void RemoveSpellForCharacter(Character character, Spell? spell)
+    {
+        if (character?.ID == null || spell == null) return;
+
+        if (CharacterSpells.TryGetValue(character.ID, out var spells))
+        {
+            var existing = spells.FirstOrDefault(s => s.Id == spell.Id) ??
+                           spells.FirstOrDefault(s => s.Name == spell.Name);
+            if (existing != null)
+                spells.Remove(existing);
         }
 
-        // Notify any observers about the changes
+        character.RemoveSpell(spell);
+
+        if (character.IsDivineCaster)
+        {
+            var prepared = character.GetPreparedSpells();
+            if (prepared.Any(s => s.Id == spell.Id))
+                character.TogglePreparedSpell(spell);
+
+            SavePreparedSpells(character);
+        }
+
+        // Remove persisted spell file for this character
+        if (character.ID != null)
+        {
+            LocalStorageHelper.DeleteSpellFile(character.ID.Value, spell);
+        }
+
         OnPropertyChanged(nameof(CharacterSpells));
     }
-    
-    /// <summary>
-    /// Generates a unique key for associating a specific spell with a character.
-    /// The key combines the character's ID, spell name, and spell level.
-    /// </summary>
-    /// <param name="character">The character associated with the spell.</param>
-    /// <param name="spell">The spell to generate the key for.</param>
-    /// <returns>A unique key for the character and spell combination.</returns>
+
+
     public static string GenerateSpellKey(Character character, Spell spell)
     {
         if (character?.ID == null || spell == null)
@@ -396,18 +440,18 @@ public class SharedViewModel : INotifyPropertyChanged
 
         return $"{character.ID}_{spell.Name}_{spell.SpellLevel}";
     }
+
     #endregion
 
     #region Spell Slots & Logs
-    public void SaveSpellsPerDayDetails(Character character, Dictionary<int, int> maxSpellsPerDay, Dictionary<int, int> spellsUsedToday)
+
+    public void SaveSpellsPerDayDetails(Character character, Dictionary<int, int> maxSpellsPerDay,
+        Dictionary<int, int> spellsUsedToday)
     {
         try
         {
-            var maxSpellsJson = JsonConvert.SerializeObject(maxSpellsPerDay);
-            Preferences.Set($"maxSpells_{character.ID}", maxSpellsJson);
-
-            var usedSpellsJson = JsonConvert.SerializeObject(spellsUsedToday);
-            Preferences.Set($"usedSpells_{character.ID}", usedSpellsJson);
+            if (character?.ID != null)
+                LocalStorageHelper.SaveSpellsPerDayDetails(character.ID.Value, maxSpellsPerDay, spellsUsedToday);
         }
         catch (Exception ex)
         {
@@ -415,63 +459,49 @@ public class SharedViewModel : INotifyPropertyChanged
         }
     }
 
-    public void LoadSpellsPerDayDetails(Character character)
+    private static void LoadSpellsPerDayDetails(Character character)
     {
-        if (character == null) return;
+        if (character.ID != null)
+        {
+            var (max, used) = LocalStorageHelper.LoadSpellsPerDayDetails(character.ID.Value);
+            character.MaxSpellsPerDay = max;
+            character.SpellsUsedToday = used;
+            return;
+        }
 
-        var maxSpellsJson = Preferences.Get($"maxSpells_{character.ID}", "{}");
-        var usedSpellsJson = Preferences.Get($"usedSpells_{character.ID}", "{}");
-
-        character.MaxSpellsPerDay = JsonConvert.DeserializeObject<Dictionary<int, int>>(maxSpellsJson) ?? new Dictionary<int, int>();
-        character.SpellsUsedToday = JsonConvert.DeserializeObject<Dictionary<int, int>>(usedSpellsJson) ?? new Dictionary<int, int>();
+        character.MaxSpellsPerDay = new Dictionary<int, int>();
+        character.SpellsUsedToday = new Dictionary<int, int>();
     }
-    
-    /// <summary>
-    /// Loads the spell cast logs for the given character.
-    /// Groups logs by session ID to allow for easy navigation or display.
-    /// </summary>
+
     public void LoadLogs(Character character)
     {
-        if (character == null) return;
+        var logs = new List<SpellCastLog>();
+        if (character.ID != null)
+        {
+            logs = LocalStorageHelper.LoadSpellLogs<SpellCastLog>(character.ID.Value);
+        }
 
-        // Retrieve the stored logs for the character
-        var logsJson = Preferences.Get($"spellLogs_{character.Name}", "[]");
-        var logs = JsonConvert.DeserializeObject<List<SpellCastLog>>(logsJson) ?? new List<SpellCastLog>();
-
-        // Clear existing logs to avoid duplication
         GroupedLogs.Clear();
 
-        // Group logs by session ID or another relevant property
         var groupedData = logs
             .GroupBy(log => log.SessionId)
             .OrderByDescending(group => group.Key)
             .Select(group => new Grouping<int, SpellCastLog>(group.Key, group.OrderByDescending(log => log.CastTime)))
             .ToList();
 
-        foreach (var group in groupedData)
+        foreach (var newGroup in groupedData.Select(group => new Grouping<int, SpellCastLog>(group.Key, group)))
         {
-            var newGroup = new Grouping<int, SpellCastLog>(group.Key, group);
             GroupedLogs.Add(newGroup);
         }
 
         OnPropertyChanged(nameof(GroupedLogs));
     }
 
-    /// <summary>
-    /// Logs a failed attempt to cast a spell for the given character.
-    /// This includes the spell information, level, and failure reason.
-    /// </summary>
-    /// <param name="character">The character attempting to cast the spell.</param>
-    /// <param name="spellName">The name of the spell being cast.</param>
-    /// <param name="spellLevel">The spell level being cast.</param>
-    /// <param name="reason">The reason the spell cast failed.</param>
-    /// <exception cref="ArgumentNullException"></exception>
     public void LogFailedSpellCast(Character character, string spellName, int spellLevel, string reason)
     {
         if (character == null || string.IsNullOrWhiteSpace(spellName) || string.IsNullOrWhiteSpace(reason))
             throw new ArgumentNullException("Character, spell name, and reason cannot be null or empty.");
 
-        // Create a log entry for the failed spell cast
         var failedLog = new SpellCastLog
         {
             CharacterName = character.Name,
@@ -480,38 +510,35 @@ public class SharedViewModel : INotifyPropertyChanged
             CastTime = DateTime.UtcNow,
             Success = false,
             Reason = reason,
-            SessionId = GetCurrentSessionId() // Ensure session tracking
+            SessionId = GetCurrentSessionId()
         };
 
-        // Retrieve existing logs for the character from persistent storage
-        var logsJson = Preferences.Get($"spellLogs_{character.Name}", "[]");
-        var logs = JsonConvert.DeserializeObject<List<SpellCastLog>>(logsJson) ?? new List<SpellCastLog>();
+        List<SpellCastLog> logs;
+        if (character.ID != null)
+        {
+            logs = LocalStorageHelper.LoadSpellLogs<SpellCastLog>(character.ID.Value);
+            logs.Add(failedLog);
+            LocalStorageHelper.SaveSpellLogs(character.ID.Value, logs.Cast<object>().ToList());
+        }
+        else
+        {
+            // Fallback to preferences for legacy records
+            var logsJson = Preferences.Get($"spellLogs_{character.Name}", "[]");
+            logs = JsonConvert.DeserializeObject<List<SpellCastLog>>(logsJson) ?? new List<SpellCastLog>();
+            logs.Add(failedLog);
+            Preferences.Set($"spellLogs_{character.Name}", JsonConvert.SerializeObject(logs));
+        }
 
-        // Add the new log entry
-        logs.Add(failedLog);
-
-        // Save the updated logs back to persistent storage
-        Preferences.Set($"spellLogs_{character.Name}", JsonConvert.SerializeObject(logs));
-
-        // Notify about changes (if needed)
         OnPropertyChanged(nameof(GroupedLogs));
     }
-    
-    /// <summary>
-    /// Retrieves the current session ID from persistent storage.
-    /// If no session ID exists, a new session ID is generated and saved.
-    /// </summary>
-    /// <returns>The current session ID as an integer.</returns>
+
     private int GetCurrentSessionId()
     {
         // Retrieve the current session ID; defaults to 0 if not present
-        var sessionId = Preferences.Get("currentSessionId", 0);
-
-        // If no valid session ID exists, generate a new session ID
+        var sessionId = LocalStorageHelper.LoadSessionId();
         if (sessionId != 0) return sessionId;
         sessionId = GenerateNewSessionId();
-        Preferences.Set("currentSessionId", sessionId);
-
+        LocalStorageHelper.SaveSessionId(sessionId);
         return sessionId;
     }
 
@@ -534,7 +561,7 @@ public class SharedViewModel : INotifyPropertyChanged
     /// <param name="spellName">The name of the spell being cast.</param>
     /// <param name="spellLevel">The spell level being cast.</param>
     /// <exception cref="ArgumentNullException"></exception>
-    public void LogSpellCast(Character character, string spellName, int spellLevel, bool castAsRitual )
+    public void LogSpellCast(Character character, string spellName, int spellLevel, bool castAsRitual)
     {
         if (character == null || string.IsNullOrWhiteSpace(spellName))
             throw new ArgumentNullException("Character and spell name cannot be null or empty.");
@@ -551,46 +578,97 @@ public class SharedViewModel : INotifyPropertyChanged
             SessionId = GetCurrentSessionId() // Ensure session tracking
         };
 
-        // Retrieve existing logs for the character from persistent storage
-        var logsJson = Preferences.Get($"spellLogs_{character.Name}", "[]");
-        var logs = JsonConvert.DeserializeObject<List<SpellCastLog>>(logsJson) ?? new List<SpellCastLog>();
-
-        // Add the new log entry
-        logs.Add(successLog);
-
-        // Save the updated logs back to persistent storage
-        Preferences.Set($"spellLogs_{character.Name}", JsonConvert.SerializeObject(logs));
+        if (character.ID != null)
+        {
+            var logs = LocalStorageHelper.LoadSpellLogs<SpellCastLog>(character.ID.Value);
+            logs.Add(successLog);
+            LocalStorageHelper.SaveSpellLogs(character.ID.Value, logs.Cast<object>().ToList());
+        }
+        else
+        {
+            var logsJson = Preferences.Get($"spellLogs_{character.Name}", "[]");
+            var logs = JsonConvert.DeserializeObject<List<SpellCastLog>>(logsJson) ?? new List<SpellCastLog>();
+            logs.Add(successLog);
+            Preferences.Set($"spellLogs_{character.Name}", JsonConvert.SerializeObject(logs));
+        }
 
         // Notify observers about changes (if needed)
         OnPropertyChanged(nameof(GroupedLogs));
     }
-    
+
     /// <summary>
     /// Resets the record of spells used by all characters for the current day.
     /// Typically called at the start of a new in-game day or after a long rest.
     /// </summary>
     public void ResetSpellsUsedToday()
     {
+        Debug.WriteLine("=== SharedViewModel.ResetSpellsUsedToday START ===");
         // Iterate through all active characters and reset their spells used
         foreach (var character in Characters)
         {
+            // Ensure the character has a persistent ID so we can save per-character files
+            if (character.ID == null)
+            {
+                character.ID = Guid.NewGuid();
+                Debug.WriteLine($"Assigned new ID {character.ID} to character '{character.Name}'");
+            }
+
+            Debug.WriteLine($"Clearing SpellsUsedToday for character '{character.Name}' ({character.ID})");
             character.SpellsUsedToday.Clear();
             SaveSpellsPerDayDetails(character, character.MaxSpellsPerDay, character.SpellsUsedToday);
+
+            try
+            {
+                var path = TabletopSpells.Helpers.LocalStorageHelper.GetSpellsPerDayPath(character.ID.Value);
+                var exists = System.IO.File.Exists(path);
+                var len = exists ? new System.IO.FileInfo(path).Length : 0;
+                Debug.WriteLine($"Saved spellsPerDay file exists={exists} path={path} length={len}");
+
+                // Reload the saved details immediately to validate persistence and update the in-memory model
+                LoadSpellsPerDayDetails(character);
+                Debug.WriteLine($"After reload: character '{character.Name}' SpellsUsedToday count={character.SpellsUsedToday.Count}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error verifying saved spells per day for character {character.ID}: {ex.Message}");
+            }
+        }
+
+        // Persist characters (so any newly assigned IDs are saved) and notify observers
+        try
+        {
+            LocalStorageHelper.SaveCharactersToFile(Characters.ToList());
+            Debug.WriteLine($"Saved characters list to disk. Count={Characters.Count}");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Failed to save characters list: {ex.Message}");
+        }
+
+        // If the current character is set, reload its spells-per-day to ensure UI is up-to-date
+        if (CurrentCharacter != null)
+        {
+            LoadSpellsPerDayDetails(CurrentCharacter);
+            OnPropertyChanged(nameof(CurrentCharacter));
         }
 
         // Notify observers if any UI or bindings are tracking spells used
         OnPropertyChanged(nameof(Characters));
+        Debug.WriteLine("=== SharedViewModel.ResetSpellsUsedToday END ===");
     }
     #endregion
 
     #region INotifyPropertyChanged Implementation
+
     public event PropertyChangedEventHandler? PropertyChanged;
+
     public void OnPropertyChanged(string propertyName)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
+
     #endregion
-    
+
     public void SaveCharacterPreparedSpells(Guid? characterId, List<Spell> preparedSpells)
     {
         if (characterId == null) return;
@@ -598,8 +676,10 @@ public class SharedViewModel : INotifyPropertyChanged
         try
         {
             var ids = preparedSpells.Select(s => s.Id).ToList();
-            var json = JsonConvert.SerializeObject(ids);
-            Preferences.Set($"preparedSpells_{characterId}", json);
+            if (characterId.HasValue)
+            {
+                LocalStorageHelper.SavePreparedSpellIds(characterId.Value, ids);
+            }
 
             Debug.WriteLine($"Saving prepared spells: {ids.Count} for {characterId}");
         }
@@ -614,5 +694,25 @@ public class SharedViewModel : INotifyPropertyChanged
         if (character?.ID == null) return;
         SaveCharacterPreparedSpells(character.ID, character.GetPreparedSpells());
     }
-}
 
+    /// <summary>
+    /// Toggles the favorite status of a spell for a character.
+    /// </summary>
+    public void ToggleSpellFavorite(Character character, Spell spell)
+    {
+        if (!CharacterSpells.ContainsKey(character.ID)) return;
+
+        var characterSpell = CharacterSpells[character.ID].FirstOrDefault(s => s.Id == spell.Id);
+        if (characterSpell != null)
+        {
+            characterSpell.IsFavoriteSpell = !characterSpell.IsFavoriteSpell;
+
+            // Persist change to file
+            SaveSpellForCharacter(character, characterSpell);
+
+            // Notify UI
+            OnPropertyChanged(nameof(CharacterSpells));
+            SpellsChanged?.Invoke();
+        }
+    }
+}

@@ -183,11 +183,18 @@ namespace TabletopSpells.ViewModels
                         (!string.IsNullOrEmpty(vm.Spell.Name) && vm.Spell.Name.ToLowerInvariant().Contains(lower)) ||
                         (!string.IsNullOrEmpty(vm.Spell.SpellLevel) && vm.Spell.SpellLevel.ToLowerInvariant().Contains(lower)));
                 }
-                FilteredSpellViewModels = new ObservableCollection<SpellViewModel>(filtered);
+                
+                // Sort with favorites first (by level then alphabetical), then non-favorites
+                var sorted = filtered
+                    .OrderByDescending(vm => vm.Spell.IsFavoriteSpell)
+                    .ThenBy(vm => ParseSpellLevel(vm.Spell.SpellLevel, Character.CharacterClass.ToString()))
+                    .ThenBy(vm => vm.Spell.Name);
+                
+                FilteredSpellViewModels = new ObservableCollection<SpellViewModel>(sorted);
                 return;
             }
 
-            // For non-divine casters, filter the loaded spells (not Character.KnownSpells which is empty)
+            // For non-divine casters, filter the loaded spells
             var spells = SpellViewModels.Select(svm => svm.Spell).AsEnumerable();
 
             if (SelectedSpellLevel.HasValue)
@@ -204,7 +211,15 @@ namespace TabletopSpells.ViewModels
                     (!string.IsNullOrEmpty(s.SpellLevel) && s.SpellLevel.ToLowerInvariant().Contains(lower)));
             }
 
-            FilteredSpells = new ObservableCollection<Spell>(spells);
+            // Sort with favorites first (by level then alphabetical), then non-favorites
+            var sortedSpells = spells
+                .OrderByDescending(s => s.IsFavoriteSpell)
+                .ThenBy(s => ParseSpellLevel(s.SpellLevel, Character.CharacterClass.ToString()))
+                .ThenBy(s => s.Name);
+            
+            FilteredSpellViewModels = new ObservableCollection<SpellViewModel>(
+                sortedSpells.Select(s => SpellViewModels.FirstOrDefault(vm => vm.Spell.Id == s.Id) ?? new SpellViewModel(s, Character))
+            );
         }
 
         public int ParseSpellLevel(string spellLevel, string characterClass)

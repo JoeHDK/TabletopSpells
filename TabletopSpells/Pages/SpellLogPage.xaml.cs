@@ -4,7 +4,6 @@ using TabletopSpells.ViewModels;
 namespace TabletopSpells.Pages;
 public partial class SpellLogPage : ContentPage
 {
-    private Character character;
     public SpellLogPage(Character character)
     {
         InitializeComponent();

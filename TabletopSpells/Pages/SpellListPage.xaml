@@ -32,7 +32,7 @@
                    Placeholder="Search spells..."
                    TextChanged="OnSearchTextChanged" />
 
-        <!-- 🧮 Prepared spell counter -->
+        <!-- 🧮 Prepared spell counter (divine casters only) -->
         <Label Grid.Row="1"
                Text="{Binding PreparedSpellCountText}"
                IsVisible="{Binding IsDivineCaster}"
@@ -40,57 +40,37 @@
                FontSize="16"
                Margin="10,10,10,0" />
 
-        <!-- 🛐 Divine caster spell list -->
-        <CollectionView Grid.Row="2"
-                        IsVisible="{Binding IsDivineCaster}"
+        <!-- Unified spell list for all casters -->
+        <CollectionView x:Name="SpellCollectionView"
                         ItemsSource="{Binding FilteredSpellViewModels}"
                         SelectionMode="Single"
-                        SelectionChanged="OnSpellSelected">
+                        SelectionChanged="OnSpellSelected"
+                        Grid.Row="2">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Grid Padding="10" ColumnDefinitions="*,Auto" RowSpacing="5">
                         <StackLayout Grid.Column="0">
                             <Label FontAttributes="Bold"
                                    FontSize="16"
-                                   Text="{Binding Spell.Name}">
-                                <Label.TextColor>
-                                    <Binding Path="IsPrepared"
-                                             Converter="{StaticResource PreparedSpellColorConverter}" />
-                                </Label.TextColor>
-                            </Label>
+                                   Text="{Binding Spell.Name}" />
                             <Label Text="{Binding Spell.SpellLevel}"
                                    FontSize="12"
                                    TextColor="Gray" />
                         </StackLayout>
 
-                        <CheckBox IsChecked="{Binding IsPrepared, Mode=TwoWay}"
-                                  Grid.Column="1"
-                                  VerticalOptions="Center"
-                                  HorizontalOptions="End"
-                                  HeightRequest="30"
-                                  WidthRequest="30" />
+                        <!-- Star icon for favoriting -->
+                        <ImageButton Grid.Column="1"
+                                     Clicked="OnFavoriteClicked"
+                                     CommandParameter="{Binding Spell}"
+                                     BackgroundColor="Transparent"
+                                     VerticalOptions="Center"
+                                     HorizontalOptions="End"
+                                     Margin="10,0,0,0">
+                            <ImageButton.Source>
+                                <FontImageSource Glyph="★" Color="{Binding Spell.IsFavoriteSpell, Converter={StaticResource PreparedSpellColorConverter}}"/>
+                            </ImageButton.Source>
+                        </ImageButton>
                     </Grid>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-
-        <!-- 🧙 Non-divine caster spell list -->
-        <CollectionView x:Name="SpellCollectionView"
-                        IsVisible="{Binding IsDivineCaster, Converter={StaticResource InverseBoolConverter}}"
-                        ItemsSource="{Binding FilteredSpells}"
-                        SelectionMode="Single"
-                        SelectionChanged="OnSpellSelected"
-                        Grid.Row="2">
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <StackLayout Padding="10">
-                        <Label Text="{Binding Name}"
-                               FontAttributes="Bold"
-                               FontSize="16" />
-                        <Label Text="{Binding SpellLevel}"
-                               FontSize="12"
-                               TextColor="Gray" />
-                    </StackLayout>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

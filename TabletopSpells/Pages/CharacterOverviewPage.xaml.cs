@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using CommunityToolkit.Maui.Views;
+using TabletopSpells.Helpers;
 using TabletopSpells.Models;
 using TabletopSpells.Models.Enums;
 using TabletopSpells.ViewModels;
@@ -72,18 +73,15 @@ public partial class CharacterOverviewPage : ContentPage
     {
         try
         {
-            string existingCharactersJson = Preferences.Get("characters", "[]");
-            var characters = JsonConvert.DeserializeObject<List<Character>>(existingCharactersJson);
-
+            var characters = LocalStorageHelper.LoadCharactersFromFile();
             var characterToRemove = characters.FirstOrDefault(c => c.ID == character.ID);
             if (characterToRemove != null)
             {
                 characters.Remove(characterToRemove);
-                string updatedCharactersJson = JsonConvert.SerializeObject(characters);
-                Preferences.Set("characters", updatedCharactersJson);
+                LocalStorageHelper.SaveCharactersToFile(characters);
 
                 viewModel.CharacterSpells.Remove(character.ID);
-                Preferences.Remove($"spells_{character.ID}");
+                LocalStorageHelper.DeleteCharacterFolder(character.ID.Value);
 
                 viewModel.OnPropertyChanged(nameof(viewModel.CharacterSpells));
                 await DisplayAlert("Success", $"{character.Name} has been removed.", "OK");

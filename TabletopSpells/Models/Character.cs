@@ -35,13 +35,13 @@ public class Character
     /// <summary>
     /// The character's full spellbook / known spells.
     /// </summary>
-    private readonly List<Spell> _knownSpells = new();
+    private readonly List<Spell> _knownSpells = new List<Spell>();
     public IEnumerable<Spell> KnownSpells => _knownSpells;
 
     /// <summary>
     /// The manually prepared spells the player has selected.
     /// </summary>
-    private readonly List<Spell> _manuallyPreparedSpells = new();
+    private readonly List<Spell> _manuallyPreparedSpells = new List<Spell>();
 
     /// <summary>
     /// Basic D&D/PF ability scores.
@@ -69,6 +69,10 @@ public class Character
     {
         if (!_knownSpells.Contains(spell))
             _knownSpells.Add(spell);
+
+        // Divine casters automatically have their spells marked as always prepared
+        if (IsDivineCaster && !spell.IsAlwaysPrepared)
+            spell.IsAlwaysPrepared = true;
     }
 
     /// <summary>
@@ -111,23 +115,32 @@ public class Character
 
     /// <summary>
     /// Returns the list of prepared spells within limit (Level + modifier).
+    /// Includes always-prepared spells that don't count against the limit.
     /// </summary>
     public List<Spell> GetPreparedSpells()
     {
         int limit = Level + GetRelevantAbilityModifier();
 
-        return _manuallyPreparedSpells
+        var manual = _manuallyPreparedSpells
             .OrderByDescending(spell => spell.SpellLevel)
             .Take(limit)
             .ToList();
+
+        // Always prepared spells (IsAlwaysPrepared) do not count toward the limit
+        var always = _knownSpells.Where(s => s.IsAlwaysPrepared).ToList();
+
+        // Merge unique by Id - include always first then manual (manual may include duplicates)
+        var combined = always.Concat(manual).GroupBy(s => s.Id).Select(g => g.First()).ToList();
+        return combined;
     }
 
     /// <summary>
     /// Toggles a spell as prepared/unprepared within current limit.
+    /// This only affects manually prepared spells; always-prepared spells are managed separately.
     /// </summary>
     public bool TogglePreparedSpell(Spell spell)
     {
-        int limit = Level + GetRelevantAbilityModifier();
+        var limit = Level + GetRelevantAbilityModifier();
         var existing = _manuallyPreparedSpells.FirstOrDefault(s => s.Id == spell.Id);
 
         if (existing != null)
@@ -136,13 +149,10 @@ public class Character
             return true;
         }
 
-        if (_manuallyPreparedSpells.Count < limit)
-        {
-            _manuallyPreparedSpells.Add(spell);
-            return true;
-        }
+        if (_manuallyPreparedSpells.Count >= limit) return false;
+        _manuallyPreparedSpells.Add(spell);
+        return true;
 
-        return false;
     }
 
 }

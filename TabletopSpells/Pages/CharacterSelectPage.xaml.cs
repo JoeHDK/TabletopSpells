@@ -62,16 +62,14 @@ public partial class CharacterSelectPage : ContentPage
 
     private void SaveCharacters(List<Character> characters)
     {
-        var json = JsonConvert.SerializeObject(characters);
-        Preferences.Set("characters", json);
+        LocalStorageHelper.SaveCharactersToFile(characters);
     }
 
     private List<Character> GetExistingCharacters()
     {
         try
         {
-            var json = Preferences.Get("characters", "[]");
-            return JsonConvert.DeserializeObject<List<Character>>(json) ?? new();
+            return LocalStorageHelper.LoadCharactersFromFile();
         }
         catch (JsonException ex)
         {

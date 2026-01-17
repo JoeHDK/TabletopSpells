@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Security.Cryptography.X509Certificates;
 using TabletopSpells.Models;
 using TabletopSpells.ViewModels;
 
@@ -7,45 +6,43 @@ namespace TabletopSpells.Pages;
 [XamlCompilation(XamlCompilationOptions.Compile)]
 public partial class SpellsPerDayPage : ContentPage
 {
-    private ObservableCollection<SpellLevelViewModel> spellLevels;
+    public ObservableCollection<SpellLevelViewModel> SpellLevels { get; private set; } = new ObservableCollection<SpellLevelViewModel>();
 
     public SpellsPerDayPage()
     {
         InitializeComponent();
-        BindingContext = SharedViewModel.Instance;
-        spellLevels = new ObservableCollection<SpellLevelViewModel>();
+        // Bind the page to itself so templates resolve to SpellLevelViewModel
+        BindingContext = this;
         LoadSpellLevels();
-        lvSpellsPerDay.ItemsSource = spellLevels;
+        lvSpellsPerDay.ItemsSource = SpellLevels;
     }
 
     private void LoadSpellLevels()
     {
-        Character character = SharedViewModel.Instance.CurrentCharacter;
+        Character? character = SharedViewModel.Instance.CurrentCharacter;
         if (character == null)
         {
-            DisplayAlert("Error", "No character loaded.", "OK");
+            // Use Dispatcher to ensure UI thread invocation
+            Application.Current?.MainPage?.DisplayAlert("Error", "No character loaded.", "OK");
             return;
         }
 
-        spellLevels.Clear();
+        SpellLevels.Clear();
 
         // Ensure all spell levels are initialized (0 to 9 as example)
         for (int level = 1; level <= 9; level++)
         {
-            // Get or set default max spells and spells used
             int maxSpells = character.MaxSpellsPerDay.TryGetValue(level, out int max) ? max : 0;
             int spellsUsed = character.SpellsUsedToday.TryGetValue(level, out int used) ? used : 0;
 
-            spellLevels.Add(new SpellLevelViewModel
+            SpellLevels.Add(new SpellLevelViewModel
             {
                 Level = level,
                 MaxSpells = maxSpells,
                 SpellsUsed = spellsUsed,
                 DisplayText = $"Level {level} Spells"
-                // DetailText is computed automatically, no need to set it here
             });
 
-            // Check and update defaults if necessary
             if (!character.MaxSpellsPerDay.ContainsKey(level))
             {
                 character.MaxSpellsPerDay[level] = 0;  // Ensure defaults are set if missing
@@ -56,8 +53,8 @@ public partial class SpellsPerDayPage : ContentPage
             }
         }
 
-        // Save any changes if defaults were added
         SharedViewModel.Instance.SaveSpellsPerDayDetails(character, character.MaxSpellsPerDay, character.SpellsUsedToday);
+        OnPropertyChanged(nameof(SpellLevels));
     }
 
     private async void OnSpellLevelSelected(object sender, SelectedItemChangedEventArgs e)
@@ -91,23 +88,15 @@ public partial class SpellsPerDayPage : ContentPage
                 }
 
                 // Refresh the UI
-                OnPropertyChanged(nameof(SpellLevelViewModel.DetailText)); // Ensure the UI updates
+                OnPropertyChanged(nameof(SpellLevels)); // Ensure the UI updates
             }
         }
     }
     
-    public async void OnResetSpellsPerDayClicked(object sender, EventArgs e)
+    public void OnResetSpellsPerDayClicked(object sender, EventArgs e)
     {
-        SharedViewModel sharedViewModel = SharedViewModel.Instance;
-        bool confirm = await Application.Current.MainPage.DisplayAlert(
-            "Confirm Reset",
-            "Reset all spells used today to zero?",
-            "Yes", "No");
-        
-        if (confirm)
-        {
-            sharedViewModel.ResetSpellsUsedToday();
-            LoadSpellLevels();
-        }
+        var sharedViewModel = SharedViewModel.Instance;
+        sharedViewModel.ResetSpellsUsedToday();
+        LoadSpellLevels();
     }
 }

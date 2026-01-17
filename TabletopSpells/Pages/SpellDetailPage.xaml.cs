@@ -1,4 +1,5 @@
-﻿using TabletopSpells.Models;
+﻿using System.Collections.ObjectModel;
+using TabletopSpells.Models;
 using TabletopSpells.Models.Enums;
 using TabletopSpells.ViewModels;
 
@@ -10,6 +11,7 @@ public partial class SpellDetailPage : ContentPage
     private readonly Character character;
     private readonly int spellLevel;
     private bool spellIsKnown;
+    private bool spellIsPrepared;
     private bool castAsRitual;
 
     public SpellDetailPage(Spell spell, Character character, int spellLevel, Game gameType)
@@ -21,6 +23,7 @@ public partial class SpellDetailPage : ContentPage
         BindingContext = spell;
         this.spellLevel = spellLevel;
         CheckIfSpellIsKnown();
+        CheckIfSpellIsPrepared();
         UpdateButtons();
     }
 
@@ -31,22 +34,45 @@ public partial class SpellDetailPage : ContentPage
                        viewModel.CharacterSpells[character.ID].Any(s => s.Name == spell.Name);
     }
 
+    private void CheckIfSpellIsPrepared()
+    {
+        spellIsPrepared = character.GetPreparedSpells().Any(s => s.Id == spell.Id);
+    }
+
     private void UpdateButtons()
     {
-        AddOrRemoveButton.Text = spellIsKnown ? "Remove Spell" : "Add Spell";
-
         // Clear existing click event subscriptions to avoid multiple subscriptions
         AddOrRemoveButton.Clicked -= OnAddSpellClicked;
         AddOrRemoveButton.Clicked -= OnRemoveSpellClicked;
+        AddOrRemoveButton.Clicked -= OnPrepareSpellClicked;
+        AddOrRemoveButton.Clicked -= OnUnprepareSpellClicked;
 
-        // Subscribe to the appropriate event
-        if (spellIsKnown)
+        // For divine casters, show Prepare/Unprepare
+        if (character.IsDivineCaster)
         {
-            AddOrRemoveButton.Clicked += OnRemoveSpellClicked;
+            if (spellIsPrepared)
+            {
+                AddOrRemoveButton.Text = "Unprepare Spell";
+                AddOrRemoveButton.Clicked += OnUnprepareSpellClicked;
+            }
+            else
+            {
+                AddOrRemoveButton.Text = "Prepare Spell";
+                AddOrRemoveButton.Clicked += OnPrepareSpellClicked;
+            }
         }
         else
         {
-            AddOrRemoveButton.Clicked += OnAddSpellClicked;
+            // Traditional casters show Add/Remove
+            AddOrRemoveButton.Text = spellIsKnown ? "Remove Spell" : "Add Spell";
+            if (spellIsKnown)
+            {
+                AddOrRemoveButton.Clicked += OnRemoveSpellClicked;
+            }
+            else
+            {
+                AddOrRemoveButton.Clicked += OnAddSpellClicked;
+            }
         }
 
         // Update the visibility and enabled status of the CastSpellButton
@@ -60,8 +86,11 @@ public partial class SpellDetailPage : ContentPage
         CastSpellButton.IsEnabled = false;
         CastSpellButton.Clicked -= OnCastSpellClicked; // Clear any existing event subscriptions
 
-        // If the spell isn't known to the character, no further action is needed
-        if (!spellIsKnown)
+        // For divine casters, check if prepared; for others, check if known
+        bool spellAvailable = character.IsDivineCaster ? spellIsPrepared : spellIsKnown;
+
+        // If the spell isn't available to the character, no further action is needed
+        if (!spellAvailable)
         {
             return;
         }
@@ -76,159 +105,267 @@ public partial class SpellDetailPage : ContentPage
             break;
         }
 
-        // Show the cast spell button since the spell is known
+        // Show the cast spell button since the spell is available
         CastSpellButton.IsVisible = true;
 
-        // Enable the button if the spell can be cast as a ritual, has available slots, or is a cantrip (level 0)
         if (spell.Ritual || hasAvailableSpellSlots || spellLevel == 0)
         {
             CastSpellButton.IsEnabled = true;
-            CastSpellButton.Clicked += OnCastSpellClicked; // Attach the event handler
+            CastSpellButton.Clicked += OnCastSpellClicked;
         }
         else
         {
-            // Keep the button disabled and reduce its opacity to indicate it's unavailable
             CastSpellButton.Opacity = 0.5;
         }
     }
 
 
-    private async void OnCastSpellClicked(object? sender, EventArgs e)
-{
-    // Retrieve the character from the SharedViewModel using the character name
-    var currentCharacter = SharedViewModel.Instance.CurrentCharacter;
-
-    if (currentCharacter == null)
+    private async void OnCastSpellClicked(object? sender, EventArgs eventArgs)
     {
-        await DisplayAlert("Error", "No character selected.", "OK");
-        return;
-    }
-
-    // Check if the spell can be cast as a ritual and ask the user for confirmation
-    if (spell.Ritual)
-    {
-        var castAsRitualConfirmation = await DisplayAlert("Cast as Ritual",
-                                                           $"Do you want to cast '{spell.Name}' as a ritual?",
-                                                           "Yes",
-                                                           "No");
-
-        if (castAsRitualConfirmation)
+        try
         {
-            castAsRitual = true;
-            await DisplayAlert("Ritual Cast", $"{spell.Name} has been cast as a ritual.", "OK");
-            SharedViewModel.Instance.LogSpellCast(currentCharacter, spell.Name, spellLevel, castAsRitual);
-            ReloadUI();
-            return; // Exit after casting as a ritual
-        }
-    }
+            var currentCharacter = SharedViewModel.Instance.CurrentCharacter;
 
-    // Prepare the list of spell slots to display
-    var spellSlots = new List<string>();
-    foreach (var (level, maxSpells) in currentCharacter.MaxSpellsPerDay)
-    {
-        if (level < spellLevel) continue;
+            if (currentCharacter == null)
+            {
+                await DisplayAlert("Error", "No character selected.", "OK");
+                return;
+            }
+
+            if (spell.Ritual)
+            {
+                var castAsRitualConfirmation = await DisplayAlert("Cast as Ritual",
+                    $"Do you want to cast '{spell.Name}' as a ritual?",
+                    "Yes",
+                    "No");
+
+                if (castAsRitualConfirmation)
+                {
+                    castAsRitual = true;
+                    // await DisplayAlert("Ritual Cast", $"{spell.Name} has been cast as a ritual.", "OK");
+                    if (spell.Name != null)
+                        SharedViewModel.Instance.LogSpellCast(currentCharacter, spell.Name, spellLevel, castAsRitual);
+                    ReloadUI();
+                    return;
+                }
+            }
+
+            if (spellLevel == 0)
+            {
+                if (spell.Name != null)
+                    SharedViewModel.Instance.LogSpellCast(currentCharacter, spell.Name, spellLevel, false);
+                await DisplayAlert("", "", "OK");
+                ReloadUI();
+                return;
+            }
+
+            var spellSlots = new List<string>();
+            foreach (var (level, maxSpells) in currentCharacter.MaxSpellsPerDay)
+            {
+                if (level < spellLevel) continue;
         
-        var usedSpells = currentCharacter.SpellsUsedToday.GetValueOrDefault(level, 0);
-        var remainingSpells = maxSpells - usedSpells;
+                var usedSpells = currentCharacter.SpellsUsedToday.GetValueOrDefault(level, 0);
+                var remainingSpells = maxSpells - usedSpells;
 
-        // Only display levels with defined slots
-        if (maxSpells <= 0) continue;
-        // Format: "Level {n} (x remaining)"
-        var slotDisplay = $"Level {level} ({remainingSpells} remaining)";
-        spellSlots.Add(slotDisplay);
-    }
+                if (maxSpells <= 0) continue;
+                var slotDisplay = $"Level {level} ({remainingSpells} remaining)";
+                spellSlots.Add(slotDisplay);
+            }
 
-    if (spellSlots.Count == 0)
-    {
-        await DisplayAlert("No Spell Slots", $"No spell slots available for {spell.Name}.", "OK");
-        return;
-    }
+            if (spellSlots.Count == 0)
+            {
+                await DisplayAlert("No Spell Slots", $"No spell slots available for {spell.Name}.", "OK");
+                return;
+            }
 
-    // Use DisplayActionSheet to show all slots
-    var selectedSlot = await DisplayActionSheet($"{spell.Name} (lvl: {spellLevel})", "Cancel", null, spellSlots.ToArray());
+            var selectedSlot = await DisplayActionSheet($"{spell.Name} (lvl: {spellLevel})", "Cancel", null, spellSlots.ToArray());
 
-    if (selectedSlot == "Cancel" || string.IsNullOrEmpty(selectedSlot))
-    {
-        return; // User canceled the selection
-    }
+            if (selectedSlot == "Cancel" || string.IsNullOrEmpty(selectedSlot))
+            {
+                return;
+            }
 
-    // Extract the spell level from the selected string
-    var selectedLevel = int.Parse(selectedSlot.Split(' ')[1]);
+            var selectedLevel = int.Parse(selectedSlot.Split(' ')[1]);
 
-    // Cast the spell using the selected level
-    var success = currentCharacter.CastSpell(selectedLevel);
+            var success = currentCharacter.CastSpell(selectedLevel);
 
-    if (success)
-    {
-        if (spell.Name != null)
+            if (success)
+            {
+                if (spell.Name != null)
+                {
+                    SharedViewModel.Instance.LogSpellCast(currentCharacter, spell.Name, selectedLevel, castAsRitual);
+
+                    SharedViewModel.Instance.SaveSpellsPerDayDetails(currentCharacter, currentCharacter.MaxSpellsPerDay,
+                        currentCharacter.SpellsUsedToday);
+                }
+            }
+            else
+            {
+                if (spell.Name != null)
+                {
+                    SharedViewModel.Instance.LogFailedSpellCast(currentCharacter, spell.Name, selectedLevel,
+                        "Unable to cast spell.");
+                    await DisplayAlert("Failed", $"Failed to cast {spell.Name} at level {selectedLevel}.", "OK");
+                }
+            }
+
+            ReloadUI();
+        }
+        catch (Exception e)
         {
-            SharedViewModel.Instance.LogSpellCast(currentCharacter, spell.Name, selectedLevel, castAsRitual);
-
-            // Update spells used in SharedViewModel
-            SharedViewModel.Instance.SaveSpellsPerDayDetails(currentCharacter, currentCharacter.MaxSpellsPerDay,
-                currentCharacter.SpellsUsedToday);
-
-            await DisplayAlert("Spell Cast", $"{spell.Name} has been cast at level {selectedLevel}.", "OK");
+            await DisplayAlert("Error", $"An error occurred while casting the spell: {e.Message}", "OK");
         }
     }
-    else
-    {
-        if (spell.Name != null)
-        {
-            SharedViewModel.Instance.LogFailedSpellCast(currentCharacter, spell.Name, selectedLevel,
-                "Unable to cast spell.");
-            await DisplayAlert("Failed", $"Failed to cast {spell.Name} at level {selectedLevel}.", "OK");
-        }
-    }
-
-    ReloadUI();
-}
 
 
     private void ReloadUI()
     {
-        CheckIfSpellIsKnown(); // Re-check if the spell is known
-        UpdateButtons();       // Update the buttons based on the current state
-        OnPropertyChanged(nameof(character.SpellsUsedToday)); // Trigger UI update for spells used today
-        OnPropertyChanged(nameof(character.MaxSpellsPerDay)); // Trigger UI update for max spells per day
+        CheckIfSpellIsKnown();
+        UpdateButtons();      
+        OnPropertyChanged(nameof(character.SpellsUsedToday));
+        OnPropertyChanged(nameof(character.MaxSpellsPerDay));
     }
 
-    private async void OnAddSpellClicked(object? sender, EventArgs e)
+    private async void OnAddSpellClicked(object? sender, EventArgs eventArgs)
     {
-        var confirmation = await DisplayAlert("Add Spell",
-                                              $"Do you want to add '{spell.Name}' " +
-                                              $"to {character.Name}?",
-                                              "Cancel",
-                                              "Add");
+        try
+        {
+            var viewModel = SharedViewModel.Instance;
+            // Ensure character has an ID
+            if (character.ID == null) character.ID = Guid.NewGuid();
 
-        if (confirmation) return;
-        // Logic to add the spell to the character's known spells'
-        var viewModel = SharedViewModel.Instance;
-        viewModel.AddSpell(character, spell);
-        viewModel.SaveSpellForCharacter(character, spell);
-        //await DisplayAlert("Spell Added", $"{spell.Name} has been added to {character.Name}.", "OK");
-        CheckIfSpellIsKnown(); // Re-check if the spell is known
-        UpdateButtons(); // Update buttons after adding the spell
-        //await Navigation.PopAsync();
+            viewModel.AddSpell(character, spell);
+            viewModel.SaveSpellForCharacter(character, spell);
+            CheckIfSpellIsKnown();
+            UpdateButtons();
+
+            // Notify other UI to reload lists
+            SharedViewModel.Instance.SpellsChanged?.Invoke();
+
+            await Navigation.PopAsync();
+        }
+        catch (Exception e)
+        {
+            await DisplayAlert("Error", $"An error occurred while adding the spell: {e.Message}", "OK");
+        }
     }
 
-    private async void OnRemoveSpellClicked(object? sender, EventArgs e)
+    private async void OnRemoveSpellClicked(object? sender, EventArgs eventArgs)
     {
-        var confirmation = await DisplayAlert("Remove Spell",
-                                              $"Are you sure you want to remove '{spell.Name}' " +
-                                              $"from {character.Name}?",
-                                              "Cancel",
-                                              "Remove");
+        try
+        {
+            var viewModel = SharedViewModel.Instance;
+            if (!viewModel.CharacterSpells.TryGetValue(character.ID, out var value)) return;
+            value.Remove(spell);
+            viewModel.RemoveSpellForCharacter(character, spell);
+            CheckIfSpellIsKnown();
+            UpdateButtons();
 
-        if (confirmation) return;
-        // Logic to remove the spell from the character's known spells
-        var viewModel = SharedViewModel.Instance;
-        if (!viewModel.CharacterSpells.ContainsKey(character.ID)) return;
-        viewModel.CharacterSpells[character.ID].Remove(spell);
-        viewModel.RemoveSpellForCharacter(character, spell);
-        //await DisplayAlert("Spell Removed", $"{spell.Name} has been removed from {character.Name}.", "OK");
-        CheckIfSpellIsKnown(); // Re-check if the spell is known
-        UpdateButtons(); // Update buttons after removing the spell
-        //await Navigation.PopAsync();
+            // Notify other UI to reload lists
+            SharedViewModel.Instance.SpellsChanged?.Invoke();
+
+            await Navigation.PopAsync();
+        }
+        catch (Exception e)
+        {
+            await DisplayAlert("Error", $"An error occurred while removing the spell: {e.Message}", "OK");
+        }
+    }
+
+    private async void OnPrepareSpellClicked(object? sender, EventArgs eventArgs)
+    {
+        try
+        {
+            var viewModel = SharedViewModel.Instance;
+
+            // First, ensure the spell is in the character's known spells (so they can cast it)
+            if (!viewModel.CharacterSpells.ContainsKey(character.ID))
+            {
+                viewModel.CharacterSpells[character.ID] = new ObservableCollection<Spell>();
+            }
+            if (!viewModel.CharacterSpells[character.ID].Any(s => s.Name == spell.Name))
+            {
+                viewModel.AddSpell(character, spell);
+                viewModel.SaveSpellForCharacter(character, spell);
+            }
+
+            // Check if we're at the preparation limit
+            int limit = character.Level + character.GetRelevantAbilityModifier();
+            var preparedSpells = character.GetPreparedSpells();
+
+            if (preparedSpells.Count >= limit)
+            {
+                // Show replacement dialog
+                var selectedSpell = await PrepareSpellReplacementDialog.ShowAsync(preparedSpells, spell.Name ?? "");
+
+                if (selectedSpell != null)
+                {
+                    // Replace the old spell with the new one
+                    character.TogglePreparedSpell(selectedSpell);
+                    character.TogglePreparedSpell(spell);
+                    viewModel.SavePreparedSpells(character);
+
+                    await DisplayAlert("Success", $"'{selectedSpell.Name}' has been replaced with '{spell.Name}'.", "OK");
+                }
+            }
+            else
+            {
+                // Under limit - prepare directly
+                character.TogglePreparedSpell(spell);
+                viewModel.SavePreparedSpells(character);
+                await DisplayAlert("Success", $"'{spell.Name}' has been prepared.", "OK");
+            }
+
+            CheckIfSpellIsPrepared();
+            UpdateButtons();
+
+            // Refresh lists
+            SharedViewModel.Instance.SpellsChanged?.Invoke();
+
+            await Navigation.PopAsync();
+        }
+        catch (Exception e)
+        {
+            await DisplayAlert("Error", $"An error occurred while preparing the spell: {e.Message}", "OK");
+        }
+    }
+
+    private async void OnUnprepareSpellClicked(object? sender, EventArgs eventArgs)
+    {
+        try
+        {
+            var viewModel = SharedViewModel.Instance;
+            character.TogglePreparedSpell(spell);
+            viewModel.SavePreparedSpells(character);
+
+            CheckIfSpellIsPrepared();
+            UpdateButtons();
+
+            // Refresh lists
+            SharedViewModel.Instance.SpellsChanged?.Invoke();
+
+            await Navigation.PopAsync();
+        }
+        catch (Exception e)
+        {
+            await DisplayAlert("Error", $"An error occurred while unpreparing the spell: {e.Message}", "OK");
+        }
+    }
+
+    private async Task<Spell?> ShowReplacementDialog(List<Spell> preparedSpells)
+    {
+        var spellNames = preparedSpells.Select(s => s.Name).ToArray();
+        var selectedSpellName = await DisplayActionSheet(
+            "Prepared Spell Limit Reached",
+            "Cancel",
+            null,
+            spellNames);
+
+        if (selectedSpellName == "Cancel" || string.IsNullOrEmpty(selectedSpellName))
+        {
+            return null;
+        }
+
+        return preparedSpells.FirstOrDefault(s => s.Name == selectedSpellName);
     }
 }
