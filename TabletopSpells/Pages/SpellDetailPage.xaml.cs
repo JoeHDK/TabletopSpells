@@ -27,6 +27,16 @@ public partial class SpellDetailPage : ContentPage
         UpdateButtons();
     }
 
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        
+        // Refresh the prepared state in case it changed while navigating
+        CheckIfSpellIsKnown();
+        CheckIfSpellIsPrepared();
+        UpdateButtons();
+    }
+
     private void CheckIfSpellIsKnown()
     {
         var viewModel = SharedViewModel.Instance;
@@ -47,32 +57,16 @@ public partial class SpellDetailPage : ContentPage
         AddOrRemoveButton.Clicked -= OnPrepareSpellClicked;
         AddOrRemoveButton.Clicked -= OnUnprepareSpellClicked;
 
-        // For divine casters, show Prepare/Unprepare
-        if (character.IsDivineCaster)
+        // ALL casters use Add/Remove buttons
+        // Divine casters manage preparation via the "Prepare Spells" modal on SpellsPage
+        AddOrRemoveButton.Text = spellIsKnown ? "Remove Spell" : "Add Spell";
+        if (spellIsKnown)
         {
-            if (spellIsPrepared)
-            {
-                AddOrRemoveButton.Text = "Unprepare Spell";
-                AddOrRemoveButton.Clicked += OnUnprepareSpellClicked;
-            }
-            else
-            {
-                AddOrRemoveButton.Text = "Prepare Spell";
-                AddOrRemoveButton.Clicked += OnPrepareSpellClicked;
-            }
+            AddOrRemoveButton.Clicked += OnRemoveSpellClicked;
         }
         else
         {
-            // Traditional casters show Add/Remove
-            AddOrRemoveButton.Text = spellIsKnown ? "Remove Spell" : "Add Spell";
-            if (spellIsKnown)
-            {
-                AddOrRemoveButton.Clicked += OnRemoveSpellClicked;
-            }
-            else
-            {
-                AddOrRemoveButton.Clicked += OnAddSpellClicked;
-            }
+            AddOrRemoveButton.Clicked += OnAddSpellClicked;
         }
 
         // Update the visibility and enabled status of the CastSpellButton
@@ -86,8 +80,20 @@ public partial class SpellDetailPage : ContentPage
         CastSpellButton.IsEnabled = false;
         CastSpellButton.Clicked -= OnCastSpellClicked; // Clear any existing event subscriptions
 
-        // For divine casters, check if prepared; for others, check if known
-        bool spellAvailable = character.IsDivineCaster ? spellIsPrepared : spellIsKnown;
+        // Check if spell is available:
+        // - For divine casters: spell must be in added spells AND marked as prepared
+        // - For others: spell must be in added spells
+        bool spellAvailable;
+        if (character.IsDivineCaster)
+        {
+            // Divine casters need both: in their spell list AND marked as prepared
+            spellAvailable = spellIsKnown && spellIsPrepared;
+        }
+        else
+        {
+            // Traditional casters just need the spell to be known/added
+            spellAvailable = spellIsKnown;
+        }
 
         // If the spell isn't available to the character, no further action is needed
         if (!spellAvailable)
@@ -154,7 +160,7 @@ public partial class SpellDetailPage : ContentPage
             {
                 if (spell.Name != null)
                     SharedViewModel.Instance.LogSpellCast(currentCharacter, spell.Name, spellLevel, false);
-                await DisplayAlert("", "", "OK");
+                await DisplayAlert("Cast as Cantrip", "Success", "OK");
                 ReloadUI();
                 return;
             }
@@ -255,16 +261,28 @@ public partial class SpellDetailPage : ContentPage
         try
         {
             var viewModel = SharedViewModel.Instance;
-            if (!viewModel.CharacterSpells.TryGetValue(character.ID, out var value)) return;
-            value.Remove(spell);
+            // Ensure the character has an ID and the in-memory spell collection is loaded
+            character.ID ??= Guid.NewGuid();
+ 
+            // This will initialize CharacterSpells[character.ID] if missing
+            var spellsForChar = viewModel.SpellsForCharacter(character);
+ 
+            // Remove by matching Id or Name to handle different object instances
+            var existing = spellsForChar.FirstOrDefault(s => s.Id == spell.Id) ?? spellsForChar.FirstOrDefault(s => s.Name == spell.Name);
+            if (existing != null)
+            {
+                spellsForChar.Remove(existing);
+            }
+ 
+            // Ensure persistent removal and any divine-caster cleanup happens
             viewModel.RemoveSpellForCharacter(character, spell);
-            CheckIfSpellIsKnown();
-            UpdateButtons();
+             CheckIfSpellIsKnown();
+             UpdateButtons();
 
-            // Notify other UI to reload lists
-            SharedViewModel.Instance.SpellsChanged?.Invoke();
+             // Notify other UI to reload lists
+             SharedViewModel.Instance.SpellsChanged?.Invoke();
 
-            await Navigation.PopAsync();
+             await Navigation.PopAsync();
         }
         catch (Exception e)
         {
@@ -278,6 +296,10 @@ public partial class SpellDetailPage : ContentPage
         {
             var viewModel = SharedViewModel.Instance;
 
+            // Prompt user whether this should be a regular prepare or a domain (always-prepared) save
+            var choice = await DisplayActionSheet("Prepare Options", "Cancel", null, "Prepare Normally", "Mark as Domain (Always Prepared)");
+            if (choice == "Cancel" || string.IsNullOrEmpty(choice)) return;
+
             // First, ensure the spell is in the character's known spells (so they can cast it)
             if (!viewModel.CharacterSpells.ContainsKey(character.ID))
             {
@@ -289,31 +311,43 @@ public partial class SpellDetailPage : ContentPage
                 viewModel.SaveSpellForCharacter(character, spell);
             }
 
-            // Check if we're at the preparation limit
-            int limit = character.Level + character.GetRelevantAbilityModifier();
-            var preparedSpells = character.GetPreparedSpells();
-
-            if (preparedSpells.Count >= limit)
+            if (choice == "Mark as Domain (Always Prepared)")
             {
-                // Show replacement dialog
-                var selectedSpell = await PrepareSpellReplacementDialog.ShowAsync(preparedSpells, spell.Name ?? "");
-
-                if (selectedSpell != null)
-                {
-                    // Replace the old spell with the new one
-                    character.TogglePreparedSpell(selectedSpell);
-                    character.TogglePreparedSpell(spell);
-                    viewModel.SavePreparedSpells(character);
-
-                    await DisplayAlert("Success", $"'{selectedSpell.Name}' has been replaced with '{spell.Name}'.", "OK");
-                }
+                // Mark as domain (always prepared) and persist immediately
+                spell.IsAlwaysPrepared = true;
+                if (!character.AlwaysPreparedSpells.Contains(spell.Name ?? string.Empty))
+                    character.AlwaysPreparedSpells.Add(spell.Name ?? string.Empty);
+                viewModel.SavePreparedSpells(character); // includes always-prepared save now
+                await DisplayAlert("Success", $"'{spell.Name}' has been saved as a domain (always prepared) spell.", "OK");
             }
             else
             {
-                // Under limit - prepare directly
-                character.TogglePreparedSpell(spell);
-                viewModel.SavePreparedSpells(character);
-                await DisplayAlert("Success", $"'{spell.Name}' has been prepared.", "OK");
+                // Check if we're at the preparation limit
+                int limit = character.Level + character.GetRelevantAbilityModifier();
+                var preparedSpells = character.GetPreparedSpells();
+
+                if (preparedSpells.Count >= limit)
+                {
+                    // Show replacement dialog
+                    var selectedSpell = await PrepareSpellReplacementDialog.ShowAsync(preparedSpells, spell.Name ?? "");
+
+                    if (selectedSpell != null)
+                    {
+                        // Replace the old spell with the new one
+                        character.TogglePreparedSpell(selectedSpell);
+                        character.TogglePreparedSpell(spell);
+                        viewModel.SavePreparedSpells(character);
+
+                        await DisplayAlert("Success", $"'{selectedSpell.Name}' has been replaced with '{spell.Name}'.", "OK");
+                    }
+                }
+                else
+                {
+                    // Under limit - prepare directly
+                    character.TogglePreparedSpell(spell);
+                    viewModel.SavePreparedSpells(character);
+                    await DisplayAlert("Success", $"'{spell.Name}' has been prepared.", "OK");
+                }
             }
 
             CheckIfSpellIsPrepared();
@@ -335,8 +369,25 @@ public partial class SpellDetailPage : ContentPage
         try
         {
             var viewModel = SharedViewModel.Instance;
-            character.TogglePreparedSpell(spell);
-            viewModel.SavePreparedSpells(character);
+
+            // If the spell is marked as always-prepared (domain), ask whether to unmark domain or unprepare manually
+            if (spell.IsAlwaysPrepared)
+            {
+                var choice = await DisplayActionSheet("This spell is marked as domain (always prepared).", "Cancel", null, "Unmark Domain");
+                if (choice == "Cancel" || string.IsNullOrEmpty(choice)) return;
+                if (choice == "Unmark Domain")
+                {
+                    spell.IsAlwaysPrepared = false;
+                    if (character.AlwaysPreparedSpells.Contains(spell.Name ?? string.Empty))
+                        character.AlwaysPreparedSpells.Remove(spell.Name ?? string.Empty);
+                    viewModel.SavePreparedSpells(character);
+                }
+            }
+            else
+            {
+                character.TogglePreparedSpell(spell);
+                viewModel.SavePreparedSpells(character);
+            }
 
             CheckIfSpellIsPrepared();
             UpdateButtons();

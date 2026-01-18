@@ -17,6 +17,11 @@
                      Clicked="OnSearchSpellsClicked"
                      Priority="0"
                      Order="Primary" />
+        <ToolbarItem x:Name="PrepareSpellsToolbarItem"
+                     Text="Prepare Spells"
+                     Clicked="OnPrepareSpellsClicked"
+                     Priority="1"
+                     Order="Primary" />
     </ContentPage.ToolbarItems>
 
     <Grid BackgroundColor="Black" Margin="10, 10, 0, 0">

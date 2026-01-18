@@ -8,6 +8,8 @@
         <ResourceDictionary>
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
             <converters:PreparedSpellColorConverter x:Key="PreparedSpellColorConverter" />
+            <converters:FavoriteGlyphConverter x:Key="FavoriteGlyphConverter" />
+            <converters:FavoriteColorConverter x:Key="FavoriteColorConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -59,17 +61,22 @@
                         </StackLayout>
 
                         <!-- Star icon for favoriting -->
-                        <ImageButton Grid.Column="1"
-                                     Clicked="OnFavoriteClicked"
-                                     CommandParameter="{Binding Spell}"
-                                     BackgroundColor="Transparent"
-                                     VerticalOptions="Center"
-                                     HorizontalOptions="End"
-                                     Margin="10,0,0,0">
-                            <ImageButton.Source>
-                                <FontImageSource Glyph="★" Color="{Binding Spell.IsFavoriteSpell, Converter={StaticResource PreparedSpellColorConverter}}"/>
-                            </ImageButton.Source>
-                        </ImageButton>
+                        <Button Grid.Column="1"
+                                Clicked="OnFavoriteClicked"
+                                CommandParameter="{Binding Spell}"
+                                BackgroundColor="Transparent"
+                                VerticalOptions="Center"
+                                HorizontalOptions="End"
+                                Margin="10,0,0,0"
+                                FontSize="20"
+                                Padding="0">
+                            <Button.Text>
+                                <Binding Path="IsFavorite" Converter="{StaticResource FavoriteGlyphConverter}" />
+                            </Button.Text>
+                            <Button.TextColor>
+                                <Binding Path="IsFavorite" Converter="{StaticResource FavoriteColorConverter}" />
+                            </Button.TextColor>
+                        </Button>
                     </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>

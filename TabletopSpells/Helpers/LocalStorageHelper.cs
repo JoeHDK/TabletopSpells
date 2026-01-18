@@ -44,6 +44,11 @@ namespace TabletopSpells.Helpers
             return Path.Combine(GetCharacterDir(characterId), "preparedSpells.json");
         }
 
+        public static string GetAlwaysPreparedSpellsPath(Guid characterId)
+        {
+            return Path.Combine(GetCharacterDir(characterId), "alwaysPreparedSpells.json");
+        }
+
         public static void EnsureCharacterDirs(Guid characterId)
         {
             var dir = GetCharacterSpellsDir(characterId);
@@ -118,11 +123,41 @@ namespace TabletopSpells.Helpers
             }
         }
 
+        public static void SaveAlwaysPreparedSpellIds(Guid characterId, List<Guid> ids)
+        {
+            try
+            {
+                EnsureCharacterDirs(characterId);
+                var path = GetAlwaysPreparedSpellsPath(characterId);
+                var json = JsonConvert.SerializeObject(ids);
+                File.WriteAllText(path, json);
+            }
+            catch
+            {
+                // ignore
+            }
+        }
+
         public static List<Guid> LoadPreparedSpellIds(Guid characterId)
         {
             try
             {
                 var path = GetPreparedSpellsPath(characterId);
+                if (!File.Exists(path)) return new List<Guid>();
+                var json = File.ReadAllText(path);
+                return JsonConvert.DeserializeObject<List<Guid>>(json) ?? new List<Guid>();
+            }
+            catch
+            {
+                return new List<Guid>();
+            }
+        }
+
+        public static List<Guid> LoadAlwaysPreparedSpellIds(Guid characterId)
+        {
+            try
+            {
+                var path = GetAlwaysPreparedSpellsPath(characterId);
                 if (!File.Exists(path)) return new List<Guid>();
                 var json = File.ReadAllText(path);
                 return JsonConvert.DeserializeObject<List<Guid>>(json) ?? new List<Guid>();

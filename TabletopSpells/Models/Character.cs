@@ -19,6 +19,8 @@ public class Character
         }
     }
 
+    public Subclass Subclass { get; set; } = Subclass.None;
+
     public Game GameType { get; init; }
     public int Level { get; set; }
 
@@ -70,9 +72,8 @@ public class Character
         if (!_knownSpells.Contains(spell))
             _knownSpells.Add(spell);
 
-        // Divine casters automatically have their spells marked as always prepared
-        if (IsDivineCaster && !spell.IsAlwaysPrepared)
-            spell.IsAlwaysPrepared = true;
+        // Do NOT automatically mark spells as always-prepared. Domain/always-prepared status
+        // should be set explicitly via the UI (user choice).
     }
 
     /// <summary>
@@ -152,7 +153,14 @@ public class Character
         if (_manuallyPreparedSpells.Count >= limit) return false;
         _manuallyPreparedSpells.Add(spell);
         return true;
+    }
 
+    /// <summary>
+    /// Clears all manually prepared spells. Used when reloading from storage.
+    /// </summary>
+    public void ClearManualllyPreparedSpells()
+    {
+        _manuallyPreparedSpells.Clear();
     }
 
 }

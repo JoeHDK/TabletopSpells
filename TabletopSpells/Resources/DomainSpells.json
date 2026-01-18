@@ -1,0 +1,265 @@
+﻿{
+  "domainSpells": {
+    "Cleric": {
+      "domains": {
+        "Air": {
+          "spellLevel1": ["Feather Fall", "Shocking Grasp"],
+          "spellLevel2": ["Fog Cloud", "Gust of Wind"],
+          "spellLevel3": ["Call Lightning", "Sleet Storm"],
+          "spellLevel4": ["Control Water", "Ice Storm"],
+          "spellLevel5": ["Cone of Cold", "Insect Plague"],
+          "spellLevel6": ["Chain Lightning", "Wall of Ice"],
+          "spellLevel7": ["Delayed Blast Fireball", "Teleport"],
+          "spellLevel8": ["Sunburst", "Whirlwind"],
+          "spellLevel9": ["Storm of Vengeance", "Wish"]
+        },
+        "Animal": {
+          "spellLevel1": ["Animal Friendship", "Entangle"],
+          "spellLevel2": ["Barkskin", "Summon Beast"],
+          "spellLevel3": ["Conjure Animals", "Dominate Beast"],
+          "spellLevel4": ["Giant Insect", "Polymorph"],
+          "spellLevel5": ["Awaken", "Conjure Elemental"],
+          "spellLevel6": ["Conjure Fey", "Mass Suggestion"],
+          "spellLevel7": ["Forcecage", "Teleport"],
+          "spellLevel8": ["Sunburst", "True Polymorph"],
+          "spellLevel9": ["Shapechange", "Wish"]
+        },
+        "Arcana": {
+          "spellLevel1": ["Arcane Missile", "Magic Missile"],
+          "spellLevel2": ["Identify", "Magic Mouth"],
+          "spellLevel3": ["Dispel Magic", "Magic Circle"],
+          "spellLevel4": ["Arcane Eye", "Leomund's Secret Chest"],
+          "spellLevel5": ["Telekinesis", "Teleportation Circle"],
+          "spellLevel6": ["Contingency", "Legend Lore"],
+          "spellLevel7": ["Forcecage", "Prismatic Spray"],
+          "spellLevel8": ["Antimagic Field", "Nystul's Magic Aura"],
+          "spellLevel9": ["Wish", "Gate"]
+        },
+        "Death": {
+          "spellLevel1": ["False Life", "Ray of Sickness"],
+          "spellLevel2": ["Blindness/Deafness", "Gentle Repose"],
+          "spellLevel3": ["Animate Dead", "Vampiric Touch"],
+          "spellLevel4": ["Blight", "Death Ward"],
+          "spellLevel5": ["Antilife Shell", "Contagion"],
+          "spellLevel6": ["Circle of Death", "Create Undead"],
+          "spellLevel7": ["Finger of Death", "Teleport"],
+          "spellLevel8": ["Clone", "Horrid Wilting"],
+          "spellLevel9": ["Power Word Kill", "Wish"]
+        },
+        "Forge": {
+          "spellLevel1": ["Identify", "Magic Weapon"],
+          "spellLevel2": ["Heat Metal", "Mending"],
+          "spellLevel3": ["Elemental Weapon", "Protection from Energy"],
+          "spellLevel4": ["Fabricate", "Stone Shape"],
+          "spellLevel5": ["Animate Objects", "Creation"],
+          "spellLevel6": ["Move Earth", "Tensers Transformation"],
+          "spellLevel7": ["Forcecage", "Prismatic Spray"],
+          "spellLevel8": ["Antimagic Field", "Incendiary Cloud"],
+          "spellLevel9": ["Wish", "Gate"]
+        },
+        "Grave": {
+          "spellLevel1": ["Bless", "Cure Wounds"],
+          "spellLevel2": ["Gentle Repose", "Ray of Enfeeblement"],
+          "spellLevel3": ["Animate Dead", "Spirit Guardians"],
+          "spellLevel4": ["Blight", "Death Ward"],
+          "spellLevel5": ["Antilife Shell", "Raise Dead"],
+          "spellLevel6": ["Circle of Death", "Tidal Wave"],
+          "spellLevel7": ["Plane Shift", "Teleport"],
+          "spellLevel8": ["Clone", "Control Weather"],
+          "spellLevel9": ["Astral Projection", "Wish"]
+        },
+        "Knowledge": {
+          "spellLevel1": ["Command", "Identify"],
+          "spellLevel2": ["Augury", "Suggestion"],
+          "spellLevel3": ["Dispel Magic", "Nondetection"],
+          "spellLevel4": ["Arcane Eye", "Confusion"],
+          "spellLevel5": ["Legend Lore", "Scrying"],
+          "spellLevel6": ["Contingency", "Geas"],
+          "spellLevel7": ["Forcecage", "Prismatic Spray"],
+          "spellLevel8": ["Antimagic Field", "Dominate Monster"],
+          "spellLevel9": ["Mass Heal", "Wish"]
+        },
+        "Life": {
+          "spellLevel1": ["Bless", "Cure Wounds"],
+          "spellLevel2": ["Lesser Restoration", "Spiritual Weapon"],
+          "spellLevel3": ["Beacon of Hope", "Revivify"],
+          "spellLevel4": ["Aura of Life", "Guardian of Faith"],
+          "spellLevel5": ["Greater Restoration", "Raise Dead"],
+          "spellLevel6": ["Heal", "Heroes' Feast"],
+          "spellLevel7": ["Etherealness", "Regenerate"],
+          "spellLevel8": ["Mass Heal", "Sunburst"],
+          "spellLevel9": ["True Resurrection", "Wish"]
+        },
+        "Light": {
+          "spellLevel1": ["Burning Hands", "Faerie Fire"],
+          "spellLevel2": ["Flaming Sphere", "Scorching Ray"],
+          "spellLevel3": ["Daylight", "Fireball"],
+          "spellLevel4": ["Guardian of Faith", "Wall of Fire"],
+          "spellLevel5": ["Flame Strike", "Scrying"],
+          "spellLevel6": ["Sunbeam", "Conjure Fey"],
+          "spellLevel7": ["Delayed Blast Fireball", "Teleport"],
+          "spellLevel8": ["Sunburst", "Incendiary Cloud"],
+          "spellLevel9": ["Gate", "Wish"]
+        },
+        "Nature": {
+          "spellLevel1": ["Animal Friendship", "Entangle"],
+          "spellLevel2": ["Barkskin", "Spike Growth"],
+          "spellLevel3": ["Call Lightning", "Plant Growth"],
+          "spellLevel4": ["Dominate Beast", "Grasping Vine"],
+          "spellLevel5": ["Insect Plague", "Tree Stride"],
+          "spellLevel6": ["Move Earth", "Sunbeam"],
+          "spellLevel7": ["Fire Storm", "Teleport"],
+          "spellLevel8": ["Control Weather", "Sunburst"],
+          "spellLevel9": ["Earthquake", "Wish"]
+        },
+        "Tempest": {
+          "spellLevel1": ["Fog Cloud", "Thunderwave"],
+          "spellLevel2": ["Gust of Wind", "Scorching Ray"],
+          "spellLevel3": ["Call Lightning", "Sleet Storm"],
+          "spellLevel4": ["Control Water", "Ice Storm"],
+          "spellLevel5": ["Cone of Cold", "Destructive Wave"],
+          "spellLevel6": ["Chain Lightning", "Sunbeam"],
+          "spellLevel7": ["Delayed Blast Fireball", "Teleport"],
+          "spellLevel8": ["Sunburst", "Whirlwind"],
+          "spellLevel9": ["Storm of Vengeance", "Wish"]
+        },
+        "Trickery": {
+          "spellLevel1": ["Charm Person", "Disguise Self"],
+          "spellLevel2": ["Invisibility", "Mirror Image"],
+          "spellLevel3": ["Blink", "Dispel Magic"],
+          "spellLevel4": ["Dimension Door", "Polymorph"],
+          "spellLevel5": ["Dimension Door", "Modify Memory"],
+          "spellLevel6": ["Mass Suggestion", "Teleportation Circle"],
+          "spellLevel7": ["Forcecage", "Teleport"],
+          "spellLevel8": ["Clone", "Telekinesis"],
+          "spellLevel9": ["Wish", "Gate"]
+        },
+        "War": {
+          "spellLevel1": ["Divine Favor", "Thunderous Smite"],
+          "spellLevel2": ["Magic Weapon", "Spiritual Weapon"],
+          "spellLevel3": ["Crusaders Mantle", "Spirit Guardians"],
+          "spellLevel4": ["Divine Power", "Freedom of Movement"],
+          "spellLevel5": ["Flame Strike", "Hold Monster"],
+          "spellLevel6": ["Blade Barrier", "Tensers Transformation"],
+          "spellLevel7": ["Fire Storm", "Teleport"],
+          "spellLevel8": ["Sunburst", "Holy Aura"],
+          "spellLevel9": ["Wish", "Gate"]
+        }
+      }
+    },
+    "Druid": {
+      "circles": {
+        "Land": {
+          "spellLevel1": ["Entangle", "Goodberry"],
+          "spellLevel2": ["Barkskin", "Spike Growth"],
+          "spellLevel3": ["Call Lightning", "Plant Growth"],
+          "spellLevel4": ["Dominate Beast", "Grasping Vine"],
+          "spellLevel5": ["Insect Plague", "Tree Stride"],
+          "spellLevel6": ["Move Earth", "Sunbeam"],
+          "spellLevel7": ["Fire Storm", "Teleport"],
+          "spellLevel8": ["Control Weather", "Sunburst"],
+          "spellLevel9": ["Earthquake", "Wish"]
+        },
+        "Moon": {
+          "spellLevel1": ["Entangle", "Faerie Fire"],
+          "spellLevel2": ["Barkskin", "Moonbeam"],
+          "spellLevel3": ["Call Lightning", "Conjure Animals"],
+          "spellLevel4": ["Dominate Beast", "Polymorph"],
+          "spellLevel5": ["Conjure Elemental", "Insect Plague"],
+          "spellLevel6": ["Conjure Fey", "Transport via Plants"],
+          "spellLevel7": ["Fire Storm", "Plane Shift"],
+          "spellLevel8": ["Control Weather", "Tsunami"],
+          "spellLevel9": ["Storm of Vengeance", "Wish"]
+        },
+        "Spores": {
+          "spellLevel1": ["Blindness/Deafness", "Gentle Repose"],
+          "spellLevel2": ["Animate Dead", "Blindness/Deafness"],
+          "spellLevel3": ["Animate Dead", "Gaseous Form"],
+          "spellLevel4": ["Blight", "Polymorph"],
+          "spellLevel5": ["Cloudkill", "Contagion"],
+          "spellLevel6": ["Create Undead", "Eyebite"],
+          "spellLevel7": ["Finger of Death", "Plane Shift"],
+          "spellLevel8": ["Horrid Wilting", "Tsunami"],
+          "spellLevel9": ["Shapechange", "Wish"]
+        },
+        "Dreams": {
+          "spellLevel1": ["Calming", "Sleep"],
+          "spellLevel2": ["Phantasmal Force", "Suggestion"],
+          "spellLevel3": ["Hypnotic Pattern", "Major Image"],
+          "spellLevel4": ["Phantasmal Killer", "Polymorph"],
+          "spellLevel5": ["Dream", "Modify Memory"],
+          "spellLevel6": ["Mass Suggestion", "Seeming"],
+          "spellLevel7": ["Mirage Arcane", "Plane Shift"],
+          "spellLevel8": ["Mind Blank", "Telekinesis"],
+          "spellLevel9": ["Wish", "Gate"]
+        },
+        "Shepherd": {
+          "spellLevel1": ["Animal Friendship", "Entangle"],
+          "spellLevel2": ["Barkskin", "Summon Beast"],
+          "spellLevel3": ["Conjure Animals", "Dominate Beast"],
+          "spellLevel4": ["Giant Insect", "Polymorph"],
+          "spellLevel5": ["Awaken", "Conjure Elemental"],
+          "spellLevel6": ["Conjure Fey", "Mass Suggestion"],
+          "spellLevel7": ["Forcecage", "Plane Shift"],
+          "spellLevel8": ["Control Weather", "Tsunami"],
+          "spellLevel9": ["Shapechange", "Wish"]
+        }
+      }
+    },
+    "Paladin": {
+      "oaths": {
+        "Devotion": {
+          "spellLevel1": ["Divine Favor", "Protection from Evil and Good"],
+          "spellLevel2": ["Lesser Restoration", "Zone of Truth"],
+          "spellLevel3": ["Beacon of Hope", "Dispel Magic"],
+          "spellLevel4": ["Freedom of Movement", "Guardian of Faith"],
+          "spellLevel5": ["Cloudkill", "Flame Strike"]
+        },
+        "Ancients": {
+          "spellLevel1": ["Ensnaring Strike", "Speak with Animals"],
+          "spellLevel2": ["Barkskin", "Spike Growth"],
+          "spellLevel3": ["Plant Growth", "Summon Beast"],
+          "spellLevel4": ["Blight", "Tree Stride"],
+          "spellLevel5": ["Commune with Nature", "Conjure Elemental"]
+        },
+        "Vengeance": {
+          "spellLevel1": ["Bless", "Thunderous Smite"],
+          "spellLevel2": ["Magic Weapon", "Scorching Ray"],
+          "spellLevel3": ["Haste", "Protection from Energy"],
+          "spellLevel4": ["Blight", "Dimension Door"],
+          "spellLevel5": ["Destructive Wave", "Hold Monster"]
+        },
+        "Conquest": {
+          "spellLevel1": ["Armor of Agathys", "Command"],
+          "spellLevel2": ["Spiritual Weapon", "Hold Person"],
+          "spellLevel3": ["Fear", "Spiritual Weapon"],
+          "spellLevel4": ["Dominate Beast", "Stoneskin"],
+          "spellLevel5": ["Cloudkill", "Cone of Cold"]
+        },
+        "Redemption": {
+          "spellLevel1": ["Sanctuary", "Wrathful Smite"],
+          "spellLevel2": ["Hold Person", "Scorching Ray"],
+          "spellLevel3": ["Counterspell", "Hypnotic Pattern"],
+          "spellLevel4": ["Ottos Irresistible Dance", "Wall of Force"],
+          "spellLevel5": ["Dispel Evil and Good", "Teleportation Circle"]
+        }
+      }
+    },
+    "Ranger": {
+      "concreteSpells": {
+        "spellLevel1": ["Animal Friendship", "Goodberry"],
+        "spellLevel2": ["Barkskin", "Find Traps"],
+        "spellLevel3": ["Conjure Animals", "Daylight"],
+        "spellLevel4": ["Freedom of Movement", "Locate Creature"],
+        "spellLevel5": ["Commune with Nature", "Tree Stride"]
+      }
+    }
+  },
+  "notes": {
+    "Cleric": "Cleric domain spells must be prepared and do not count against the number of spells known.",
+    "Druid": "Druid circle spells must be prepared and do not count against the number of spells known.",
+    "Paladin": "Paladin oath spells are always prepared and do not count against the number of spells known.",
+    "Ranger": "Ranger spells are learned and always known, no preparation needed."
+  }
+}
+

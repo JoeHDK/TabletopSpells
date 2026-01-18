@@ -10,6 +10,12 @@
                 <Entry x:Name="LevelEntry" Keyboard="Numeric" Placeholder="Enter level" />
             </HorizontalStackLayout>
 
+            <!-- Subclass Field -->
+            <HorizontalStackLayout Spacing="10" Margin="0,0,0,10">
+                <Label Text="Subclass" VerticalTextAlignment="Center" WidthRequest="150" />
+                <Picker x:Name="SubclassPicker" Title="Select subclass" />
+            </HorizontalStackLayout>
+
             <!-- Strength Field -->
             <HorizontalStackLayout Spacing="10" Margin="0, 0, 0, 10">
                 <Label Text="Strength" VerticalTextAlignment="Center" WidthRequest="150" />

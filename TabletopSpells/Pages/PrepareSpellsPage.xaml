@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TabletopSpells.Pages.PrepareSpellsPage"
+             Title="Prepare Spells">
+    
+    <VerticalStackLayout Padding="12" Spacing="10">
+        
+        <!-- Header -->
+        <Label Text="Select spells to prepare" 
+               FontAttributes="Bold" 
+               FontSize="18" />
+        
+        <!-- Summary -->
+        <Label Text="{Binding PrepareSummary}" 
+               FontSize="14" />
+        
+        <!-- Spell List -->
+        <CollectionView ItemsSource="{Binding AddedSpells}" 
+                        SelectionMode="None"
+                        VerticalOptions="FillAndExpand">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Padding="8" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <CheckBox IsChecked="{Binding IsPrepared}" 
+                                  VerticalOptions="Center"
+                                  IsEnabled="{Binding IsCheckboxEnabled}" />
+                        
+                        <Label Grid.Column="1" 
+                               Text="{Binding Name}" 
+                               VerticalOptions="Center"
+                               FontSize="16" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Buttons -->
+        <HorizontalStackLayout HorizontalOptions="End" Spacing="8" Padding="0,10,0,0">
+            <Button Text="Cancel" 
+                    Command="{Binding CancelCommand}"
+                    Padding="16,8" />
+            <Button Text="Save" 
+                    Command="{Binding SaveCommand}"
+                    Padding="16,8" />
+        </HorizontalStackLayout>
+    </VerticalStackLayout>
+</ContentPage>
+

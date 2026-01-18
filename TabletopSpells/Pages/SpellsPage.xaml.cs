@@ -12,7 +12,7 @@ public partial class SpellsPage : ContentPage
     private readonly Game gameType;
     private readonly Character character;
 
-    public ObservableCollection<Grouping<int, Spell>> GroupedSpells { get; set; } = new();
+    public ObservableCollection<Grouping<int, Spell>> GroupedSpells { get; set; } = [];
 
     public SpellsPage(Character character, SharedViewModel viewModel, Game gameType)
     {
@@ -23,7 +23,8 @@ public partial class SpellsPage : ContentPage
 
         Title = $"{character.Name}'s spells";
 
-        SharedViewModel.Instance.LoadSpellsForCharacter(character);
+        // Use SpellsForCharacter which handles auto-filling and loading prepared spells
+        viewModel.SpellsForCharacter(character);
 
         var castable = GetCastableSpells(character, gameType);
         GroupAndDisplaySpells(castable);
@@ -49,7 +50,7 @@ public partial class SpellsPage : ContentPage
         var alwaysPrepared = character.AlwaysPreparedSpells
             .SelectMany(name =>
                 allSpellsFromJson.Where(spell =>
-                    spell.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
+                    spell.Name != null && spell.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
             .ToList();
         castable.AddRange(alwaysPrepared);
 
@@ -70,6 +71,18 @@ public partial class SpellsPage : ContentPage
             .OrderBy(spell => spell.SpellLevel)
             .ThenBy(spell => spell.Name)
             .ToList();
+    }
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        
+        // Show Prepare Spells button only for divine casters
+        PrepareSpellsToolbarItem.IsEnabled = character.IsDivineCaster;
+        if (!character.IsDivineCaster)
+        {
+            ToolbarItems.Remove(PrepareSpellsToolbarItem);
+        }
     }
 
     private int ParseSpellLevel(string spellLevel, string characterClass)
@@ -106,6 +119,21 @@ public partial class SpellsPage : ContentPage
         }
 
         ((CollectionView)sender).SelectedItem = null;
+    }
+
+    private async void OnPrepareSpellsClicked(object sender, EventArgs e)
+    {
+        if (!character.IsDivineCaster)
+            return;
+
+        // Get the character's known spells and convert to List
+        var knownSpells = SharedViewModel.Instance.SpellsForCharacter(character).ToList();
+        
+        // Function to compute max prepared spells
+        int GetMaxPrepared() => character.Level + character.GetRelevantAbilityModifier();
+
+        // Open the prepare spells modal
+        await Navigation.PushModalAsync(new PrepareSpellsPage(knownSpells, GetMaxPrepared, character));
     }
 
     [GeneratedRegex(@"\d+")]

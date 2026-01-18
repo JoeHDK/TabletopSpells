@@ -1,5 +1,7 @@
 ﻿using TabletopSpells.ViewModels;
 using TabletopSpells.Models;
+using TabletopSpells.Models.Enums;
+using TabletopSpells.Helpers;
 
 namespace TabletopSpells.Pages;
 
@@ -7,6 +9,7 @@ public partial class StatsPage : ContentPage
 {
     private readonly SharedViewModel sharedViewModel;
     private Character character;
+    private List<Subclass> availableSubclasses = new();
 
     public StatsPage(Character character, SharedViewModel viewModel)
     {
@@ -14,7 +17,6 @@ public partial class StatsPage : ContentPage
         this.sharedViewModel = viewModel;
         this.character = character;
 
-        // Populate fields with existing character data
         LevelEntry.Text = character.Level.ToString();
         StrengthEntry.Text = character.AbilityScores["Strength"].ToString();
         DexterityEntry.Text = character.AbilityScores["Dexterity"].ToString();
@@ -23,8 +25,36 @@ public partial class StatsPage : ContentPage
         WisdomEntry.Text = character.AbilityScores["Wisdom"].ToString();
         CharismaEntry.Text = character.AbilityScores["Charisma"].ToString();
 
-        // Update UI modifiers
+        PopulateSubclassPicker();
+
         UpdateModifiers();
+    }
+
+    /// <summary>
+    /// Populates the subclass picker with options for the character's class.
+    /// </summary>
+    private void PopulateSubclassPicker()
+    {
+        availableSubclasses = SubclassHelper.GetSubclassesForClass(character.CharacterClass);
+        var displayNames = availableSubclasses.Select(s => SubclassHelper.GetDisplayName(s)).ToList();
+
+        SubclassPicker.ItemsSource = displayNames;
+
+        // Set the current selection
+        var currentIndex = availableSubclasses.IndexOf(character.Subclass);
+        if (currentIndex >= 0)
+        {
+            SubclassPicker.SelectedIndex = currentIndex;
+        }
+
+        // Handle selection changes
+        SubclassPicker.SelectedIndexChanged += (s, e) =>
+        {
+            if (SubclassPicker.SelectedIndex >= 0 && SubclassPicker.SelectedIndex < availableSubclasses.Count)
+            {
+                character.Subclass = availableSubclasses[SubclassPicker.SelectedIndex];
+            }
+        };
     }
 
     /// <summary>

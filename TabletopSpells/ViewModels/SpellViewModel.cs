@@ -59,6 +59,20 @@ public class SpellViewModel : INotifyPropertyChanged
         }
     }
 
+    // Notifying wrapper for the Spell's IsFavoriteSpell so UI can bind and get updates
+    public bool IsFavorite
+    {
+        get => Spell.IsFavoriteSpell;
+        set
+        {
+            if (Spell.IsFavoriteSpell == value) return;
+            Spell.IsFavoriteSpell = value;
+            OnPropertyChanged(nameof(IsFavorite));
+            // Also notify that Spell changed if other bindings use it
+            OnPropertyChanged(nameof(Spell));
+        }
+    }
+
     public string PreparedSpellCountText =>
         $"Prepared: {character.GetPreparedSpells().Count} / {character.Level + character.GetRelevantAbilityModifier()}";
 

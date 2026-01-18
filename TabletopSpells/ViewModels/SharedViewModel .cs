@@ -47,9 +47,15 @@ public class SharedViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(CurrentCharacter));
                 if (currentCharacter != null)
                 {
-                    LoadSpellsPerDayDetails(currentCharacter); // Load spell details directly into the character
-                    MigrateSpellsIfNeeded(currentCharacter); // Migrate spells from name-based keys to ID-based keys
-                    LoadPreparedSpells(currentCharacter); // Load prepared spells for the character
+                    // Load spell slots directly into the character
+                    LoadSpellsPerDayDetails(currentCharacter);
+                    
+                    // Migrate spells from name-based keys to ID-based keys
+                    MigrateSpellsIfNeeded(currentCharacter);
+                    
+                    // Note: Do NOT load prepared spells here!
+                    // LoadPreparedSpells must happen AFTER spells are loaded/auto-filled,
+                    // which happens in SpellsForCharacter() method
                 }
             }
         }
@@ -281,11 +287,9 @@ public class SharedViewModel : INotifyPropertyChanged
 
         character.AddSpell(spell);
 
-        // Defensive: ensure always-prepared flag is set for divine casters
-        if (ClassHelper.IsDivineCaster(character.CharacterClass) && !spell.IsAlwaysPrepared)
-        {
-            spell.IsAlwaysPrepared = true;
-        }
+        // Do NOT automatically mark spells as always-prepared here. Domain (always-prepared)
+        // status is explicit and should be set via the UI (Prepare -> Mark as Domain) or via
+        // a dedicated API that calls SaveAlwaysPreparedSpells.
 
         // Also keep the in-memory CharacterSpells collection in sync
         CharacterSpells[character.ID].Add(spell);
@@ -314,6 +318,19 @@ public class SharedViewModel : INotifyPropertyChanged
                 var list = LocalStorageHelper.LoadSpellFiles(character.ID.Value);
                 foreach (var sp in list)
                 {
+                    // Determine if the loaded spell is native to this character's class and mark it
+                    try
+                    {
+                        var className = character.CharacterClass.ToString();
+                        if (!string.IsNullOrEmpty(sp.SpellLevel) && sp.SpellLevel.ToLower().Contains(className.ToLower()))
+                        {
+                            sp.IsNativeSpell = true;
+                            // Persist the updated flag so future loads reflect native state
+                            LocalStorageHelper.SaveSpellToFile(character.ID.Value, sp);
+                        }
+                    }
+                    catch { }
+
                     spells.Add(sp);
                 }
             }
@@ -334,19 +351,58 @@ public class SharedViewModel : INotifyPropertyChanged
         try
         {
             var preparedSpellIds = LocalStorageHelper.LoadPreparedSpellIds(character.ID.Value);
+            Debug.WriteLine($"=== LoadPreparedSpells for {character.Name} ===");
+            Debug.WriteLine($"Loaded {preparedSpellIds.Count} prepared spell IDs from file");
 
-            if (!CharacterSpells.TryGetValue(character.ID, out var liveSpells)) return;
+            if (!CharacterSpells.TryGetValue(character.ID, out var liveSpells))
+            {
+                Debug.WriteLine($"ERROR: No CharacterSpells found for {character.Name}");
+                return;
+            }
+
+            Debug.WriteLine($"CharacterSpells has {liveSpells.Count} spells");
 
             foreach (var savedId in preparedSpellIds)
             {
                 var match = liveSpells.FirstOrDefault(s => s.Id == savedId);
                 if (match != null)
                 {
+                    // Ensure spell is in known spells first
+                    character.AddSpell(match);
+                    // Then toggle it as prepared
                     character.TogglePreparedSpell(match);
+                    Debug.WriteLine($"  ✓ Prepared: {match.Name}");
+                }
+                else
+                {
+                    Debug.WriteLine($"  ✗ Spell ID {savedId} not found in CharacterSpells");
                 }
             }
 
-            Debug.WriteLine($"Prepared spells loaded successfully for {character.Name}");
+            // Load always-prepared (domain) spells and mark them on the model
+            var alwaysIds = LocalStorageHelper.LoadAlwaysPreparedSpellIds(character.ID.Value);
+            Debug.WriteLine($"Loaded {alwaysIds.Count} always-prepared spell IDs");
+            
+            foreach (var aid in alwaysIds)
+            {
+                var m = liveSpells.FirstOrDefault(s => s.Id == aid);
+                if (m != null)
+                {
+                    m.IsAlwaysPrepared = true;
+                    character.AddSpell(m);
+                    if (!character.AlwaysPreparedSpells.Contains(m.Name ?? string.Empty))
+                        character.AlwaysPreparedSpells.Add(m.Name ?? string.Empty);
+                    Debug.WriteLine($"  ✓ Always Prepared: {m.Name}");
+                }
+                else
+                {
+                    Debug.WriteLine($"  ✗ Always-prepared spell ID {aid} not found");
+                }
+            }
+
+            var totalPrepared = character.GetPreparedSpells().Count;
+            Debug.WriteLine($"Total prepared spells after load: {totalPrepared}");
+            Debug.WriteLine($"=== LoadPreparedSpells Complete ===");
         }
         catch (Exception ex)
         {
@@ -354,6 +410,30 @@ public class SharedViewModel : INotifyPropertyChanged
         }
     }
 
+    public void SaveCharacterAlwaysPreparedSpells(Guid? characterId, List<Guid> ids)
+    {
+        if (characterId == null) return;
+
+        try
+        {
+            if (characterId.HasValue)
+            {
+                LocalStorageHelper.SaveAlwaysPreparedSpellIds(characterId.Value, ids);
+            }
+            Debug.WriteLine($"Saving ALWAYS prepared spells: {ids.Count} for {characterId}");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error saving always prepared spells: {ex.Message}");
+        }
+    }
+
+    public void SaveAlwaysPreparedSpells(Character character)
+    {
+        if (character?.ID == null) return;
+        var ids = character.GetPreparedSpells().Where(s => s.IsAlwaysPrepared).Select(s => s.Id).ToList();
+        SaveCharacterAlwaysPreparedSpells(character.ID, ids);
+    }
 
     /// <summary>
     /// Retrieves all spells for the given character from the in-memory dictionary.
@@ -374,6 +454,14 @@ public class SharedViewModel : INotifyPropertyChanged
                     AddSpell(character, spell);
                 }
             }
+
+            // After ensuring CharacterSpells contains the character's spells (loaded or auto-filled),
+            // load prepared spell IDs and apply them to the in-memory spell collection so prepared state persists.
+            try
+            {
+                LoadPreparedSpells(character);
+            }
+            catch { /* ignore any issues applying prepared flags */ }
         }
 
         return CharacterSpells[character.ID];
@@ -691,8 +779,21 @@ public class SharedViewModel : INotifyPropertyChanged
 
     public void SavePreparedSpells(Character character)
     {
-        if (character?.ID == null) return;
+        if (character == null) return;
+        // Ensure the character has an ID so prepared IDs can be persisted per-character
+        if (character.ID == null)
+        {
+            character.ID = Guid.NewGuid();
+            try
+            {
+                // Persist updated characters list so the new ID is durable
+                LocalStorageHelper.SaveCharactersToFile(Characters.ToList());
+            }
+            catch { }
+        }
+
         SaveCharacterPreparedSpells(character.ID, character.GetPreparedSpells());
+        SaveAlwaysPreparedSpells(character); // also persist always-prepared list
     }
 
     /// <summary>
