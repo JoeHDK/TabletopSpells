@@ -17,6 +17,7 @@ namespace TabletopSpells.ViewModels
 
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
+        public ICommand TogglePreparedCommand { get; }
 
         private readonly Func<int> _getMaxPrepared;
 
@@ -51,6 +52,7 @@ namespace TabletopSpells.ViewModels
 
             SaveCommand = new Command(() => RequestClose?.Invoke(this, new CloseEventArgs(true)));
             CancelCommand = new Command(() => RequestClose?.Invoke(this, new CloseEventArgs(false)));
+            TogglePreparedCommand = new Command<SpellPrepareItemViewModel>(item => TogglePrepared(item));
 
             UpdatePrepareSummary();
         }
@@ -70,6 +72,11 @@ namespace TabletopSpells.ViewModels
             }
 
             UpdatePrepareSummary();
+        }
+
+        private void TogglePrepared(SpellPrepareItemViewModel item)
+        {
+            item.IsPrepared = !item.IsPrepared;
         }
 
         private void UpdatePrepareSummary()

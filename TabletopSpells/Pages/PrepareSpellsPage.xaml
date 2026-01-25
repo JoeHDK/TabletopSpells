@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:TabletopSpells.Pages"
              x:Class="TabletopSpells.Pages.PrepareSpellsPage"
              Title="Prepare Spells">
     
@@ -21,11 +22,18 @@
                         VerticalOptions="FillAndExpand">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Grid Padding="8" ColumnSpacing="12">
+                    <Grid Padding="8" ColumnSpacing="12" BackgroundColor="Transparent">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
+                        
+                        <!-- Tap gesture on the entire row -->
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer 
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type local:PrepareSpellsPage}}, Path=BindingContext.TogglePreparedCommand}"
+                                CommandParameter="{Binding .}" />
+                        </Grid.GestureRecognizers>
                         
                         <CheckBox IsChecked="{Binding IsPrepared}" 
                                   VerticalOptions="Center"
