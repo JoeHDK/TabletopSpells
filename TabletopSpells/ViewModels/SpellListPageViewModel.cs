@@ -1,10 +1,8 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using TabletopSpells.Models;
 using TabletopSpells.Models.Enums;
 using TabletopSpells.Repositories;
-using TabletopSpells.ViewModels;
 
 namespace TabletopSpells.ViewModels
 {
@@ -13,16 +11,6 @@ namespace TabletopSpells.ViewModels
         public bool IsDivineCaster { get; set; }
         public ObservableCollection<SpellViewModel> SpellViewModels { get; set; }
         public Character Character { get; set; }
-
-        public string PreparedSpellCountText
-    {
-        get
-        {
-            var prepared = SpellViewModels.Count(s => s.IsPrepared);
-            var limit = Character.Level + Character.GetRelevantAbilityModifier();
-            return $"Prepared: {prepared}/{limit}";
-        }
-    }
 
         public Game GameType { get; set; }
         private int? _selectedSpellLevel;
@@ -149,20 +137,12 @@ namespace TabletopSpells.ViewModels
                 System.Diagnostics.Debug.WriteLine($"Created {FilteredSpells.Count} FilteredSpells");
             }
             
-            foreach (var svm in SpellViewModels)
-                svm.PropertyChanged += SpellViewModel_PropertyChanged;
-            FilterSpells(); // Ensure FilteredSpells/FilteredSpellViewModels is populated on startup
+            FilterSpells();
             
             System.Diagnostics.Debug.WriteLine($"After FilterSpells:");
             System.Diagnostics.Debug.WriteLine($"  FilteredSpells.Count: {FilteredSpells.Count}");
             System.Diagnostics.Debug.WriteLine($"  FilteredSpellViewModels.Count: {FilteredSpellViewModels.Count}");
             System.Diagnostics.Debug.WriteLine($"=== SpellListPageViewModel Constructor END ===");
-        }
-
-        private void SpellViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(SpellViewModel.IsPrepared))
-                OnPropertyChanged(nameof(PreparedSpellCountText));
         }
 
         public void ReloadDivineSpellViewModels()
@@ -205,11 +185,6 @@ namespace TabletopSpells.ViewModels
                 );
                 FilteredSpells = new ObservableCollection<Spell>(allSpells);
             }
-            
-            foreach (var svm in SpellViewModels)
-                svm.PropertyChanged -= SpellViewModel_PropertyChanged; // Remove old handlers
-            foreach (var svm in SpellViewModels)
-                svm.PropertyChanged += SpellViewModel_PropertyChanged; // Add new handlers
             
             OnPropertyChanged(nameof(SpellViewModels));
             FilterSpells();
@@ -327,8 +302,6 @@ namespace TabletopSpells.ViewModels
             {
                 newViewModel.IsPrepared = true;
             }
-
-            OnPropertyChanged(nameof(PreparedSpellCountText));
         }
     }
 }
