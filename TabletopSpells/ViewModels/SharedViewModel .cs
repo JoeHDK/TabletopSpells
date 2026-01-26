@@ -251,6 +251,10 @@ public class SharedViewModel : INotifyPropertyChanged
             var preparedSpellIds = LocalStorageHelper.LoadPreparedSpellIds(character.ID.Value);
             Debug.WriteLine($"=== LoadPreparedSpells for {character.Name} ===");
             Debug.WriteLine($"Loaded {preparedSpellIds.Count} prepared spell IDs from file");
+            foreach (var id in preparedSpellIds)
+            {
+                Debug.WriteLine($"  - Saved ID: {id}");
+            }
 
             if (!CharacterSpells.TryGetValue(character.ID, out var liveSpells))
             {
@@ -258,7 +262,11 @@ public class SharedViewModel : INotifyPropertyChanged
                 return;
             }
 
-            Debug.WriteLine($"CharacterSpells has {liveSpells.Count} spells");
+            Debug.WriteLine($"CharacterSpells has {liveSpells.Count} spells:");
+            foreach (var spell in liveSpells)
+            {
+                Debug.WriteLine($"  - {spell.Name} (ID: {spell.Id})");
+            }
 
             foreach (var savedId in preparedSpellIds)
             {
@@ -297,6 +305,10 @@ public class SharedViewModel : INotifyPropertyChanged
 
             var totalPrepared = character.GetPreparedSpells().Count;
             Debug.WriteLine($"Total prepared spells after load: {totalPrepared}");
+            foreach (var spell in character.GetPreparedSpells())
+            {
+                Debug.WriteLine($"  - {spell.Name} (ID: {spell.Id})");
+            }
             Debug.WriteLine($"=== LoadPreparedSpells Complete ===");
         }
         catch (Exception ex)
@@ -645,8 +657,18 @@ public class SharedViewModel : INotifyPropertyChanged
             }
         }
 
-        SaveCharacterPreparedSpells(character.ID, character.GetPreparedSpells());
+        var preparedSpells = character.GetPreparedSpells();
+        Debug.WriteLine($"=== SavePreparedSpells ===");
+        Debug.WriteLine($"Character: {character.Name}");
+        Debug.WriteLine($"Prepared count: {preparedSpells.Count}");
+        foreach (var spell in preparedSpells)
+        {
+            Debug.WriteLine($"  - {spell.Name} (ID: {spell.Id})");
+        }
+
+        SaveCharacterPreparedSpells(character.ID, preparedSpells);
         SaveAlwaysPreparedSpells(character);
+        Debug.WriteLine($"=== SavePreparedSpells Complete ===");
     }
 
     public void ToggleSpellFavorite(Character character, Spell spell)

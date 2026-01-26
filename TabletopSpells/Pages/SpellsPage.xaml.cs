@@ -135,6 +135,13 @@ public partial class SpellsPage : ContentPage
         // Get the character's known spells and convert to List
         var knownSpells = SharedViewModel.Instance.SpellsForCharacter(character).ToList();
         
+        // Set IsPrepared state on each spell based on Character.GetPreparedSpells()
+        var preparedSpellIds = character.GetPreparedSpells().Select(s => s.Id).ToHashSet();
+        foreach (var spell in knownSpells)
+        {
+            spell.IsPrepared = preparedSpellIds.Contains(spell.Id);
+        }
+        
         // Function to compute max prepared spells
         int GetMaxPrepared() => character.Level + character.GetRelevantAbilityModifier();
 
