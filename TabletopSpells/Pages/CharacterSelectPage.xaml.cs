@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿﻿using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using TabletopSpells.Helpers;
@@ -134,7 +134,8 @@ public partial class CharacterSelectPage : ContentPage
         if (e.CurrentSelection.FirstOrDefault() is Character selectedCharacter)
         {
             SharedViewModel.Instance.CurrentCharacter = selectedCharacter;
-            SharedViewModel.Instance.LoadPreparedSpells(selectedCharacter);
+            // Don't call LoadPreparedSpells here - it will be called automatically by SpellsForCharacter
+            // when CharacterOverviewPage calls LoadSpellsForCharacter
             await Navigation.PushAsync(new CharacterOverviewPage(selectedCharacter, SharedViewModel.Instance, gameType));
             LoadCharacters();
         }

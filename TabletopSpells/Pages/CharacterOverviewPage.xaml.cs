@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿﻿using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using CommunityToolkit.Maui.Views;
@@ -25,7 +25,8 @@ public partial class CharacterOverviewPage : ContentPage
         this.viewModel = viewModel; // Use the passed viewModel
 
         this.BindingContext = this.viewModel;
-        this.viewModel.LoadSpellsForCharacter(character);
+        // Use SpellsForCharacter which calls LoadSpellsForCharacter and LoadPreparedSpells in correct order
+        this.viewModel.SpellsForCharacter(character);
 
         this.gameType = gameType;
     }

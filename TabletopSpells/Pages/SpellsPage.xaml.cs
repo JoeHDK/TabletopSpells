@@ -25,9 +25,10 @@ public partial class SpellsPage : ContentPage
         Title = $"{character.Name}'s spells";
 
         // Use SpellsForCharacter which handles auto-filling and loading prepared spells
-        viewModel.SpellsForCharacter(character);
+        // Store the result to use the persisted spells
+        var characterSpells = viewModel.SpellsForCharacter(character);
 
-        var castable = GetCastableSpells(character, gameType);
+        var castable = GetCastableSpells(character, gameType, characterSpells);
         GroupAndDisplaySpells(castable);
     }
 
@@ -42,15 +43,14 @@ public partial class SpellsPage : ContentPage
         SpellListView.ItemsSource = GroupedSpells;
     }
 
-    private List<Spell> GetCastableSpells(Character character, Game game)
+    private List<Spell> GetCastableSpells(Character character, Game game, ObservableCollection<Spell> characterSpells)
     {
-        var allSpellsFromJson = SpellRepository.GetAllSpellsFromJson(game);
         var castable = new List<Spell>();
 
         // Always prepared
         var alwaysPrepared = character.AlwaysPreparedSpells
             .SelectMany(name =>
-                allSpellsFromJson.Where(spell =>
+                characterSpells.Where(spell =>
                     spell.Name != null && spell.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
             .ToList();
         castable.AddRange(alwaysPrepared);
@@ -61,11 +61,10 @@ public partial class SpellsPage : ContentPage
             castable.AddRange(character.GetPreparedSpells());
         }
 
-        // Manually added
-        var manuallyAdded = SharedViewModel.Instance.SpellsForCharacter(character);
-        castable.AddRange(manuallyAdded);
+        // Manually added spells (all spells in characterSpells are manually added or always prepared)
+        castable.AddRange(characterSpells);
 
-        // Deduplicate
+        // Deduplicate by spell name and level
         return castable
             .GroupBy(spell => (spell.Name?.ToLowerInvariant(), spell.SpellLevel))
             .Select(grouping => grouping.First())
@@ -77,10 +76,11 @@ public partial class SpellsPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        
-        // Refresh the spells list to reflect any additions or deletions
         Debug.WriteLine("=== SpellsPage.OnAppearing - Refreshing spells ===");
-        var castable = GetCastableSpells(character, gameType);
+        
+        // Reload spells from disk to ensure persistence across page navigations
+        var characterSpells = SharedViewModel.Instance.SpellsForCharacter(character);
+        var castable = GetCastableSpells(character, gameType, characterSpells);
         GroupAndDisplaySpells(castable);
         
         // Show Prepare Spells button only for divine casters
