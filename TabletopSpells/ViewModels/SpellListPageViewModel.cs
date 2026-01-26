@@ -14,6 +14,7 @@ namespace TabletopSpells.ViewModels
 
         public Game GameType { get; set; }
         private int? _selectedSpellLevel;
+
         public int? SelectedSpellLevel
         {
             get => _selectedSpellLevel;
@@ -29,6 +30,7 @@ namespace TabletopSpells.ViewModels
         }
 
         private string _searchText = string.Empty;
+
         public string SearchText
         {
             get => _searchText;
@@ -43,31 +45,29 @@ namespace TabletopSpells.ViewModels
             }
         }
 
-        private ObservableCollection<Spell> _filteredSpells = new ObservableCollection<Spell>();
+        private ObservableCollection<Spell> _filteredSpells = [];
+
         public ObservableCollection<Spell> FilteredSpells
         {
             get => _filteredSpells;
             set
             {
-                if (_filteredSpells != value)
-                {
-                    _filteredSpells = value;
-                    OnPropertyChanged(nameof(FilteredSpells));
-                }
+                if (_filteredSpells == value) return;
+                _filteredSpells = value;
+                OnPropertyChanged(nameof(FilteredSpells));
             }
         }
 
-        private ObservableCollection<SpellViewModel> _filteredSpellViewModels = new ObservableCollection<SpellViewModel>();
+        private ObservableCollection<SpellViewModel> _filteredSpellViewModels = [];
+
         public ObservableCollection<SpellViewModel> FilteredSpellViewModels
         {
             get => _filteredSpellViewModels;
             set
             {
-                if (_filteredSpellViewModels != value)
-                {
-                    _filteredSpellViewModels = value;
-                    OnPropertyChanged(nameof(FilteredSpellViewModels));
-                }
+                if (_filteredSpellViewModels == value) return;
+                _filteredSpellViewModels = value;
+                OnPropertyChanged(nameof(FilteredSpellViewModels));
             }
         }
 
@@ -77,26 +77,23 @@ namespace TabletopSpells.ViewModels
             System.Diagnostics.Debug.WriteLine($"Character: {character?.Name ?? "null"}");
             System.Diagnostics.Debug.WriteLine($"IsDivineCaster: {isDivineCaster}");
             System.Diagnostics.Debug.WriteLine($"GameType: {gameType}");
-            
+
             Character = character;
             IsDivineCaster = isDivineCaster;
-            GameType = gameType ?? Game.dnd5e; // Default to dnd5e if not provided
-            
+            GameType = gameType ?? Game.dnd5e;
+
             System.Diagnostics.Debug.WriteLine($"GameType after default: {GameType}");
-            
+
             if (IsDivineCaster)
             {
                 System.Diagnostics.Debug.WriteLine($"Loading spells for DIVINE CASTER");
-                // Use the full class spell list for divine casters
                 var allClassSpells = SharedViewModel.Instance.LoadAllClassSpells(Character);
-                // Ensure per-character spells are loaded so we can merge favorites/always-prepared flags
                 var savedForChar = SharedViewModel.Instance.SpellsForCharacter(Character);
-                foreach (var saved in savedForChar ?? new ObservableCollection<Spell>())
+                foreach (var saved in savedForChar ?? [])
                 {
-                    // no-op: ensures the collection is initialized
                 }
+
                 System.Diagnostics.Debug.WriteLine($"Loaded {allClassSpells.Count} class spells");
-                // Merge saved per-character flags into the repository spells so the UI represents favorites correctly
                 foreach (var sp in allClassSpells)
                 {
                     var match = savedForChar?.FirstOrDefault(s => s.Id == sp.Id || s.Name == sp.Name);
@@ -115,9 +112,7 @@ namespace TabletopSpells.ViewModels
             else
             {
                 System.Diagnostics.Debug.WriteLine($"Loading spells for NON-DIVINE CASTER");
-                // For non-divine casters, load ALL available spells from repository to allow adding new ones
                 var allSpells = SpellRepository.GetAllSpellsFromJson(GameType);
-                // Merge per-character saved flags (favorites) into repository spells so the UI shows per-character favorites
                 var savedForChar = SharedViewModel.Instance.SpellsForCharacter(Character);
                 foreach (var sp in allSpells)
                 {
@@ -128,6 +123,7 @@ namespace TabletopSpells.ViewModels
                         sp.IsAlwaysPrepared = match.IsAlwaysPrepared;
                     }
                 }
+
                 System.Diagnostics.Debug.WriteLine($"Loaded {allSpells.Count} total spells");
                 SpellViewModels = new ObservableCollection<SpellViewModel>(
                     allSpells.Select(spell => new SpellViewModel(spell, Character))
@@ -136,9 +132,9 @@ namespace TabletopSpells.ViewModels
                 System.Diagnostics.Debug.WriteLine($"Created {SpellViewModels.Count} SpellViewModels");
                 System.Diagnostics.Debug.WriteLine($"Created {FilteredSpells.Count} FilteredSpells");
             }
-            
+
             FilterSpells();
-            
+
             System.Diagnostics.Debug.WriteLine($"After FilterSpells:");
             System.Diagnostics.Debug.WriteLine($"  FilteredSpells.Count: {FilteredSpells.Count}");
             System.Diagnostics.Debug.WriteLine($"  FilteredSpellViewModels.Count: {FilteredSpellViewModels.Count}");
@@ -150,7 +146,6 @@ namespace TabletopSpells.ViewModels
             if (IsDivineCaster)
             {
                 var allClassSpells = SharedViewModel.Instance.LoadAllClassSpells(Character);
-                // Merge per-character saved flags
                 var savedForChar = SharedViewModel.Instance.SpellsForCharacter(Character);
                 foreach (var sp in allClassSpells)
                 {
@@ -161,6 +156,7 @@ namespace TabletopSpells.ViewModels
                         sp.IsAlwaysPrepared = match.IsAlwaysPrepared;
                     }
                 }
+
                 SpellViewModels = new ObservableCollection<SpellViewModel>(
                     allClassSpells.Select(spell => new SpellViewModel(spell, Character))
                 );
@@ -168,7 +164,6 @@ namespace TabletopSpells.ViewModels
             }
             else
             {
-                // Load all available spells for non-divine casters
                 var allSpells = SpellRepository.GetAllSpellsFromJson(GameType);
                 var savedForChar = SharedViewModel.Instance.SpellsForCharacter(Character);
                 foreach (var sp in allSpells)
@@ -180,54 +175,36 @@ namespace TabletopSpells.ViewModels
                         sp.IsAlwaysPrepared = match.IsAlwaysPrepared;
                     }
                 }
+
                 SpellViewModels = new ObservableCollection<SpellViewModel>(
                     allSpells.Select(spell => new SpellViewModel(spell, Character))
                 );
                 FilteredSpells = new ObservableCollection<Spell>(allSpells);
             }
-            
+
             OnPropertyChanged(nameof(SpellViewModels));
             FilterSpells();
         }
 
         public void FilterSpells()
         {
-            if (IsDivineCaster)
-            {
-                var filtered = SpellViewModels.AsEnumerable();
-                if (SelectedSpellLevel.HasValue)
-                {
-                    filtered = filtered.Where(vm =>
-                        ParseSpellLevel(vm.Spell.SpellLevel, Character.CharacterClass.ToString()) == SelectedSpellLevel.Value);
-                }
-                if (!string.IsNullOrWhiteSpace(SearchText))
-                {
-                    var lower = SearchText.ToLowerInvariant();
-                    filtered = filtered.Where(vm =>
-                        (!string.IsNullOrEmpty(vm.Spell.Name) && vm.Spell.Name.ToLowerInvariant().Contains(lower)) ||
-                        (!string.IsNullOrEmpty(vm.Spell.SpellLevel) && vm.Spell.SpellLevel.ToLowerInvariant().Contains(lower)));
-                }
-                
-                // Favorites first in alphabetical order, then the rest by level then alphabetical
-                var favorites = filtered.Where(vm => vm.Spell.IsFavoriteSpell).OrderBy(vm => vm.Spell.Name);
-                var rest = filtered.Where(vm => !vm.Spell.IsFavoriteSpell)
-                    .OrderBy(vm => ParseSpellLevel(vm.Spell.SpellLevel, Character.CharacterClass.ToString()))
-                    .ThenBy(vm => vm.Spell.Name);
-                
-                var final = favorites.Concat(rest);
-                FilteredSpellViewModels = new ObservableCollection<SpellViewModel>(final);
-                return;
-            }
-
-            // For non-divine casters, filter the loaded spells
+            var characterClassName = Character.CharacterClass.ToString().ToLowerInvariant();
             var spells = SpellViewModels.Select(svm => svm.Spell).AsEnumerable();
 
+            // Filter by spell level if selected
             if (SelectedSpellLevel.HasValue)
             {
                 spells = spells.Where(s =>
-                    ParseSpellLevel(s.SpellLevel, Character.CharacterClass.ToString()) == SelectedSpellLevel.Value);
+                    ParseSpellLevel(s.SpellLevel, characterClassName) == SelectedSpellLevel.Value &&
+                    IsSpellAvailableForClass(s, characterClassName));
+            }
+            else
+            {
+                // If no spell level filter, still only show spells available for this class
+                spells = spells.Where(s => IsSpellAvailableForClass(s, characterClassName));
             }
 
+            // Filter by search text
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
                 var lower = SearchText.ToLowerInvariant();
@@ -236,17 +213,26 @@ namespace TabletopSpells.ViewModels
                     (!string.IsNullOrEmpty(s.SpellLevel) && s.SpellLevel.ToLowerInvariant().Contains(lower)));
             }
 
-            // Favorites first in alphabetical order, then the rest by level then alphabetical
-            var favs = spells.Where(s => s.IsFavoriteSpell).OrderBy(s => s.Name);
-            var others = spells.Where(s => !s.IsFavoriteSpell)
-                .OrderBy(s => ParseSpellLevel(s.SpellLevel, Character.CharacterClass.ToString()))
+            // Order by spell level, then alphabetically
+            var ordered = spells
+                .OrderBy(s => ParseSpellLevel(s.SpellLevel, characterClassName))
                 .ThenBy(s => s.Name);
-            
-            var ordered = favs.Concat(others);
-            
+
             FilteredSpellViewModels = new ObservableCollection<SpellViewModel>(
-                ordered.Select(s => SpellViewModels.FirstOrDefault(vm => vm.Spell.Id == s.Id) ?? new SpellViewModel(s, Character))
+                ordered.Select(s =>
+                    SpellViewModels.FirstOrDefault(vm => vm.Spell.Id == s.Id) ?? new SpellViewModel(s, Character))
             );
+        }
+
+        /// <summary>
+        /// Checks if a spell is available for the character's class.
+        /// </summary>
+        private bool IsSpellAvailableForClass(Spell spell, string characterClass)
+        {
+            if (string.IsNullOrEmpty(spell.SpellLevel))
+                return false;
+
+            return spell.SpellLevel.ToLowerInvariant().Contains(characterClass);
         }
 
         public int ParseSpellLevel(string spellLevel, string characterClass)
@@ -259,6 +245,7 @@ namespace TabletopSpells.ViewModels
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
+
         protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

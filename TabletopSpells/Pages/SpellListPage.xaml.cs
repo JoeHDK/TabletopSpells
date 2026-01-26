@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using TabletopSpells.Models;
 using TabletopSpells.Models.Enums;
 using TabletopSpells.ViewModels;
@@ -7,7 +6,7 @@ using TabletopSpells.ViewModels;
 namespace TabletopSpells.Pages;
 
 [XamlCompilation(XamlCompilationOptions.Compile)]
-public partial class SpellListPage : ContentPage
+public partial class SpellListPage
 {
     private readonly SpellListPageViewModel viewModel;
 
@@ -70,197 +69,17 @@ public partial class SpellListPage : ContentPage
         if (e.CurrentSelection.FirstOrDefault() is SpellViewModel selectedViewModel)
         {
             var selectedSpell = selectedViewModel.Spell;
-            int level = viewModel.ParseSpellLevel(selectedSpell.SpellLevel, viewModel.Character?.CharacterClass.ToString() ?? "");
+            var level = viewModel.ParseSpellLevel(selectedSpell.SpellLevel, viewModel.Character?.CharacterClass.ToString() ?? "");
             
-            // All casters (divine and non-divine) go to spell detail page
-            // The detail page handles the Prepare/Add logic based on caster type
             await Navigation.PushAsync(new SpellDetailPage(selectedSpell, viewModel.Character, level, viewModel.GameType));
             
             ((CollectionView)sender).SelectedItem = null;
         }
     }
 
-    private async Task HandleDivineCasterSpellSelection(Spell selectedSpell)
-    {
-        var confirmation = await DisplayAlert("Prepare Spell",
-            $"Do you want to add '{selectedSpell.Name}' to your prepared spells?",
-            "Yes",
-            "No");
-
-        if (!confirmation)
-            return;
-        // Ask whether to prepare normally or mark as domain (always prepared)
-        var choice = await DisplayActionSheet("Prepare Options", "Cancel", null, "Prepare Normally", "Mark as Domain (Always Prepared)");
-        if (choice == "Cancel" || string.IsNullOrEmpty(choice)) return;
-        // Check if we're at the preparation limit
-        if (!viewModel.CanPrepareMoReSpells())
-        {
-            // Show replacement dialog
-            var preparedSpells = viewModel.GetPreparedSpells();
-            var replacementDialog = new PrepareSpellReplacementDialog(preparedSpells, selectedSpell.Name);
-            await Navigation.PushAsync(replacementDialog);
-            
-            // Wait for user selection (using a simple polling approach)
-            await Task.Delay(1000);
-            var selectedReplacement = replacementDialog.GetSelectedReplacement();
-            
-            if (selectedReplacement != null)
-            {
-                // Ensure both spells are present in the character's persisted spell list so prepared IDs can be mapped later
-                var shared = SharedViewModel.Instance;
-                var character = viewModel.Character;
-                if (character.ID == null) character.ID = Guid.NewGuid();
-
-                if (!shared.CharacterSpells.ContainsKey(character.ID))
-                    shared.CharacterSpells[character.ID] = new ObservableCollection<Spell>();
-
-                if (!shared.CharacterSpells[character.ID].Any(s => s.Id == selectedSpell.Id))
-                {
-                    shared.AddSpell(character, selectedSpell);
-                    shared.SaveSpellForCharacter(character, selectedSpell);
-                }
-
-                if (choice == "Mark as Domain (Always Prepared)")
-                {
-                    selectedSpell.IsAlwaysPrepared = true;
-                    if (!character.AlwaysPreparedSpells.Contains(selectedSpell.Name ?? string.Empty))
-                        character.AlwaysPreparedSpells.Add(selectedSpell.Name ?? string.Empty);
-                }
-
-                viewModel.ReplacePrepareddSpell(selectedReplacement, selectedSpell);
-                SharedViewModel.Instance.SavePreparedSpells(viewModel.Character);
-                await DisplayAlert("Success", $"'{selectedReplacement.Name}' has been replaced with '{selectedSpell.Name}'.", "OK");
-             }
-             
-             await Navigation.PopAsync();
-         }
-         else
-         {
-             // Prepare the spell directly
-             var spellViewModel = viewModel.SpellViewModels.FirstOrDefault(s => s.Spell.Id == selectedSpell.Id);
-             if (spellViewModel != null)
-             {
-                var shared = SharedViewModel.Instance;
-                var character = viewModel.Character;
-                if (character.ID == null) character.ID = Guid.NewGuid();
-
-                if (!shared.CharacterSpells.ContainsKey(character.ID))
-                    shared.CharacterSpells[character.ID] = new ObservableCollection<Spell>();
-
-                if (!shared.CharacterSpells[character.ID].Any(s => s.Id == selectedSpell.Id))
-                {
-                    shared.AddSpell(character, selectedSpell);
-                    shared.SaveSpellForCharacter(character, selectedSpell);
-                }
-
-                if (choice == "Mark as Domain (Always Prepared)")
-                {
-                    selectedSpell.IsAlwaysPrepared = true;
-                    if (!character.AlwaysPreparedSpells.Contains(selectedSpell.Name ?? string.Empty))
-                        character.AlwaysPreparedSpells.Add(selectedSpell.Name ?? string.Empty);
-                    SharedViewModel.Instance.SavePreparedSpells(viewModel.Character);
-                    await DisplayAlert("Success", $"'{selectedSpell.Name}' has been saved as a domain (always prepared) spell.", "OK");
-                }
-                else
-                {
-                    spellViewModel.IsPrepared = true;
-                    SharedViewModel.Instance.SavePreparedSpells(viewModel.Character);
-                    await DisplayAlert("Success", $"'{selectedSpell.Name}' has been added to your prepared spells.", "OK");
-                }
-             }
-         }
-     }
-
     private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
     {
-        // Forward the search text to the ViewModel for filtering
         viewModel.SearchText = e.NewTextValue;
         viewModel.FilterSpells();
-    }
-
-    private async void OnFavoriteClicked(object sender, EventArgs e)
-    {
-        try
-        {
-            if (sender is Button btn && btn.CommandParameter is Spell spell)
-            {
-                var shared = SharedViewModel.Instance;
-                // Toggle favorite in shared storage; use the page's ViewModel.Character first (more reliable),
-                // fallback to SharedViewModel.CurrentCharacter then first character in list.
-                var character = viewModel.Character ?? SharedViewModel.Instance.CurrentCharacter ?? SharedViewModel.Instance.Characters.FirstOrDefault();
-                if (character == null) return;
-
-                // Ensure the spell is present in character spells collection
-                if (!shared.CharacterSpells.ContainsKey(character.ID))
-                    shared.CharacterSpells[character.ID] = new ObservableCollection<Spell>();
-
-                var existing = shared.CharacterSpells[character.ID].FirstOrDefault(s => s.Id == spell.Id);
-                if (existing == null)
-                {
-                    // If spell not present, add it (but do not prepare)
-                    shared.AddSpell(character, spell);
-                    shared.SaveSpellForCharacter(character, spell);
-                    existing = shared.CharacterSpells[character.ID].FirstOrDefault(s => s.Id == spell.Id);
-                }
-
-                if (existing != null)
-                {
-                    shared.ToggleSpellFavorite(character, existing);
-                    // Also update any SpellViewModel instances that reference this spell (match by Id or Name)
-                    try
-                    {
-                        MainThread.BeginInvokeOnMainThread(() =>
-                        {
-                            var vmToUpdate = this.viewModel.SpellViewModels.FirstOrDefault(v => v.Spell.Id == existing.Id || string.Equals(v.Spell.Name, existing.Name, StringComparison.OrdinalIgnoreCase));
-                            if (vmToUpdate != null)
-                            {
-                                vmToUpdate.Spell.IsFavoriteSpell = existing.IsFavoriteSpell;
-                            }
-                        });
-                    }
-                    catch
-                    {
-                        var vmToUpdate = this.viewModel.SpellViewModels.FirstOrDefault(v => v.Spell.Id == existing.Id || string.Equals(v.Spell.Name, existing.Name, StringComparison.OrdinalIgnoreCase));
-                        if (vmToUpdate != null)
-                        {
-                            vmToUpdate.Spell.IsFavoriteSpell = existing.IsFavoriteSpell;
-                        }
-                    }
-                }
-
-                // Visual feedback: pulse animation on the button (if supported)
-                try
-                {
-                    await btn.ScaleTo(1.3, 120, Easing.CubicOut);
-                    await btn.ScaleTo(1.0, 120, Easing.CubicIn);
-                }
-                catch
-                {
-                    // ignore animation errors on unsupported platforms
-                }
-
-                // Refresh page view model's list and UI on the UI thread so bindings update immediately
-                try
-                {
-                    MainThread.BeginInvokeOnMainThread(() =>
-                    {
-                        shared.SpellsChanged?.Invoke();
-                        this.viewModel.ReloadDivineSpellViewModels();
-                        this.viewModel.FilterSpells();
-                    });
-                }
-                catch
-                {
-                    // fallback: direct call if MainThread isn't available (tests)
-                    shared.SpellsChanged?.Invoke();
-                    this.viewModel.ReloadDivineSpellViewModels();
-                    this.viewModel.FilterSpells();
-                }
-             }
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlert("Error", $"Unable to toggle favorite: {ex.Message}", "OK");
-        }
     }
 }

@@ -59,24 +59,6 @@
                                    FontSize="12"
                                    TextColor="Gray" />
                         </StackLayout>
-
-                        <!-- Star icon for favoriting -->
-                        <Button Grid.Column="1"
-                                Clicked="OnFavoriteClicked"
-                                CommandParameter="{Binding Spell}"
-                                BackgroundColor="Transparent"
-                                VerticalOptions="Center"
-                                HorizontalOptions="End"
-                                Margin="10,0,0,0"
-                                FontSize="20"
-                                Padding="0">
-                            <Button.Text>
-                                <Binding Path="IsFavorite" Converter="{StaticResource FavoriteGlyphConverter}" />
-                            </Button.Text>
-                            <Button.TextColor>
-                                <Binding Path="IsFavorite" Converter="{StaticResource FavoriteColorConverter}" />
-                            </Button.TextColor>
-                        </Button>
                     </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>

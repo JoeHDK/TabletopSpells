@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using TabletopSpells.Models;
 using TabletopSpells.Models.Enums;
@@ -76,6 +77,11 @@ public partial class SpellsPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        
+        // Refresh the spells list to reflect any additions or deletions
+        Debug.WriteLine("=== SpellsPage.OnAppearing - Refreshing spells ===");
+        var castable = GetCastableSpells(character, gameType);
+        GroupAndDisplaySpells(castable);
         
         // Show Prepare Spells button only for divine casters
         PrepareSpellsToolbarItem.IsEnabled = character.IsDivineCaster;
