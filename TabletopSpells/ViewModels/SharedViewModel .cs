@@ -353,7 +353,15 @@ public class SharedViewModel : INotifyPropertyChanged
                     AddSpell(character, spell);
                 }
             }
+        }
 
+        // Always reload prepared spells for divine casters to ensure current state
+        // This handles switching between characters and coming back
+        if (character.IsDivineCaster)
+        {
+            // Clear prepared spells first to ensure fresh load
+            character.ClearManualllyPreparedSpells();
+            // Now reload prepared state from disk
             LoadPreparedSpells(character);
         }
 
