@@ -105,6 +105,7 @@ public class SharedViewModel : INotifyPropertyChanged
             existingCharacter.Name = character.Name;
             existingCharacter.Level = character.Level;
             existingCharacter.AbilityScores = character.AbilityScores;
+            existingCharacter.Subclass = character.Subclass;
         }
         else
         {
