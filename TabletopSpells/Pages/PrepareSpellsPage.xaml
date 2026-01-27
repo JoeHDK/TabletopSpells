@@ -5,21 +5,20 @@
              x:Class="TabletopSpells.Pages.PrepareSpellsPage"
              Title="Prepare Spells">
     
-    <VerticalStackLayout Padding="12" Spacing="10">
+    <Grid Padding="12" RowSpacing="10" RowDefinitions="Auto,Auto,*,Auto">
         
-        <!-- Header -->
         <Label Text="Select spells to prepare" 
                FontAttributes="Bold" 
-               FontSize="18" />
+               FontSize="18"
+               Grid.Row="0" />
         
-        <!-- Summary -->
         <Label Text="{Binding PrepareSummary}" 
-               FontSize="14" />
+               FontSize="14"
+               Grid.Row="1" />
         
-        <!-- Spell List -->
         <CollectionView ItemsSource="{Binding AddedSpells}" 
                         SelectionMode="None"
-                        VerticalOptions="FillAndExpand">
+                        Grid.Row="2">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Grid Padding="8" ColumnSpacing="12" BackgroundColor="Transparent">
@@ -28,7 +27,6 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         
-                        <!-- Tap gesture on the entire row -->
                         <Grid.GestureRecognizers>
                             <TapGestureRecognizer 
                                 Command="{Binding Source={RelativeSource AncestorType={x:Type local:PrepareSpellsPage}}, Path=BindingContext.TogglePreparedCommand}"
@@ -49,7 +47,7 @@
         </CollectionView>
 
         <!-- Buttons -->
-        <HorizontalStackLayout HorizontalOptions="End" Spacing="8" Padding="0,10,0,0">
+        <HorizontalStackLayout HorizontalOptions="End" Spacing="8" Padding="0,10,0,0" Grid.Row="3">
             <Button Text="Cancel" 
                     Command="{Binding CancelCommand}"
                     Padding="16,8" />
@@ -57,6 +55,6 @@
                     Command="{Binding SaveCommand}"
                     Padding="16,8" />
         </HorizontalStackLayout>
-    </VerticalStackLayout>
+    </Grid>
 </ContentPage>
 

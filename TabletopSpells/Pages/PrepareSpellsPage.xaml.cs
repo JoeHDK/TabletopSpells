@@ -28,14 +28,12 @@ namespace TabletopSpells.Pages
             {
                 System.Diagnostics.Debug.WriteLine("=== PrepareSpellsPage.OnRequestClose START ===");
                 System.Diagnostics.Debug.WriteLine($"Character: {_character.Name}, ID: {_character.ID}");
-
-                // Get current prepared state before changes
+                
                 var currentlyPreparedIds = _character.GetPreparedSpells()
                     .Select(s => s.Id)
                     .ToHashSet();
                 System.Diagnostics.Debug.WriteLine($"Currently prepared (before): {currentlyPreparedIds.Count}");
 
-                // Apply changes from the dialog
                 foreach (var item in _viewModel.AddedSpells)
                 {
                     var original = FindOriginalSpell(item.Id);
@@ -45,20 +43,16 @@ namespace TabletopSpells.Pages
                         continue;
                     }
 
-                    bool wasAlreadyPrepared = currentlyPreparedIds.Contains(item.Id);
-                    bool shouldNowBePrepared = item.IsPrepared;
+                    var wasAlreadyPrepared = currentlyPreparedIds.Contains(item.Id);
+                    var shouldNowBePrepared = item.IsPrepared;
 
                     System.Diagnostics.Debug.WriteLine($"  Spell: {original.Name}, ID: {original.Id}, Was: {wasAlreadyPrepared}, Now: {shouldNowBePrepared}");
 
-                    // Only toggle if state changed
-                    if (wasAlreadyPrepared != shouldNowBePrepared)
-                    {
-                        var result = _character.TogglePreparedSpell(original);
-                        System.Diagnostics.Debug.WriteLine($"    Toggle result: {result}");
-                    }
+                    if (wasAlreadyPrepared == shouldNowBePrepared) continue;
+                    var result = _character.TogglePreparedSpell(original);
+                    System.Diagnostics.Debug.WriteLine($"    Toggle result: {result}");
                 }
 
-                // Verify the state after toggling
                 var afterToggle = _character.GetPreparedSpells();
                 System.Diagnostics.Debug.WriteLine($"Prepared spells after toggle: {afterToggle.Count}");
                 foreach (var spell in afterToggle)
@@ -66,7 +60,6 @@ namespace TabletopSpells.Pages
                     System.Diagnostics.Debug.WriteLine($"  - {spell.Name} (ID: {spell.Id})");
                 }
 
-                // Persist the new prepared spell state
                 SharedViewModel.Instance.SavePreparedSpells(_character);
                 System.Diagnostics.Debug.WriteLine("=== PrepareSpellsPage.OnRequestClose END ===");
             }
@@ -76,12 +69,7 @@ namespace TabletopSpells.Pages
 
         private Spell? FindOriginalSpell(Guid id)
         {
-            foreach (var spell in _originalSpells)
-            {
-                if (spell.Id == id)
-                    return spell;
-            }
-            return null;
+            return _originalSpells.FirstOrDefault(spell => spell.Id == id);
         }
     }
 }

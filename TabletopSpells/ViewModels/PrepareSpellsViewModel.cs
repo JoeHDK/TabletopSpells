@@ -61,7 +61,8 @@ namespace TabletopSpells.ViewModels
         {
             if (newValue)
             {
-                var currentPreparedCount = AddedSpells.Count(x => x.IsPrepared);
+                // Count prepared spells excluding the current item (which has already been toggled)
+                var currentPreparedCount = AddedSpells.Count(x => x.IsPrepared && x.Id != item.Id);
 
                 if (currentPreparedCount >= MaxPrepared)
                 {

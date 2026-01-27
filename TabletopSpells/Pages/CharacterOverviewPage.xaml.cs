@@ -21,13 +21,10 @@ public partial class CharacterOverviewPage : ContentPage
     {
         InitializeComponent();
         this.character = character;
-        this.Title = $"{character.Name}'s home";
-        this.viewModel = viewModel; // Use the passed viewModel
-
-        this.BindingContext = this.viewModel;
-        // Use SpellsForCharacter which calls LoadSpellsForCharacter and LoadPreparedSpells in correct order
+        Title = $"{character.Name}'s home";
+        this.viewModel = viewModel;
+        BindingContext = this.viewModel;
         this.viewModel.SpellsForCharacter(character);
-
         this.gameType = gameType;
     }
 
@@ -49,7 +46,6 @@ public partial class CharacterOverviewPage : ContentPage
     
     private void OnStatsPageButtonClicked(object sender, EventArgs e)
     {
-        // Navigate to StatsPage, passing the character and viewModel instances
         Navigation.PushAsync(new StatsPage(character, viewModel));
     }
 
@@ -63,11 +59,9 @@ public partial class CharacterOverviewPage : ContentPage
             "Yes"
         );
 
-        if (!deleteConfirmed)
-        {
-            await DeleteCharacter(character);
-            Device.BeginInvokeOnMainThread(async () => { await Navigation.PopAsync(); });
-        }
+        if (deleteConfirmed) return;
+        await DeleteCharacter(character);
+        Device.BeginInvokeOnMainThread(async () => { await Navigation.PopAsync(); });
     }
 
     private async Task DeleteCharacter(Character character)
