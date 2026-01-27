@@ -1,12 +1,10 @@
-﻿using System.Collections.ObjectModel;
-using TabletopSpells.Models;
+﻿using TabletopSpells.Models;
 using TabletopSpells.Models.Enums;
 using TabletopSpells.ViewModels;
 
 namespace TabletopSpells.Pages;
-public partial class SpellDetailPage : ContentPage
+public partial class SpellDetailPage
 {
-    //private Game gameType;
     private readonly Spell spell;
     private readonly Character character;
     private readonly int spellLevel;
@@ -303,9 +301,9 @@ public partial class SpellDetailPage : ContentPage
             // First, ensure the spell is in the character's known spells (so they can cast it)
             if (!viewModel.CharacterSpells.ContainsKey(character.ID))
             {
-                viewModel.CharacterSpells[character.ID] = new ObservableCollection<Spell>();
+                viewModel.CharacterSpells[character.ID] = [];
             }
-            if (!viewModel.CharacterSpells[character.ID].Any(s => s.Name == spell.Name))
+            if (viewModel.CharacterSpells[character.ID].All(s => s.Name != spell.Name))
             {
                 viewModel.AddSpell(character, spell);
                 viewModel.SaveSpellForCharacter(character, spell);
@@ -320,36 +318,7 @@ public partial class SpellDetailPage : ContentPage
                 viewModel.SavePreparedSpells(character); // includes always-prepared save now
                 await DisplayAlert("Success", $"'{spell.Name}' has been saved as a domain (always prepared) spell.", "OK");
             }
-            else
-            {
-                // Check if we're at the preparation limit
-                int limit = character.Level + character.GetRelevantAbilityModifier();
-                var preparedSpells = character.GetPreparedSpells();
-
-                if (preparedSpells.Count >= limit)
-                {
-                    // Show replacement dialog
-                    var selectedSpell = await PrepareSpellReplacementDialog.ShowAsync(preparedSpells, spell.Name ?? "");
-
-                    if (selectedSpell != null)
-                    {
-                        // Replace the old spell with the new one
-                        character.TogglePreparedSpell(selectedSpell);
-                        character.TogglePreparedSpell(spell);
-                        viewModel.SavePreparedSpells(character);
-
-                        await DisplayAlert("Success", $"'{selectedSpell.Name}' has been replaced with '{spell.Name}'.", "OK");
-                    }
-                }
-                else
-                {
-                    // Under limit - prepare directly
-                    character.TogglePreparedSpell(spell);
-                    viewModel.SavePreparedSpells(character);
-                    await DisplayAlert("Success", $"'{spell.Name}' has been prepared.", "OK");
-                }
-            }
-
+            
             CheckIfSpellIsPrepared();
             UpdateButtons();
 
