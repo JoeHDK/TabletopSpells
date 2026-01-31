@@ -189,19 +189,14 @@ namespace TabletopSpells.ViewModels
         public void FilterSpells()
         {
             var characterClassName = Character.CharacterClass.ToString().ToLowerInvariant();
-            var spells = SpellViewModels.Select(svm => svm.Spell).AsEnumerable();
+            var spells = SpellViewModels.Select(spellViewModel => spellViewModel.Spell).AsEnumerable();
 
-            // Filter by spell level if selected
+            // Filter by spell level if selected (and restrict to class spells)
             if (SelectedSpellLevel.HasValue)
             {
-                spells = spells.Where(s =>
-                    ParseSpellLevel(s.SpellLevel, characterClassName) == SelectedSpellLevel.Value &&
-                    IsSpellAvailableForClass(s, characterClassName));
-            }
-            else
-            {
-                // If no spell level filter, still only show spells available for this class
-                spells = spells.Where(s => IsSpellAvailableForClass(s, characterClassName));
+                spells = spells.Where(spell =>
+                    ParseSpellLevel(spell.SpellLevel, characterClassName) == SelectedSpellLevel.Value &&
+                    IsSpellAvailableForClass(spell, characterClassName));
             }
 
             // Filter by search text
