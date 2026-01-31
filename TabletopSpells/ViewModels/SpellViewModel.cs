@@ -16,7 +16,12 @@ public class SpellViewModel : INotifyPropertyChanged
 
     public bool IsPrepared
     {
-        get => character.GetPreparedSpells().Any(s => s.Id == Spell.Id);
+        get
+        {
+            var isPrepared = character.GetPreparedSpells().Any(s => s.Id == Spell.Id);
+            System.Diagnostics.Debug.WriteLine($"SpellViewModel.IsPrepared getter: Spell={Spell.Name}, IsPrepared={isPrepared}");
+            return isPrepared;
+        }
         set
         {
             bool currentlyPrepared = IsPrepared;

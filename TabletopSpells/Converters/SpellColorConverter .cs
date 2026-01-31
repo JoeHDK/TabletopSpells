@@ -8,10 +8,10 @@ namespace TabletopSpells.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            // Assume value is a boolean indicating whether the spell is native to the character's class
-            if (value is bool isNativeSpell)
+            // Check if the spell is prepared to provide visual cue
+            if (value is bool isPrepared)
             {
-                return isNativeSpell ? Colors.White : Colors.DarkGray;
+                return isPrepared ? Colors.LightGreen : Colors.White;
             }
             return Colors.White;
         }

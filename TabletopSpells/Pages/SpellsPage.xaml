@@ -8,6 +8,7 @@
         <ResourceDictionary>
             <converters:NonClassSpellConverter x:Key="NonClassSpellConverter"/>
             <converters:SpellColorConverter x:Key="SpellColorConverter"/>
+            <converters:SpellTextColorConverter x:Key="SpellTextColorConverter"/>
             <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
@@ -68,13 +69,19 @@
                             <RowDefinition Height="1"/>
                         </Grid.RowDefinitions>
 
-                        <Label Text="{Binding Name}"
+                        <Label Text="{Binding Spell.Name}"
                                FontSize="Large"
                                FontAttributes="None"
                                HorizontalTextAlignment="Start"
                                Margin="0,0,0,10"
-                               Grid.Row="0"
-                               TextColor="{Binding IsNativeSpell, Converter={StaticResource SpellColorConverter}}" />
+                               Grid.Row="0">
+                            <Label.TextColor>
+                                <MultiBinding Converter="{StaticResource SpellTextColorConverter}">
+                                    <Binding Path="Spell.IsNativeSpell" />
+                                    <Binding Path="IsPrepared" />
+                                </MultiBinding>
+                            </Label.TextColor>
+                        </Label>
                     </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>

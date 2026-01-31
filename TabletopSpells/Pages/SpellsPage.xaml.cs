@@ -13,7 +13,7 @@ public partial class SpellsPage : ContentPage
     private readonly Game gameType;
     private readonly Character character;
 
-    public ObservableCollection<Grouping<int, Spell>> GroupedSpells { get; set; } = [];
+    public ObservableCollection<Grouping<int, SpellViewModel>> GroupedSpells { get; set; } = [];
 
     public SpellsPage(Character character, SharedViewModel viewModel, Game gameType)
     {
@@ -37,9 +37,11 @@ public partial class SpellsPage : ContentPage
         var grouped = spells
             .GroupBy(spell => ParseSpellLevel(spell.SpellLevel, character.CharacterClass.ToString()))
             .OrderBy(g => g.Key)
-            .Select(g => new Grouping<int, Spell>(g.Key, g.OrderBy(s => s.Name)));
+            .Select(g => new Grouping<int, SpellViewModel>(
+                g.Key, 
+                g.OrderBy(s => s.Name).Select(s => new SpellViewModel(s, character))));
 
-        GroupedSpells = new ObservableCollection<Grouping<int, Spell>>(grouped);
+        GroupedSpells = new ObservableCollection<Grouping<int, SpellViewModel>>(grouped);
         SpellListView.ItemsSource = GroupedSpells;
     }
 
@@ -118,8 +120,9 @@ public partial class SpellsPage : ContentPage
 
     private async void OnSpellSelected(object sender, SelectionChangedEventArgs selectionChangedEventArgs)
     {
-        if (selectionChangedEventArgs.CurrentSelection.FirstOrDefault() is Spell { SpellLevel: not null } selectedSpell)
+        if (selectionChangedEventArgs.CurrentSelection.FirstOrDefault() is SpellViewModel { Spell.SpellLevel: not null } selectedSpellViewModel)
         {
+            var selectedSpell = selectedSpellViewModel.Spell;
             var spellLevel = ParseSpellLevel(selectedSpell.SpellLevel, character.CharacterClass.ToString());
             await Navigation.PushAsync(new SpellDetailPage(selectedSpell, character, spellLevel, gameType));
         }

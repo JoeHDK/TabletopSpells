@@ -224,17 +224,17 @@ public class SharedViewModel : INotifyPropertyChanged
         if (character.ID != null)
         {
             var list = LocalStorageHelper.LoadSpellFiles(character.ID.Value);
-            foreach (var sp in list)
+            foreach (var spell in list)
             {
                 var className = character.CharacterClass.ToString();
-                if (!string.IsNullOrEmpty(sp.SpellLevel) && sp.SpellLevel.ToLower().Contains(className.ToLower()))
+                if (!string.IsNullOrEmpty(spell.SpellLevel) && spell.SpellLevel.ToLower().Contains(className.ToLower()))
                 {
-                    sp.IsNativeSpell = true;
-                    LocalStorageHelper.SaveSpellToFile(character.ID.Value, sp);
+                    spell.IsNativeSpell = true;
+                    LocalStorageHelper.SaveSpellToFile(character.ID.Value, spell);
                 }
 
 
-                spells.Add(sp);
+                spells.Add(spell);
             }
         }
 
