@@ -48,7 +48,7 @@
                         </Grid.RowDefinitions>
 
                         <Label Text="{Binding Key, Converter={StaticResource NonClassSpellConverter}}"
-                               FontSize="Title"
+                               FontSize="28"
                                FontAttributes="Bold"
                                TextColor="{helpers:ThemeColor TextSecondary}"
                                HorizontalTextAlignment="Start"

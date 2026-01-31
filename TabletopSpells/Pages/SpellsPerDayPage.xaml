@@ -29,22 +29,31 @@
                                    Margin="0,10,0,0"
                                    HorizontalTextAlignment="Center"/>
                             <Frame BorderColor="{helpers:ThemeColor Border}"
-                                   Padding="1"
+                                   Padding="0"
                                    HorizontalOptions="FillAndExpand"
                                    VerticalOptions="Center"
-                                   BackgroundColor="{helpers:ThemeColor Transparent}"
-                                   HeightRequest="30">
-                                <!-- Frame as the border provider -->
+                                   BackgroundColor="{helpers:ThemeColor CardBackground}"
+                                   HeightRequest="30"
+                                   HasShadow="False"
+                                   CornerRadius="4">
                                 <Grid Padding="0">
-                                    <!-- Grid to hold the ProgressBar and Label -->
-                                    <ProgressBar Progress="{Binding ProgressValue}"
-                                                 ProgressColor="{helpers:ThemeColor ManaBar}"
-                                                 BackgroundColor="{helpers:ThemeColor Transparent}"
-                                                 HorizontalOptions="FillAndExpand"
-                                                 VerticalOptions="FillAndExpand"/>
+                                    <!-- Background (empty part) -->
+                                    <BoxView BackgroundColor="{helpers:ThemeColor CardBackground}"
+                                             HorizontalOptions="FillAndExpand"
+                                             VerticalOptions="FillAndExpand"/>
+                                    
+                                    <!-- Progress fill with AnchorX=0 and ScaleX binding -->
+                                    <BoxView BackgroundColor="{helpers:ThemeColor ManaBar}"
+                                             HorizontalOptions="FillAndExpand"
+                                             VerticalOptions="FillAndExpand"
+                                             AnchorX="0"
+                                             ScaleX="{Binding ProgressValue}"/>
+                                    
+                                    <!-- Text overlay -->
                                     <Label Text="{Binding DetailText}" 
                                            HorizontalOptions="Center" 
                                            VerticalOptions="Center"
+                                           FontAttributes="Bold"
                                            TextColor="{helpers:ThemeColor TextPrimary}"/>
                                 </Grid>
                             </Frame>

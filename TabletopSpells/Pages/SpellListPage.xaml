@@ -35,14 +35,6 @@
                    Placeholder="Search spells..."
                    TextChanged="OnSearchTextChanged" />
 
-        <!-- 🧮 Prepared spell counter (divine casters only) -->
-        <Label Grid.Row="1"
-               Text="{Binding PreparedSpellCountText}"
-               IsVisible="{Binding IsDivineCaster}"
-               FontAttributes="Bold"
-               FontSize="16"
-               Margin="10,10,10,0" />
-
         <!-- Unified spell list for all casters -->
         <CollectionView x:Name="SpellCollectionView"
                         ItemsSource="{Binding FilteredSpellViewModels}"

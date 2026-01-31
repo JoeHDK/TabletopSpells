@@ -23,7 +23,7 @@ namespace TabletopSpells.ViewModels
                     _maxSpells = value;
                     OnPropertyChanged(nameof(MaxSpells));
                     OnPropertyChanged(nameof(DetailText));
-                    OnPropertyChanged(nameof(ProgressValue)); // Update progress bar
+                    OnPropertyChanged(nameof(ProgressValue));
                 }
             }
         }
@@ -38,7 +38,7 @@ namespace TabletopSpells.ViewModels
                     _spellsUsed = value;
                     OnPropertyChanged(nameof(SpellsUsed));
                     OnPropertyChanged(nameof(DetailText));
-                    OnPropertyChanged(nameof(ProgressValue)); // Update progress bar
+                    OnPropertyChanged(nameof(ProgressValue));
                 }
             }
         }
