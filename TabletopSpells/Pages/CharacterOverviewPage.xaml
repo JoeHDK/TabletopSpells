@@ -1,9 +1,10 @@
 ﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:helpers="clr-namespace:TabletopSpells.Helpers"
              x:Class="TabletopSpells.Pages.CharacterOverviewPage"
              Title="Character Spells">
 
-    <Grid BackgroundColor="Black" Margin="0, 10, 0, 0">
+    <Grid BackgroundColor="{helpers:ThemeColor PageBackground}" Margin="0, 10, 0, 0">
         <!-- Grid Row Definitions -->
         <Grid.RowDefinitions>
                 <RowDefinition Height="auto" />
@@ -27,7 +28,8 @@
                 Grid.Column="0"
                 Grid.Row="0"
                 Clicked="OnSpellsSelected"
-                BackgroundColor="green"
+                BackgroundColor="{helpers:ThemeColor ButtonBackground}"
+                TextColor="{helpers:ThemeColor ButtonText}"
                 Margin="10, 0, 10, 0" />
 
         <Button Text="Spells per day"
@@ -35,7 +37,8 @@
                 Grid.Column="1"
                 Grid.Row="0"
                 Clicked="OnSpellPerDaySelected"
-                BackgroundColor="green"
+                BackgroundColor="{helpers:ThemeColor ButtonBackground}"
+                TextColor="{helpers:ThemeColor ButtonText}"
                 Margin="0, 0, 10, 0" />
 
         <Button Text="Spell log"
@@ -43,7 +46,8 @@
                 Grid.Column="1"
                 Grid.Row="1"
                 Clicked="OnSpellLogSelected"
-                BackgroundColor="green"
+                BackgroundColor="{helpers:ThemeColor ButtonBackground}"
+                TextColor="{helpers:ThemeColor ButtonText}"
                 Margin="0, 10, 10, 0" />
         
         <Button Text="Stats"
@@ -51,17 +55,21 @@
                 Grid.Column="1"
                 Grid.Row="2" 
                 Clicked="OnStatsPageButtonClicked"
-                BackgroundColor="Purple"
+                BackgroundColor="{helpers:ThemeColor ExperienceBar}"
+                TextColor="{helpers:ThemeColor ButtonText}"
                 Margin="0, 10, 10, 0">
         </Button>
 
-        <!--Remove Characters Button-->
-        <Button Text="Delete character" 
-                Grid.Column="0" 
-                Grid.ColumnSpan="2"
+        <!--Options Button-->
+        <Button Text="⚙️"
+                Grid.Column="1" 
                 Grid.Row="4" 
-                Clicked="OnDeleteCharacterClicked" 
-                BackgroundColor="Red"
+                HorizontalOptions="End"
+                Clicked="OnOptionsClicked" 
+                BackgroundColor="{helpers:ThemeColor Transparent}"
+                BorderColor="transparent"
+                TextColor="{helpers:ThemeColor TextSecondary}"
+                FontSize="24"
                 Margin="10, 0"/>
     </Grid>
 </ContentPage>

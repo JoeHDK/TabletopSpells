@@ -1,5 +1,6 @@
 ﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:helpers="clr-namespace:TabletopSpells.Helpers"
              x:Class="TabletopSpells.Pages.SpellLogPage"
              Title="Spell Log">
 
@@ -11,7 +12,8 @@
                            FontAttributes="Bold"
                            HorizontalOptions="Center"
                            FontSize="Large"
-                           BackgroundColor="Transparent" 
+                           BackgroundColor="{helpers:ThemeColor Transparent}" 
+                           TextColor="{helpers:ThemeColor TextPrimary}"
                            Padding="10"/>
                 </ViewCell>
             </DataTemplate>
@@ -29,8 +31,8 @@
             <DataTemplate>
                 <ViewCell>
                     <StackLayout Orientation="Vertical">
-                        <Label Text="{Binding SpellName}" FontAttributes="Bold" TextColor="White"/>
-                        <Label TextColor="White">
+                        <Label Text="{Binding SpellName}" FontAttributes="Bold" TextColor="{helpers:ThemeColor TextPrimary}"/>
+                        <Label TextColor="{helpers:ThemeColor TextPrimary}">
                             <Label.FormattedText>
                                 <FormattedString>
                                     <Span Text="Spell level: " />
@@ -38,8 +40,8 @@
                                 </FormattedString>
                             </Label.FormattedText>
                         </Label>
-                        <Label Text="{Binding CastTime, StringFormat='{0:G}'}" TextColor="DarkGrey"/>
-                        <Label Text="{Binding FailedReason}" TextColor="Red"/>
+                        <Label Text="{Binding CastTime, StringFormat='{0:G}'}" TextColor="{helpers:ThemeColor TextTertiary}"/>
+                        <Label Text="{Binding FailedReason}" TextColor="{helpers:ThemeColor Error}"/>
                     </StackLayout>
                 </ViewCell>
             </DataTemplate>

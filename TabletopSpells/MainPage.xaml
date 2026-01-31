@@ -1,9 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:helpers="clr-namespace:TabletopSpells.Helpers"
              x:Class="TabletopSpells.MainPage">
 
-    <Grid BackgroundColor="Black" Margin="10, 10, 0, 0">
+    <Grid BackgroundColor="{helpers:ThemeColor PageBackground}" Margin="10, 10, 0, 0">
         <!-- Grid Row Definitions -->
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -17,7 +18,8 @@
 
         <!-- Create New Character Button -->
             <Button Grid.Row="0" 
-                    BackgroundColor="Green"
+                    BackgroundColor="{helpers:ThemeColor ButtonBackground}"
+                    TextColor="{helpers:ThemeColor ButtonText}"
                     Grid.Column="0"
                     Text="Pathfinder 1e" 
                     HorizontalOptions="FillAndExpand"
@@ -26,7 +28,8 @@
                     HeightRequest="75"/>
 
             <Button Grid.Row="0" 
-                    BackgroundColor="Green"
+                    BackgroundColor="{helpers:ThemeColor ButtonBackground}"
+                    TextColor="{helpers:ThemeColor ButtonText}"
                     Grid.Column="1"
                     Text="DnD 5e"
                     HorizontalOptions="FillAndExpand"

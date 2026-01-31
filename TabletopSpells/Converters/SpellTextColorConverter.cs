@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using TabletopSpells.Themes;
 
 namespace TabletopSpells.Converters
 {
@@ -12,7 +13,7 @@ namespace TabletopSpells.Converters
             if (values.Length < 2)
             {
                 System.Diagnostics.Debug.WriteLine($"SpellTextColorConverter: Not enough values ({values.Length})");
-                return Colors.Gray;
+                return AppColors.Current.SpellUnavailable;
             }
 
             // First value: IsNativeSpell (bool)
@@ -23,23 +24,23 @@ namespace TabletopSpells.Converters
 
             System.Diagnostics.Debug.WriteLine($"SpellTextColorConverter: IsNativeSpell={isNativeSpell}, IsPrepared={isPrepared}");
 
-            // Priority: If prepared, show as LightGreen
+            // Priority: If prepared, show as prepared color
             if (isPrepared)
             {
-                System.Diagnostics.Debug.WriteLine($"  -> Returning LightGreen");
-                return Colors.LightGreen;
+                System.Diagnostics.Debug.WriteLine($"  -> Returning SpellPrepared color");
+                return AppColors.Current.SpellPrepared;
             }
 
-            // If not prepared but is native spell, show as White/LightGray
+            // If not prepared but is native spell, show as native color
             if (isNativeSpell)
             {
-                System.Diagnostics.Debug.WriteLine($"  -> Returning White");
-                return Colors.White;
+                System.Diagnostics.Debug.WriteLine($"  -> Returning SpellNative color");
+                return AppColors.Current.SpellNative;
             }
 
-            // If not native spell and not prepared, show as Gray (dimmed)
-            System.Diagnostics.Debug.WriteLine($"  -> Returning Gray");
-            return Colors.Gray;
+            // If not native spell and not prepared, show as non-native (dimmed)
+            System.Diagnostics.Debug.WriteLine($"  -> Returning SpellNonNative color");
+            return AppColors.Current.SpellNonNative;
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)

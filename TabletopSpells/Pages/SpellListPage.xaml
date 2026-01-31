@@ -1,6 +1,7 @@
 ﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:converters="clr-namespace:TabletopSpells.Converters"
+             xmlns:helpers="clr-namespace:TabletopSpells.Helpers"
              x:Class="TabletopSpells.Pages.SpellListPage"
              Title="Spells">
 
@@ -57,7 +58,7 @@
                                    Text="{Binding Spell.Name}" />
                             <Label Text="{Binding Spell.SpellLevel}"
                                    FontSize="12"
-                                   TextColor="Gray" />
+                                   TextColor="{helpers:ThemeColor TextSecondary}" />
                         </StackLayout>
                     </Grid>
                 </DataTemplate>

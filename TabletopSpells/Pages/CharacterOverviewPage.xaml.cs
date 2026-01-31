@@ -1,4 +1,4 @@
-﻿﻿using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using CommunityToolkit.Maui.Views;
@@ -49,47 +49,8 @@ public partial class CharacterOverviewPage : ContentPage
         Navigation.PushAsync(new StatsPage(character, viewModel));
     }
 
-    [Obsolete]
-    private async void OnDeleteCharacterClicked(object sender, EventArgs e)
+    private void OnOptionsClicked(object sender, EventArgs e)
     {
-        bool deleteConfirmed = await DisplayAlert(
-            "Confirm Delete",
-            $"Are you sure you want to delete {character.Name}?",
-            "No",
-            "Yes"
-        );
-
-        if (deleteConfirmed) return;
-        await DeleteCharacter(character);
-        Device.BeginInvokeOnMainThread(async () => { await Navigation.PopAsync(); });
-    }
-
-    private async Task DeleteCharacter(Character character)
-    {
-        try
-        {
-            var characters = LocalStorageHelper.LoadCharactersFromFile();
-            var characterToRemove = characters.FirstOrDefault(c => c.ID == character.ID);
-            if (characterToRemove != null)
-            {
-                characters.Remove(characterToRemove);
-                LocalStorageHelper.SaveCharactersToFile(characters);
-
-                viewModel.CharacterSpells.Remove(character.ID);
-                LocalStorageHelper.DeleteCharacterFolder(character.ID.Value);
-
-                viewModel.OnPropertyChanged(nameof(viewModel.CharacterSpells));
-                await DisplayAlert("Success", $"{character.Name} has been removed.", "OK");
-            }
-            else
-            {
-                await DisplayAlert("Error", $"Character '{character.Name}' not found.", "OK");
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Error in DeleteCharacter: {ex.Message}");
-            await DisplayAlert("Error", "An error occurred while deleting the character.", "OK");
-        }
+        Navigation.PushAsync(new CharacterOptionsPage(character, viewModel));
     }
 }

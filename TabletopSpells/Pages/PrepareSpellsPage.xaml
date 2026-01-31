@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:TabletopSpells.Pages"
+             xmlns:helpers="clr-namespace:TabletopSpells.Helpers"
              x:Class="TabletopSpells.Pages.PrepareSpellsPage"
              Title="Prepare Spells">
     
@@ -21,7 +22,7 @@
                         Grid.Row="2">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Grid Padding="8" ColumnSpacing="12" BackgroundColor="Transparent">
+                    <Grid Padding="8" ColumnSpacing="12" BackgroundColor="{helpers:ThemeColor Transparent}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
@@ -35,7 +36,8 @@
                         
                         <CheckBox IsChecked="{Binding IsPrepared}" 
                                   VerticalOptions="Center"
-                                  IsEnabled="{Binding IsCheckboxEnabled}" />
+                                  IsEnabled="{Binding IsCheckboxEnabled}"
+                                  Color="{helpers:ThemeColor SpellPrepared}" />
                         
                         <Label Grid.Column="1" 
                                Text="{Binding Name}" 

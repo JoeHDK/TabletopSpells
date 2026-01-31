@@ -1,5 +1,6 @@
 ﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:helpers="clr-namespace:TabletopSpells.Helpers"
              Title="Character Stats"
              x:Class="TabletopSpells.Pages.StatsPage">
     <ScrollView>
@@ -61,8 +62,8 @@
             <!-- Save Button -->
             <Button Text="Save Stats"
                     Clicked="OnSaveClicked"
-                    BackgroundColor="Blue"
-                    TextColor="White"
+                    BackgroundColor="{helpers:ThemeColor Primary}"
+                    TextColor="{helpers:ThemeColor ButtonText}"
                     Margin="0,20,0,0" />
         </VerticalStackLayout>
     </ScrollView>
