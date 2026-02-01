@@ -50,16 +50,6 @@ namespace TabletopSpells.Pages
 
             if (!deleteConfirmed) return;
 
-            // Second confirmation for safety
-            bool doubleConfirm = await DisplayAlert(
-                "Final Confirmation",
-                $"This will permanently delete {character.Name} and all associated data. Are you absolutely sure?",
-                "Yes, I'm Sure",
-                "No, Keep Character"
-            );
-
-            if (!doubleConfirm) return;
-
             await DeleteCharacter();
         }
 

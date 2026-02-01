@@ -3,15 +3,9 @@
              x:Class="TabletopSpells.Pages.SpellDetailPage"
              Title="{Binding Name}">
 
-    <ContentPage.ToolbarItems>
-        <ToolbarItem x:Name="MenuButton"
-                     Text="☰"
-                     Priority="0"
-                     Order="Primary"
-                     Clicked="OnMenuButtonClicked"/>
-    </ContentPage.ToolbarItems>
-
-    <Grid>
+    <!-- Toolbar items are created dynamically in code-behind based on spell state -->
+    
+    <Grid x:Name="MainGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />

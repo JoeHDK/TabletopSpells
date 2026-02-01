@@ -50,7 +50,35 @@ public partial class SpellDetailPage
 
     private void UpdateButtons()
     {
-        // The menu button is always visible
+        // Clear toolbar items
+        ToolbarItems.Clear();
+        
+        // Determine what toolbar items to show based on state
+        if (!spellIsKnown)
+        {
+            // Spell not in list - show simple "Add Spell" button
+            var addButton = new ToolbarItem
+            {
+                Text = "Add Spell",
+                Priority = 0,
+                Order = ToolbarItemOrder.Primary
+            };
+            addButton.Clicked += async (s, e) => await OnAddSpellClickedAsync();
+            ToolbarItems.Add(addButton);
+        }
+        else
+        {
+            // Spell is in list - show burger menu with multiple options
+            var menuButton = new ToolbarItem
+            {
+                Text = "☰",
+                Priority = 0,
+                Order = ToolbarItemOrder.Primary
+            };
+            menuButton.Clicked += OnMenuButtonClicked;
+            ToolbarItems.Add(menuButton);
+        }
+        
         // ShowCastSpellButton handles the cast button visibility
         ShowCastSpellButton();
     }

@@ -22,16 +22,7 @@
                    Padding="15"
                    CornerRadius="10">
                 <VerticalStackLayout Spacing="10">
-                    <Label Text="🎨 Theme Settings"
-                           FontSize="20"
-                           FontAttributes="Bold"
-                           TextColor="{helpers:ThemeColor TextPrimary}"/>
-                    
-                    <Label Text="Switch between dark and light modes"
-                           FontSize="14"
-                           TextColor="{helpers:ThemeColor TextSecondary}"/>
-
-                    <Button x:Name="ThemeToggleButton"
+                   <Button x:Name="ThemeToggleButton"
                             Text="Toggle Theme"
                             BackgroundColor="{helpers:ThemeColor ButtonBackground}"
                             TextColor="{helpers:ThemeColor ButtonText}"

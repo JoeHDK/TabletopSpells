@@ -101,31 +101,6 @@
                             Margin="0,10,0,0"/>
                 </VerticalStackLayout>
             </Frame>
-
-            <!-- Info Section -->
-            <Frame BorderColor="{helpers:ThemeColor Border}"
-                   BackgroundColor="{helpers:ThemeColor SurfaceBackground}"
-                   Padding="15"
-                   CornerRadius="10"
-                   Margin="0,10,0,0">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="ℹ️ About Themes"
-                           FontSize="16"
-                           FontAttributes="Bold"
-                           TextColor="{helpers:ThemeColor TextPrimary}"/>
-                    
-                    <Label TextColor="{helpers:ThemeColor TextSecondary}" FontSize="13">
-                        <Label.FormattedText>
-                            <FormattedString>
-                                <Span Text="• Themes apply across the entire app&#x0a;"/>
-                                <Span Text="• Your selection is saved automatically&#x0a;"/>
-                                <Span Text="• Character-specific themes coming soon!"/>
-                            </FormattedString>
-                        </Label.FormattedText>
-                    </Label>
-                </VerticalStackLayout>
-            </Frame>
-
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
