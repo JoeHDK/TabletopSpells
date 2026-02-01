@@ -206,6 +206,19 @@ public class SharedViewModel : INotifyPropertyChanged
 
         if (value.Any(s => s.Name == spell.Name)) return;
         character.IsDivineCaster = ClassHelper.IsDivineCaster(character.CharacterClass);
+        
+        // Set IsNativeSpell based on whether the spell is available for this character's class
+        var className = character.CharacterClass.ToString().ToLowerInvariant();
+        if (!string.IsNullOrEmpty(spell.SpellLevel))
+        {
+            var spellLevelLower = spell.SpellLevel.ToLowerInvariant();
+            spell.IsNativeSpell = spellLevelLower.Contains(className);
+        }
+        else
+        {
+            spell.IsNativeSpell = false;
+        }
+        
         character.AddSpell(spell);
         value.Add(spell);
 
@@ -224,13 +237,19 @@ public class SharedViewModel : INotifyPropertyChanged
         if (character.ID != null)
         {
             var list = LocalStorageHelper.LoadSpellFiles(character.ID.Value);
+            var className = character.CharacterClass.ToString().ToLowerInvariant();
+            
             foreach (var spell in list)
             {
-                var className = character.CharacterClass.ToString();
-                if (!string.IsNullOrEmpty(spell.SpellLevel) && spell.SpellLevel.ToLower().Contains(className.ToLower()))
+                // Check if this spell is native to the character's class
+                if (!string.IsNullOrEmpty(spell.SpellLevel))
                 {
-                    spell.IsNativeSpell = true;
-                    LocalStorageHelper.SaveSpellToFile(character.ID.Value, spell);
+                    var spellLevelLower = spell.SpellLevel.ToLowerInvariant();
+                    spell.IsNativeSpell = spellLevelLower.Contains(className);
+                }
+                else
+                {
+                    spell.IsNativeSpell = false;
                 }
 
 

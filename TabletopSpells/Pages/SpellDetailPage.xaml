@@ -4,8 +4,12 @@
              Title="{Binding Name}">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem x:Name="AddOrRemoveButton"
+        <ToolbarItem x:Name="AlwaysPreparedButton"
+                     Text="Always Prepared"
                      Priority="0"
+                     Order="Primary"/>
+        <ToolbarItem x:Name="AddOrRemoveButton"
+                     Priority="1"
                      Order="Primary"/>
     </ContentPage.ToolbarItems>
 

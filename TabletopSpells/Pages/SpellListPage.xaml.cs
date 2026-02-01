@@ -69,7 +69,7 @@ public partial class SpellListPage
         if (e.CurrentSelection.FirstOrDefault() is SpellViewModel selectedViewModel)
         {
             var selectedSpell = selectedViewModel.Spell;
-            var level = viewModel.ParseSpellLevel(selectedSpell.SpellLevel, viewModel.Character?.CharacterClass.ToString() ?? "");
+            var level = viewModel.ParseSpellLevel(selectedSpell.SpellLevel);
             
             await Navigation.PushAsync(new SpellDetailPage(selectedSpell, viewModel.Character, level, viewModel.GameType));
             

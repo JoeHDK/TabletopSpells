@@ -150,7 +150,7 @@ namespace TabletopSpells.ViewModels
             if (SelectedSpellLevel.HasValue)
             {
                 spells = spells.Where(spell =>
-                    ParseSpellLevel(spell.SpellLevel, characterClassName) == SelectedSpellLevel.Value &&
+                    ParseSpellLevel(spell.SpellLevel) == SelectedSpellLevel.Value &&
                     IsSpellAvailableForClass(spell, characterClassName));
             }
             // When no level filter, show ALL spells (no class restriction)
@@ -166,7 +166,7 @@ namespace TabletopSpells.ViewModels
 
             // Order by spell level, then alphabetically
             var ordered = spells
-                .OrderBy(s => ParseSpellLevel(s.SpellLevel, characterClassName))
+                .OrderBy(s => ParseSpellLevel(s.SpellLevel))
                 .ThenBy(s => s.Name);
 
             FilteredSpellViewModels = new ObservableCollection<SpellViewModel>(
@@ -186,7 +186,7 @@ namespace TabletopSpells.ViewModels
             return spell.SpellLevel.ToLowerInvariant().Contains(characterClass);
         }
 
-        public int ParseSpellLevel(string spellLevel, string characterClass)
+        public int ParseSpellLevel(string spellLevel)
         {
             // Stub: Add parsing logic
             if (string.IsNullOrEmpty(spellLevel)) return -1;
@@ -200,46 +200,6 @@ namespace TabletopSpells.ViewModels
         protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        /// <summary>
-        /// Checks if the character can prepare another spell or if they're at the limit.
-        /// </summary>
-        public bool CanPrepareMoReSpells()
-        {
-            int limit = Character.Level + Character.GetRelevantAbilityModifier();
-            return SpellViewModels.Count(s => s.IsPrepared) < limit;
-        }
-
-        /// <summary>
-        /// Gets all currently prepared spells.
-        /// </summary>
-        public List<Spell> GetPreparedSpells()
-        {
-            return SpellViewModels
-                .Where(s => s.IsPrepared)
-                .Select(s => s.Spell)
-                .ToList();
-        }
-
-        /// <summary>
-        /// Replaces an old prepared spell with a new one.
-        /// </summary>
-        public void ReplacePrepareddSpell(Spell oldSpell, Spell newSpell)
-        {
-            // Find and unprepare the old spell
-            var oldViewModel = SpellViewModels.FirstOrDefault(s => s.Spell.Id == oldSpell.Id);
-            if (oldViewModel != null)
-            {
-                oldViewModel.IsPrepared = false;
-            }
-
-            // Prepare the new spell
-            var newViewModel = SpellViewModels.FirstOrDefault(s => s.Spell.Id == newSpell.Id);
-            if (newViewModel != null)
-            {
-                newViewModel.IsPrepared = true;
-            }
         }
     }
 }

@@ -4,7 +4,7 @@ using TabletopSpells.Themes;
 namespace TabletopSpells.Converters
 {
     /// <summary>
-    /// Multi-value converter that determines spell text color based on both IsNativeSpell and IsPrepared.
+    /// Multi-value converter that determines spell text color based on IsNativeSpell, IsPrepared, and IsAlwaysPrepared.
     /// </summary>
     public class SpellTextColorConverter : IMultiValueConverter
     {
@@ -18,20 +18,29 @@ namespace TabletopSpells.Converters
 
             // First value: IsNativeSpell (bool)
             // Second value: IsPrepared (bool)
+            // Third value (optional): IsAlwaysPrepared (bool) - domain spells
             
             bool isNativeSpell = values[0] is bool native && native;
             bool isPrepared = values[1] is bool prepared && prepared;
+            bool isAlwaysPrepared = values.Length > 2 && values[2] is bool always && always;
 
-            System.Diagnostics.Debug.WriteLine($"SpellTextColorConverter: IsNativeSpell={isNativeSpell}, IsPrepared={isPrepared}");
+            System.Diagnostics.Debug.WriteLine($"SpellTextColorConverter: IsNativeSpell={isNativeSpell}, IsPrepared={isPrepared}, IsAlwaysPrepared={isAlwaysPrepared}");
 
-            // Priority: If prepared, show as prepared color
+            // Priority 1: Domain spells (always prepared) - show in blue
+            if (isAlwaysPrepared)
+            {
+                System.Diagnostics.Debug.WriteLine($"  -> Returning SpellDomain color (blue)");
+                return AppColors.Current.SpellDomain;
+            }
+
+            // Priority 2: If prepared, show as prepared color (green)
             if (isPrepared)
             {
                 System.Diagnostics.Debug.WriteLine($"  -> Returning SpellPrepared color");
                 return AppColors.Current.SpellPrepared;
             }
 
-            // If not prepared but is native spell, show as native color
+            // Priority 3: If not prepared but is native spell, show as native color
             if (isNativeSpell)
             {
                 System.Diagnostics.Debug.WriteLine($"  -> Returning SpellNative color");

@@ -45,6 +45,7 @@ namespace TabletopSpells.Themes
             SpellNative = Color.FromArgb("#FFFFFF"),   // White
             SpellNonNative = Color.FromArgb("#808080"), // Gray
             SpellUnavailable = Color.FromArgb("#606060"), // DarkGray
+            SpellDomain = Color.FromArgb("#87CEEB"),   // SkyBlue - for domain/always-prepared spells
             
             // Status colors
             Success = Color.FromArgb("#00FF00"),      // Green
@@ -105,6 +106,7 @@ namespace TabletopSpells.Themes
             SpellNative = Color.FromArgb("#000000"),   // Black
             SpellNonNative = Color.FromArgb("#606060"), // DarkGray
             SpellUnavailable = Color.FromArgb("#A0A0A0"), // LightGray
+            SpellDomain = Color.FromArgb("#4682B4"),   // SteelBlue - for domain/always-prepared spells
             
             // Status colors
             Success = Color.FromArgb("#008000"),      // Green
@@ -256,6 +258,7 @@ namespace TabletopSpells.Themes
         public Color SpellNative { get; set; } = Colors.White;
         public Color SpellNonNative { get; set; } = Colors.Gray;
         public Color SpellUnavailable { get; set; } = Colors.DarkGray;
+        public Color SpellDomain { get; set; } = Colors.LightBlue; // For domain/always-prepared spells
         
         // Status colors
         public Color Success { get; set; } = Colors.Green;

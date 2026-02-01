@@ -44,7 +44,8 @@ public partial class SpellDetailPage
 
     private void CheckIfSpellIsPrepared()
     {
-        spellIsPrepared = character.GetPreparedSpells().Any(s => s.Id == spell.Id);
+        // Check only manually prepared spells, NOT domain spells
+        spellIsPrepared = character.GetManuallyPreparedSpells().Any(s => s.Id == spell.Id);
     }
 
     private void UpdateButtons()
@@ -54,6 +55,7 @@ public partial class SpellDetailPage
         AddOrRemoveButton.Clicked -= OnRemoveSpellClicked;
         AddOrRemoveButton.Clicked -= OnPrepareSpellClicked;
         AddOrRemoveButton.Clicked -= OnUnprepareSpellClicked;
+        AlwaysPreparedButton.Clicked -= OnToggleAlwaysPreparedClicked;
 
         // ALL casters use Add/Remove buttons
         // Divine casters manage preparation via the "Prepare Spells" modal on SpellsPage
@@ -65,6 +67,27 @@ public partial class SpellDetailPage
         else
         {
             AddOrRemoveButton.Clicked += OnAddSpellClicked;
+        }
+
+        // Show/hide and configure the "Always Prepared" button for divine casters
+        // Remove it first to ensure clean state
+        if (ToolbarItems.Contains(AlwaysPreparedButton))
+        {
+            ToolbarItems.Remove(AlwaysPreparedButton);
+        }
+        
+        if (character.IsDivineCaster && spellIsKnown)
+        {
+            // Check if spell is already marked as always prepared
+            bool isAlwaysPrepared = spell.IsAlwaysPrepared || 
+                                   character.AlwaysPreparedSpells.Contains(spell.Name ?? string.Empty);
+            AlwaysPreparedButton.Text = isAlwaysPrepared ? "Unmark Domain" : "Mark Domain";
+            AlwaysPreparedButton.Clicked += OnToggleAlwaysPreparedClicked;
+            // Add it to toolbar
+            if (!ToolbarItems.Contains(AlwaysPreparedButton))
+            {
+                ToolbarItems.Insert(0, AlwaysPreparedButton); // Insert at position 0 to be on the left
+            }
         }
 
         // Update the visibility and enabled status of the CastSpellButton
@@ -79,13 +102,15 @@ public partial class SpellDetailPage
         CastSpellButton.Clicked -= OnCastSpellClicked; // Clear any existing event subscriptions
 
         // Check if spell is available:
-        // - For divine casters: spell must be in added spells AND marked as prepared
+        // - For divine casters: spell must be in added spells AND (marked as prepared OR marked as domain)
         // - For others: spell must be in added spells
         bool spellAvailable;
         if (character.IsDivineCaster)
         {
-            // Divine casters need both: in their spell list AND marked as prepared
-            spellAvailable = spellIsKnown && spellIsPrepared;
+            // Divine casters: need spell in list AND (manually prepared OR domain spell)
+            bool isAlwaysPrepared = spell.IsAlwaysPrepared || 
+                                   character.AlwaysPreparedSpells.Contains(spell.Name ?? string.Empty);
+            spellAvailable = spellIsKnown && (spellIsPrepared || isAlwaysPrepared);
         }
         else
         {
@@ -387,5 +412,69 @@ public partial class SpellDetailPage
         }
 
         return preparedSpells.FirstOrDefault(s => s.Name == selectedSpellName);
+    }
+
+    private async void OnToggleAlwaysPreparedClicked(object? sender, EventArgs eventArgs)
+    {
+        try
+        {
+            var viewModel = SharedViewModel.Instance;
+            
+            // Check if spell is already marked as always prepared
+            bool isCurrentlyAlwaysPrepared = spell.IsAlwaysPrepared || 
+                                            character.AlwaysPreparedSpells.Contains(spell.Name ?? string.Empty);
+
+            if (isCurrentlyAlwaysPrepared)
+            {
+                // Unmark as domain spell
+                spell.IsAlwaysPrepared = false;
+                if (character.AlwaysPreparedSpells.Contains(spell.Name ?? string.Empty))
+                {
+                    character.AlwaysPreparedSpells.Remove(spell.Name ?? string.Empty);
+                }
+                
+                // Save the updated state
+                viewModel.SavePreparedSpells(character);
+                
+                await DisplayAlert("Success", $"'{spell.Name}' is no longer marked as a domain spell.", "OK");
+            }
+            else
+            {
+                // Mark as domain spell (always prepared)
+                spell.IsAlwaysPrepared = true;
+                if (!character.AlwaysPreparedSpells.Contains(spell.Name ?? string.Empty))
+                {
+                    character.AlwaysPreparedSpells.Add(spell.Name ?? string.Empty);
+                }
+                
+                // Ensure the spell is in the character's spell list
+                if (!viewModel.CharacterSpells.ContainsKey(character.ID))
+                {
+                    viewModel.CharacterSpells[character.ID] = [];
+                }
+                if (viewModel.CharacterSpells[character.ID].All(s => s.Name != spell.Name))
+                {
+                    viewModel.AddSpell(character, spell);
+                    viewModel.SaveSpellForCharacter(character, spell);
+                }
+                
+                // Save the updated state
+                viewModel.SavePreparedSpells(character);
+                
+                await DisplayAlert("Success", $"'{spell.Name}' has been marked as a domain spell (always prepared).", "OK");
+            }
+            
+            // Refresh UI
+            CheckIfSpellIsPrepared();
+            CheckIfSpellIsKnown();
+            UpdateButtons();
+            
+            // Notify other UI to reload lists
+            SharedViewModel.Instance.SpellsChanged?.Invoke();
+        }
+        catch (Exception e)
+        {
+            await DisplayAlert("Error", $"An error occurred while toggling always prepared status: {e.Message}", "OK");
+        }
     }
 }

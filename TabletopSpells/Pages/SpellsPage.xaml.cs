@@ -136,10 +136,16 @@ public partial class SpellsPage : ContentPage
             return;
 
         // Get the character's known spells and convert to List
-        var knownSpells = SharedViewModel.Instance.SpellsForCharacter(character).ToList();
+        // Exclude domain spells (IsAlwaysPrepared) since they're always castable
+        var knownSpells = SharedViewModel.Instance.SpellsForCharacter(character)
+            .Where(s => !s.IsAlwaysPrepared)
+            .ToList();
         
-        // Set IsPrepared state on each spell based on Character.GetPreparedSpells()
-        var preparedSpellIds = character.GetPreparedSpells().Select(s => s.Id).ToHashSet();
+        // Set IsPrepared state on each spell based on manually prepared spells only
+        var preparedSpellIds = character.GetManuallyPreparedSpells()
+            .Select(s => s.Id)
+            .ToHashSet();
+        
         foreach (var spell in knownSpells)
         {
             spell.IsPrepared = preparedSpellIds.Contains(spell.Id);

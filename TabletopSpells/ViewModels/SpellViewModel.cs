@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+﻿﻿using System.ComponentModel;
 using TabletopSpells.Models;
 
 namespace TabletopSpells.ViewModels;
@@ -18,7 +18,8 @@ public class SpellViewModel : INotifyPropertyChanged
     {
         get
         {
-            var isPrepared = character.GetPreparedSpells().Any(s => s.Id == Spell.Id);
+            // Only check manually prepared spells, NOT domain spells
+            var isPrepared = character.GetManuallyPreparedSpells().Any(s => s.Id == Spell.Id);
             System.Diagnostics.Debug.WriteLine($"SpellViewModel.IsPrepared getter: Spell={Spell.Name}, IsPrepared={isPrepared}");
             return isPrepared;
         }

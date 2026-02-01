@@ -57,17 +57,21 @@ namespace TabletopSpells.ViewModels
             UpdatePrepareSummary();
         }
 
-        private void OnSpellPreparedToggled(SpellPrepareItemViewModel item, bool newValue)
+        private void OnSpellPreparedToggled(SpellPrepareItemViewModel item, bool oldValue, bool newValue)
         {
-            if (newValue)
+            // If trying to prepare (checking the box)
+            if (!oldValue && newValue)
             {
-                // Count prepared spells excluding the current item (which has already been toggled)
-                var currentPreparedCount = AddedSpells.Count(x => x.IsPrepared && x.Id != item.Id);
+                // Count currently prepared spells (including this one that was just checked)
+                var currentPreparedCount = AddedSpells.Count(x => x.IsPrepared);
 
-                if (currentPreparedCount >= MaxPrepared)
+                if (currentPreparedCount > MaxPrepared)
                 {
-                    // Disallow and reset the checkbox
-                    item.IsPrepared = false;
+                    // Over limit - revert the change
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        item.IsPrepared = false;
+                    });
                     return;
                 }
             }
@@ -99,7 +103,7 @@ namespace TabletopSpells.ViewModels
     public class SpellPrepareItemViewModel : INotifyPropertyChanged
     {
         private bool _isPrepared;
-        private readonly Action<SpellPrepareItemViewModel, bool> _onToggle;
+        private readonly Action<SpellPrepareItemViewModel, bool, bool> _onToggle; // oldValue, newValue
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -113,17 +117,18 @@ namespace TabletopSpells.ViewModels
             {
                 if (_isPrepared != value)
                 {
+                    var oldValue = _isPrepared;
                     _isPrepared = value;
                     OnPropertyChanged(nameof(IsPrepared));
                     OnPropertyChanged(nameof(IsCheckboxEnabled));
-                    _onToggle?.Invoke(this, value);
+                    _onToggle?.Invoke(this, oldValue, value);
                 }
             }
         }
 
         public bool IsCheckboxEnabled { get; set; } = true;
 
-        public SpellPrepareItemViewModel(Spell model, Action<SpellPrepareItemViewModel, bool> onToggle)
+        public SpellPrepareItemViewModel(Spell model, Action<SpellPrepareItemViewModel, bool, bool> onToggle)
         {
             Id = model.Id;
             Name = model.Name ?? "Unknown Spell";

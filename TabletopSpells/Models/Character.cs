@@ -98,6 +98,19 @@ public class Character
         return combined;
     }
 
+    /// <summary>
+    /// Gets only the manually prepared spells (excludes domain/always-prepared spells).
+    /// This is useful for the Prepare Spells UI to show only toggleable spells.
+    /// </summary>
+    public List<Spell> GetManuallyPreparedSpells()
+    {
+        int limit = Level + GetRelevantAbilityModifier();
+        return _manuallyPreparedSpells
+            .OrderByDescending(spell => spell.SpellLevel)
+            .Take(limit)
+            .ToList();
+    }
+
     public bool TogglePreparedSpell(Spell spell)
     {
         var limit = Level + GetRelevantAbilityModifier();

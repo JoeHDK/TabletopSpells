@@ -80,6 +80,7 @@
                                 <MultiBinding Converter="{StaticResource SpellTextColorConverter}">
                                     <Binding Path="Spell.IsNativeSpell" />
                                     <Binding Path="IsPrepared" />
+                                    <Binding Path="Spell.IsAlwaysPrepared" />
                                 </MultiBinding>
                             </Label.TextColor>
                         </Label>
