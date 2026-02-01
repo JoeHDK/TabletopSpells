@@ -84,54 +84,29 @@ namespace TabletopSpells.ViewModels
 
             System.Diagnostics.Debug.WriteLine($"GameType after default: {GameType}");
 
-            if (IsDivineCaster)
+            // Load ALL spells for both divine and non-divine casters
+            // This allows users to browse and search all spells when no filter is applied
+            System.Diagnostics.Debug.WriteLine($"Loading ALL spells from JSON");
+            var allSpells = SpellRepository.GetAllSpellsFromJson(GameType);
+            var savedForChar = SharedViewModel.Instance.SpellsForCharacter(Character);
+            
+            foreach (var sp in allSpells)
             {
-                System.Diagnostics.Debug.WriteLine($"Loading spells for DIVINE CASTER");
-                var allClassSpells = SharedViewModel.Instance.LoadAllClassSpells(Character);
-                var savedForChar = SharedViewModel.Instance.SpellsForCharacter(Character);
-                foreach (var saved in savedForChar ?? [])
+                var match = savedForChar?.FirstOrDefault(s => s.Id == sp.Id || s.Name == sp.Name);
+                if (match != null)
                 {
+                    sp.IsFavoriteSpell = match.IsFavoriteSpell;
+                    sp.IsAlwaysPrepared = match.IsAlwaysPrepared;
                 }
-
-                System.Diagnostics.Debug.WriteLine($"Loaded {allClassSpells.Count} class spells");
-                foreach (var sp in allClassSpells)
-                {
-                    var match = savedForChar?.FirstOrDefault(s => s.Id == sp.Id || s.Name == sp.Name);
-                    if (match != null)
-                    {
-                        sp.IsFavoriteSpell = match.IsFavoriteSpell;
-                        sp.IsAlwaysPrepared = match.IsAlwaysPrepared;
-                    }
-                }
-
-                SpellViewModels = new ObservableCollection<SpellViewModel>(
-                    allClassSpells.Select(spell => new SpellViewModel(spell, Character))
-                );
-                FilteredSpellViewModels = new ObservableCollection<SpellViewModel>(SpellViewModels);
             }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine($"Loading spells for NON-DIVINE CASTER");
-                var allSpells = SpellRepository.GetAllSpellsFromJson(GameType);
-                var savedForChar = SharedViewModel.Instance.SpellsForCharacter(Character);
-                foreach (var sp in allSpells)
-                {
-                    var match = savedForChar?.FirstOrDefault(s => s.Id == sp.Id || s.Name == sp.Name);
-                    if (match != null)
-                    {
-                        sp.IsFavoriteSpell = match.IsFavoriteSpell;
-                        sp.IsAlwaysPrepared = match.IsAlwaysPrepared;
-                    }
-                }
 
-                System.Diagnostics.Debug.WriteLine($"Loaded {allSpells.Count} total spells");
-                SpellViewModels = new ObservableCollection<SpellViewModel>(
-                    allSpells.Select(spell => new SpellViewModel(spell, Character))
-                );
-                FilteredSpells = new ObservableCollection<Spell>(allSpells);
-                System.Diagnostics.Debug.WriteLine($"Created {SpellViewModels.Count} SpellViewModels");
-                System.Diagnostics.Debug.WriteLine($"Created {FilteredSpells.Count} FilteredSpells");
-            }
+            System.Diagnostics.Debug.WriteLine($"Loaded {allSpells.Count} total spells");
+            SpellViewModels = new ObservableCollection<SpellViewModel>(
+                allSpells.Select(spell => new SpellViewModel(spell, Character))
+            );
+            FilteredSpells = new ObservableCollection<Spell>(allSpells);
+            System.Diagnostics.Debug.WriteLine($"Created {SpellViewModels.Count} SpellViewModels");
+            System.Diagnostics.Debug.WriteLine($"Created {FilteredSpells.Count} FilteredSpells");
 
             FilterSpells();
 
@@ -143,44 +118,24 @@ namespace TabletopSpells.ViewModels
 
         public void ReloadDivineSpellViewModels()
         {
-            if (IsDivineCaster)
+            // Load ALL spells for both types of casters
+            var allSpells = SpellRepository.GetAllSpellsFromJson(GameType);
+            var savedForChar = SharedViewModel.Instance.SpellsForCharacter(Character);
+            
+            foreach (var sp in allSpells)
             {
-                var allClassSpells = SharedViewModel.Instance.LoadAllClassSpells(Character);
-                var savedForChar = SharedViewModel.Instance.SpellsForCharacter(Character);
-                foreach (var sp in allClassSpells)
+                var match = savedForChar?.FirstOrDefault(s => s.Id == sp.Id || s.Name == sp.Name);
+                if (match != null)
                 {
-                    var match = savedForChar?.FirstOrDefault(s => s.Id == sp.Id || s.Name == sp.Name);
-                    if (match != null)
-                    {
-                        sp.IsFavoriteSpell = match.IsFavoriteSpell;
-                        sp.IsAlwaysPrepared = match.IsAlwaysPrepared;
-                    }
+                    sp.IsFavoriteSpell = match.IsFavoriteSpell;
+                    sp.IsAlwaysPrepared = match.IsAlwaysPrepared;
                 }
-
-                SpellViewModels = new ObservableCollection<SpellViewModel>(
-                    allClassSpells.Select(spell => new SpellViewModel(spell, Character))
-                );
-                FilteredSpellViewModels = new ObservableCollection<SpellViewModel>(SpellViewModels);
             }
-            else
-            {
-                var allSpells = SpellRepository.GetAllSpellsFromJson(GameType);
-                var savedForChar = SharedViewModel.Instance.SpellsForCharacter(Character);
-                foreach (var sp in allSpells)
-                {
-                    var match = savedForChar?.FirstOrDefault(s => s.Id == sp.Id || s.Name == sp.Name);
-                    if (match != null)
-                    {
-                        sp.IsFavoriteSpell = match.IsFavoriteSpell;
-                        sp.IsAlwaysPrepared = match.IsAlwaysPrepared;
-                    }
-                }
 
-                SpellViewModels = new ObservableCollection<SpellViewModel>(
-                    allSpells.Select(spell => new SpellViewModel(spell, Character))
-                );
-                FilteredSpells = new ObservableCollection<Spell>(allSpells);
-            }
+            SpellViewModels = new ObservableCollection<SpellViewModel>(
+                allSpells.Select(spell => new SpellViewModel(spell, Character))
+            );
+            FilteredSpells = new ObservableCollection<Spell>(allSpells);
 
             OnPropertyChanged(nameof(SpellViewModels));
             FilterSpells();
@@ -191,13 +146,14 @@ namespace TabletopSpells.ViewModels
             var characterClassName = Character.CharacterClass.ToString().ToLowerInvariant();
             var spells = SpellViewModels.Select(spellViewModel => spellViewModel.Spell).AsEnumerable();
 
-            // Filter by spell level if selected (and restrict to class spells)
+            // Filter by spell level if selected (and restrict to class spells when level filter is active)
             if (SelectedSpellLevel.HasValue)
             {
                 spells = spells.Where(spell =>
                     ParseSpellLevel(spell.SpellLevel, characterClassName) == SelectedSpellLevel.Value &&
                     IsSpellAvailableForClass(spell, characterClassName));
             }
+            // When no level filter, show ALL spells (no class restriction)
 
             // Filter by search text
             if (!string.IsNullOrWhiteSpace(SearchText))

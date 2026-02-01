@@ -344,15 +344,6 @@ public class SharedViewModel : INotifyPropertyChanged
         if (!CharacterSpells.ContainsKey(character.ID))
         {
             LoadSpellsForCharacter(character);
-
-            if (character.IsDivineCaster && (!CharacterSpells[character.ID]?.Any() ?? true))
-            {
-                var allSpells = SpellRepository.GetAllSpellsFromJson(character.GameType); // reuse your loader
-                foreach (var spell in allSpells)
-                {
-                    AddSpell(character, spell);
-                }
-            }
         }
 
         // Always reload prepared spells for divine casters to ensure current state
