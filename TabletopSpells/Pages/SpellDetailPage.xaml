@@ -5,7 +5,7 @@
 
     <ContentPage.ToolbarItems>
         <ToolbarItem x:Name="MenuButton"
-                     Text="⋮"
+                     Text="☰"
                      Priority="0"
                      Order="Primary"
                      Clicked="OnMenuButtonClicked"/>
