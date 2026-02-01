@@ -50,48 +50,93 @@ public partial class SpellDetailPage
 
     private void UpdateButtons()
     {
-        // Clear existing click event subscriptions to avoid multiple subscriptions
-        AddOrRemoveButton.Clicked -= OnAddSpellClicked;
-        AddOrRemoveButton.Clicked -= OnRemoveSpellClicked;
-        AddOrRemoveButton.Clicked -= OnPrepareSpellClicked;
-        AddOrRemoveButton.Clicked -= OnUnprepareSpellClicked;
-        AlwaysPreparedButton.Clicked -= OnToggleAlwaysPreparedClicked;
-
-        // ALL casters use Add/Remove buttons
-        // Divine casters manage preparation via the "Prepare Spells" modal on SpellsPage
-        AddOrRemoveButton.Text = spellIsKnown ? "Remove Spell" : "Add Spell";
-        if (spellIsKnown)
-        {
-            AddOrRemoveButton.Clicked += OnRemoveSpellClicked;
-        }
-        else
-        {
-            AddOrRemoveButton.Clicked += OnAddSpellClicked;
-        }
-
-        // Show/hide and configure the "Always Prepared" button for divine casters
-        // Remove it first to ensure clean state
-        if (ToolbarItems.Contains(AlwaysPreparedButton))
-        {
-            ToolbarItems.Remove(AlwaysPreparedButton);
-        }
-        
-        if (character.IsDivineCaster && spellIsKnown)
-        {
-            // Check if spell is already marked as always prepared
-            bool isAlwaysPrepared = spell.IsAlwaysPrepared || 
-                                   character.AlwaysPreparedSpells.Contains(spell.Name ?? string.Empty);
-            AlwaysPreparedButton.Text = isAlwaysPrepared ? "Unmark Domain" : "Mark Domain";
-            AlwaysPreparedButton.Clicked += OnToggleAlwaysPreparedClicked;
-            // Add it to toolbar
-            if (!ToolbarItems.Contains(AlwaysPreparedButton))
-            {
-                ToolbarItems.Insert(0, AlwaysPreparedButton); // Insert at position 0 to be on the left
-            }
-        }
-
-        // Update the visibility and enabled status of the CastSpellButton
+        // The menu button is always visible
+        // ShowCastSpellButton handles the cast button visibility
         ShowCastSpellButton();
+    }
+
+    private async void OnMenuButtonClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            System.Diagnostics.Debug.WriteLine("=== OnMenuButtonClicked START ===");
+            System.Diagnostics.Debug.WriteLine($"Character: {character.Name}, IsDivineCaster: {character.IsDivineCaster}");
+            System.Diagnostics.Debug.WriteLine($"SpellIsKnown: {spellIsKnown}");
+            
+            // Build the menu options based on current state
+            var options = new List<string>();
+
+            // Add/Remove spell option (always available)
+            if (spellIsKnown)
+            {
+                options.Add("Remove Spell");
+                System.Diagnostics.Debug.WriteLine("Added option: Remove Spell");
+            }
+            else
+            {
+                options.Add("Add Spell");
+                System.Diagnostics.Debug.WriteLine("Added option: Add Spell");
+            }
+
+            // Mark/Unmark Domain option (only for divine casters with known spells)
+            if (character.IsDivineCaster && spellIsKnown)
+            {
+                bool isAlwaysPrepared = spell.IsAlwaysPrepared || 
+                                       character.AlwaysPreparedSpells.Contains(spell.Name ?? string.Empty);
+                if (isAlwaysPrepared)
+                {
+                    options.Add("Unmark Domain");
+                    System.Diagnostics.Debug.WriteLine("Added option: Unmark Domain");
+                }
+                else
+                {
+                    options.Add("Mark Domain");
+                    System.Diagnostics.Debug.WriteLine("Added option: Mark Domain");
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine($"Total options: {options.Count}");
+            
+            // Show the action sheet
+            var action = await DisplayActionSheet("Spell Options", "Cancel", null, options.ToArray());
+            System.Diagnostics.Debug.WriteLine($"User selected: {action}");
+
+            if (action == "Cancel" || string.IsNullOrEmpty(action))
+            {
+                System.Diagnostics.Debug.WriteLine("=== OnMenuButtonClicked CANCELLED ===");
+                return;
+            }
+
+            // Handle the selected action
+            if (action == "Add Spell")
+            {
+                System.Diagnostics.Debug.WriteLine("Executing: Add Spell");
+                await OnAddSpellClickedAsync();
+            }
+            else if (action == "Remove Spell")
+            {
+                System.Diagnostics.Debug.WriteLine("Executing: Remove Spell");
+                await OnRemoveSpellClickedAsync();
+            }
+            else if (action == "Mark Domain")
+            {
+                System.Diagnostics.Debug.WriteLine("Executing: Mark Domain");
+                await OnToggleAlwaysPreparedAsync(markAsDomain: true);
+            }
+            else if (action == "Unmark Domain")
+            {
+                System.Diagnostics.Debug.WriteLine("Executing: Unmark Domain");
+                await OnToggleAlwaysPreparedAsync(markAsDomain: false);
+            }
+            
+            System.Diagnostics.Debug.WriteLine("=== OnMenuButtonClicked END ===");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"ERROR in OnMenuButtonClicked: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            await DisplayAlert("Error", $"An error occurred: {ex.Message}", "OK");
+        }
     }
 
     private void ShowCastSpellButton()
@@ -433,6 +478,9 @@ public partial class SpellDetailPage
                     character.AlwaysPreparedSpells.Remove(spell.Name ?? string.Empty);
                 }
                 
+                // IMPORTANT: Save the spell file with IsAlwaysPrepared flag cleared
+                viewModel.SaveSpellForCharacter(character, spell);
+                
                 // Save the updated state
                 viewModel.SavePreparedSpells(character);
                 
@@ -455,13 +503,139 @@ public partial class SpellDetailPage
                 if (viewModel.CharacterSpells[character.ID].All(s => s.Name != spell.Name))
                 {
                     viewModel.AddSpell(character, spell);
-                    viewModel.SaveSpellForCharacter(character, spell);
                 }
+                
+                // IMPORTANT: Save the spell file with IsAlwaysPrepared flag
+                viewModel.SaveSpellForCharacter(character, spell);
                 
                 // Save the updated state
                 viewModel.SavePreparedSpells(character);
                 
                 await DisplayAlert("Success", $"'{spell.Name}' has been marked as a domain spell (always prepared).", "OK");
+            }
+            
+            // Refresh UI
+            CheckIfSpellIsPrepared();
+            CheckIfSpellIsKnown();
+            UpdateButtons();
+            
+            // Notify other UI to reload lists
+            SharedViewModel.Instance.SpellsChanged?.Invoke();
+        }
+        catch (Exception e)
+        {
+            await DisplayAlert("Error", $"An error occurred while toggling always prepared status: {e.Message}", "OK");
+        }
+    }
+
+    // Async wrapper methods for the context menu (don't navigate away)
+    private async Task OnAddSpellClickedAsync()
+    {
+        try
+        {
+            var viewModel = SharedViewModel.Instance;
+            // Ensure character has an ID
+            if (character.ID == null) character.ID = Guid.NewGuid();
+
+            viewModel.AddSpell(character, spell);
+            viewModel.SaveSpellForCharacter(character, spell);
+            CheckIfSpellIsKnown();
+            UpdateButtons();
+
+            // Notify other UI to reload lists
+            SharedViewModel.Instance.SpellsChanged?.Invoke();
+
+            await DisplayAlert("Success", $"'{spell.Name}' has been added to your spells.", "OK");
+        }
+        catch (Exception e)
+        {
+            await DisplayAlert("Error", $"An error occurred while adding the spell: {e.Message}", "OK");
+        }
+    }
+
+    private async Task OnRemoveSpellClickedAsync()
+    {
+        try
+        {
+            var viewModel = SharedViewModel.Instance;
+            // Ensure the character has an ID and the in-memory spell collection is loaded
+            character.ID ??= Guid.NewGuid();
+ 
+            // This will initialize CharacterSpells[character.ID] if missing
+            var spellsForChar = viewModel.SpellsForCharacter(character);
+ 
+            // Remove by matching Id or Name to handle different object instances
+            var existing = spellsForChar.FirstOrDefault(s => s.Id == spell.Id) ?? spellsForChar.FirstOrDefault(s => s.Name == spell.Name);
+            if (existing != null)
+            {
+                spellsForChar.Remove(existing);
+            }
+ 
+            // Ensure persistent removal and any divine-caster cleanup happens
+            viewModel.RemoveSpellForCharacter(character, spell);
+            CheckIfSpellIsKnown();
+            UpdateButtons();
+
+            // Notify other UI to reload lists
+            SharedViewModel.Instance.SpellsChanged?.Invoke();
+
+            await DisplayAlert("Success", $"'{spell.Name}' has been removed from your spells.", "OK");
+        }
+        catch (Exception e)
+        {
+            await DisplayAlert("Error", $"An error occurred while removing the spell: {e.Message}", "OK");
+        }
+    }
+
+    private async Task OnToggleAlwaysPreparedAsync(bool markAsDomain)
+    {
+        try
+        {
+            var viewModel = SharedViewModel.Instance;
+
+            if (markAsDomain)
+            {
+                // Mark as domain spell (always prepared)
+                spell.IsAlwaysPrepared = true;
+                if (!character.AlwaysPreparedSpells.Contains(spell.Name ?? string.Empty))
+                {
+                    character.AlwaysPreparedSpells.Add(spell.Name ?? string.Empty);
+                }
+                
+                // Ensure the spell is in the character's spell list
+                if (!viewModel.CharacterSpells.ContainsKey(character.ID))
+                {
+                    viewModel.CharacterSpells[character.ID] = [];
+                }
+                if (viewModel.CharacterSpells[character.ID].All(s => s.Name != spell.Name))
+                {
+                    viewModel.AddSpell(character, spell);
+                }
+                
+                // IMPORTANT: Save the spell file with IsAlwaysPrepared flag
+                viewModel.SaveSpellForCharacter(character, spell);
+                
+                // Save the updated state
+                viewModel.SavePreparedSpells(character);
+                
+                await DisplayAlert("Success", $"'{spell.Name}' has been marked as a domain spell (always prepared).", "OK");
+            }
+            else
+            {
+                // Unmark as domain spell
+                spell.IsAlwaysPrepared = false;
+                if (character.AlwaysPreparedSpells.Contains(spell.Name ?? string.Empty))
+                {
+                    character.AlwaysPreparedSpells.Remove(spell.Name ?? string.Empty);
+                }
+                
+                // IMPORTANT: Save the spell file with IsAlwaysPrepared flag cleared
+                viewModel.SaveSpellForCharacter(character, spell);
+                
+                // Save the updated state
+                viewModel.SavePreparedSpells(character);
+                
+                await DisplayAlert("Success", $"'{spell.Name}' is no longer marked as a domain spell.", "OK");
             }
             
             // Refresh UI

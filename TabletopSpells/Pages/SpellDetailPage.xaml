@@ -4,13 +4,11 @@
              Title="{Binding Name}">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem x:Name="AlwaysPreparedButton"
-                     Text="Always Prepared"
+        <ToolbarItem x:Name="MenuButton"
+                     Text="⋮"
                      Priority="0"
-                     Order="Primary"/>
-        <ToolbarItem x:Name="AddOrRemoveButton"
-                     Priority="1"
-                     Order="Primary"/>
+                     Order="Primary"
+                     Clicked="OnMenuButtonClicked"/>
     </ContentPage.ToolbarItems>
 
     <Grid>
