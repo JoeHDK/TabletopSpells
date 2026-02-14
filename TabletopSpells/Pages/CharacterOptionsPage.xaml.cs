@@ -19,24 +19,6 @@ namespace TabletopSpells.Pages
             this.viewModel = viewModel;
             
             Title = $"{character.Name} - Options";
-            UpdateThemeToggleText();
-        }
-
-        private void OnToggleThemeClicked(object sender, EventArgs e)
-        {
-            ThemeService.ToggleTheme();
-            UpdateThemeToggleText();
-            
-            // Show confirmation
-            var currentTheme = AppColors.Current.Name;
-            DisplayAlert("Theme Changed", $"{currentTheme} theme is now active", "OK");
-        }
-
-        private void UpdateThemeToggleText()
-        {
-            var currentTheme = AppColors.Current.Name;
-            var nextTheme = currentTheme == "Dark" ? "Light" : "Dark";
-            ThemeToggleButton.Text = $"Switch to {nextTheme} Mode";
         }
 
         private async void OnDeleteCharacterClicked(object sender, EventArgs e)
@@ -95,8 +77,6 @@ namespace TabletopSpells.Pages
         protected override void OnAppearing()
         {
             base.OnAppearing();
-            UpdateThemeToggleText();
         }
     }
 }
-

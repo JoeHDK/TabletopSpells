@@ -10,6 +10,8 @@ namespace TabletopSpells.Services
     {
         private const string ThemePreferenceKey = "app_theme";
         private const string CharacterThemesFileName = "character_themes.json";
+        private const string CustomDarkThemeFileName = "custom_dark_theme.json";
+        private const string CustomLightThemeFileName = "custom_light_theme.json";
 
         /// <summary>
         /// Loads the saved theme preference and applies it.
@@ -18,9 +20,9 @@ namespace TabletopSpells.Services
         {
             try
             {
+                LoadCustomThemes();
                 var themeName = Preferences.Default.Get(ThemePreferenceKey, "Dark");
-                var theme = themeName == "Light" ? AppColors.LightTheme : AppColors.DarkTheme;
-                AppColors.SetTheme(theme);
+                ApplyThemeByName(themeName);
             }
             catch (Exception ex)
             {
@@ -165,6 +167,105 @@ namespace TabletopSpells.Services
             }
         }
 
+        /// <summary>
+        /// Sets a custom dark theme.
+        /// </summary>
+        public static void SetCustomDarkTheme(ColorTheme theme)
+        {
+            theme.Name = "CustomDark";
+            AppColors.CustomDarkTheme = theme;
+            AppColors.SetTheme(theme);
+            _ = SaveCustomThemeAsync(CustomDarkThemeFileName, theme);
+            SaveThemePreference();
+        }
+
+        /// <summary>
+        /// Sets a custom light theme.
+        /// </summary>
+        public static void SetCustomLightTheme(ColorTheme theme)
+        {
+            theme.Name = "CustomLight";
+            AppColors.CustomLightTheme = theme;
+            AppColors.SetTheme(theme);
+            _ = SaveCustomThemeAsync(CustomLightThemeFileName, theme);
+            SaveThemePreference();
+        }
+
+        /// <summary>
+        /// Switches to a theme by name.
+        /// </summary>
+        public static void SetThemeByName(string themeName)
+        {
+            ApplyThemeByName(themeName);
+            SaveThemePreference();
+        }
+
+        private static void ApplyThemeByName(string themeName)
+        {
+            switch (themeName)
+            {
+                case "Light":
+                    AppColors.SetTheme(AppColors.LightTheme);
+                    break;
+                case "CustomDark":
+                    AppColors.SetTheme(AppColors.CustomDarkTheme);
+                    break;
+                case "CustomLight":
+                    AppColors.SetTheme(AppColors.CustomLightTheme);
+                    break;
+                default:
+                    AppColors.SetTheme(AppColors.DarkTheme);
+                    break;
+            }
+        }
+
+        private static void LoadCustomThemes()
+        {
+            AppColors.CustomDarkTheme = LoadCustomTheme(CustomDarkThemeFileName, AppColors.DarkTheme, "CustomDark");
+            AppColors.CustomLightTheme = LoadCustomTheme(CustomLightThemeFileName, AppColors.LightTheme, "CustomLight");
+        }
+
+        private static ColorTheme LoadCustomTheme(string fileName, ColorTheme baseTheme, string name)
+        {
+            try
+            {
+                var filePath = Path.Combine(FileSystem.AppDataDirectory, fileName);
+                if (!File.Exists(filePath))
+                {
+                    return AppColors.CreateCustomTheme(name, baseTheme);
+                }
+
+                var json = File.ReadAllText(filePath);
+                var data = JsonSerializer.Deserialize<ThemeData>(json);
+                if (data == null)
+                {
+                    return AppColors.CreateCustomTheme(name, baseTheme);
+                }
+
+                data.Name = name;
+                return ThemeDataToColorTheme(data, baseTheme);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error loading custom theme: {ex.Message}");
+                return AppColors.CreateCustomTheme(name, baseTheme);
+            }
+        }
+
+        private static async Task SaveCustomThemeAsync(string fileName, ColorTheme theme)
+        {
+            try
+            {
+                var filePath = Path.Combine(FileSystem.AppDataDirectory, fileName);
+                var json = JsonSerializer.Serialize(ColorThemeToThemeData(theme), new JsonSerializerOptions { WriteIndented = true });
+                await File.WriteAllTextAsync(filePath, json);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving custom theme: {ex.Message}");
+            }
+        }
+
         private static ThemeData ColorThemeToThemeData(ColorTheme theme)
         {
             return new ThemeData
@@ -174,6 +275,8 @@ namespace TabletopSpells.Services
                 TextPrimary = theme.TextPrimary.ToHex(),
                 SpellPrepared = theme.SpellPrepared.ToHex(),
                 SpellNative = theme.SpellNative.ToHex(),
+                SpellNonNative = theme.SpellNonNative.ToHex(),
+                SpellDomain = theme.SpellDomain.ToHex(),
                 Primary = theme.Primary.ToHex(),
                 Success = theme.Success.ToHex(),
                 Error = theme.Error.ToHex(),
@@ -184,8 +287,13 @@ namespace TabletopSpells.Services
         private static ColorTheme ThemeDataToColorTheme(ThemeData data)
         {
             var baseTheme = data.Name == "Light" ? AppColors.LightTheme : AppColors.DarkTheme;
+            return ThemeDataToColorTheme(data, baseTheme);
+        }
+
+        private static ColorTheme ThemeDataToColorTheme(ThemeData data, ColorTheme baseTheme)
+        {
             var theme = AppColors.CreateCustomTheme(data.Name ?? "Custom", baseTheme);
-            
+
             if (!string.IsNullOrEmpty(data.PageBackground))
                 theme.PageBackground = Color.FromArgb(data.PageBackground);
             if (!string.IsNullOrEmpty(data.TextPrimary))
@@ -194,6 +302,10 @@ namespace TabletopSpells.Services
                 theme.SpellPrepared = Color.FromArgb(data.SpellPrepared);
             if (!string.IsNullOrEmpty(data.SpellNative))
                 theme.SpellNative = Color.FromArgb(data.SpellNative);
+            if (!string.IsNullOrEmpty(data.SpellNonNative))
+                theme.SpellNonNative = Color.FromArgb(data.SpellNonNative);
+            if (!string.IsNullOrEmpty(data.SpellDomain))
+                theme.SpellDomain = Color.FromArgb(data.SpellDomain);
             if (!string.IsNullOrEmpty(data.Primary))
                 theme.Primary = Color.FromArgb(data.Primary);
             if (!string.IsNullOrEmpty(data.Success))
@@ -202,7 +314,7 @@ namespace TabletopSpells.Services
                 theme.Error = Color.FromArgb(data.Error);
             if (!string.IsNullOrEmpty(data.ButtonBackground))
                 theme.ButtonBackground = Color.FromArgb(data.ButtonBackground);
-            
+
             return theme;
         }
 
@@ -213,6 +325,8 @@ namespace TabletopSpells.Services
             public string? TextPrimary { get; set; }
             public string? SpellPrepared { get; set; }
             public string? SpellNative { get; set; }
+            public string? SpellNonNative { get; set; }
+            public string? SpellDomain { get; set; }
             public string? Primary { get; set; }
             public string? Success { get; set; }
             public string? Error { get; set; }

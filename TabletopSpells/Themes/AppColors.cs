@@ -11,11 +11,25 @@ namespace TabletopSpells.Themes
         // Current active theme
         private static ColorTheme _currentTheme = DarkTheme;
         private static readonly Dictionary<Guid, ColorTheme> _characterThemes = new();
+        private static ColorTheme _customDarkTheme = CreateCustomTheme("CustomDark", DarkTheme);
+        private static ColorTheme _customLightTheme = CreateCustomTheme("CustomLight", LightTheme);
 
         /// <summary>
         /// Gets the current active color theme.
         /// </summary>
         public static ColorTheme Current => _currentTheme;
+
+        public static ColorTheme CustomDarkTheme
+        {
+            get => _customDarkTheme;
+            set => _customDarkTheme = value;
+        }
+
+        public static ColorTheme CustomLightTheme
+        {
+            get => _customLightTheme;
+            set => _customLightTheme = value;
+        }
 
         /// <summary>
         /// Predefined Dark Theme (default)
@@ -208,6 +222,7 @@ namespace TabletopSpells.Themes
                 SpellNative = theme.SpellNative,
                 SpellNonNative = theme.SpellNonNative,
                 SpellUnavailable = theme.SpellUnavailable,
+                SpellDomain = theme.SpellDomain,
                 Success = theme.Success,
                 Warning = theme.Warning,
                 Error = theme.Error,

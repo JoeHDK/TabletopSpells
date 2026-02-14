@@ -22,14 +22,7 @@
                    Padding="15"
                    CornerRadius="10">
                 <VerticalStackLayout Spacing="10">
-                   <Button x:Name="ThemeToggleButton"
-                            Text="Toggle Theme"
-                            BackgroundColor="{helpers:ThemeColor ButtonBackground}"
-                            TextColor="{helpers:ThemeColor ButtonText}"
-                            Clicked="OnToggleThemeClicked"
-                            Margin="0,10,0,0"/>
-
-                    <Button Text="Advanced Theme Settings"
+                    <Button Text="Theme Settings"
                             BackgroundColor="{helpers:ThemeColor Primary}"
                             TextColor="{helpers:ThemeColor ButtonText}"
                             Clicked="OnViewAppThemeSettingsClicked"
@@ -54,4 +47,3 @@
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
-
