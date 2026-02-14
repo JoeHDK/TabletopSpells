@@ -1,4 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8"?>
+
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:helpers="clr-namespace:TabletopSpells.Helpers"
@@ -9,30 +10,35 @@
         <Label Text="Choose a color"
                FontAttributes="Bold"
                FontSize="20"
-               TextColor="{helpers:ThemeColor TextPrimary}"/>
+               TextColor="{helpers:ThemeColor TextPrimary}" />
 
-        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*,*" ColumnSpacing="10" RowSpacing="10">
-            <BoxView Grid.Row="0" Grid.Column="0" Color="{Binding PreviewColor}" HeightRequest="64" WidthRequest="64" CornerRadius="8"/>
-            <VerticalStackLayout Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Spacing="6">
-                <Label Text="R" TextColor="{helpers:ThemeColor TextPrimary}"/>
-                <Slider Minimum="0" Maximum="255" Value="{Binding Red}"/>
-                <Label Text="G" TextColor="{helpers:ThemeColor TextPrimary}"/>
-                <Slider Minimum="0" Maximum="255" Value="{Binding Green}"/>
-                <Label Text="B" TextColor="{helpers:ThemeColor TextPrimary}"/>
-                <Slider Minimum="0" Maximum="255" Value="{Binding Blue}"/>
+        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,*" ColumnSpacing="16" RowSpacing="16">
+            <Frame Grid.Row="0" Grid.Column="0" BorderColor="{helpers:ThemeColor Border}"
+                   BackgroundColor="{helpers:ThemeColor PageBackground}" Padding="8" CornerRadius="12">
+                <GraphicsView x:Name="ColorWheelView"
+                              HeightRequest="220"
+                              WidthRequest="220"
+                              StartInteraction="OnColorWheelStart"
+                              DragInteraction="OnColorWheelDrag" />
+            </Frame>
+
+            <VerticalStackLayout Grid.Row="0" Grid.Column="1" Spacing="12">
+                <BoxView Color="{Binding PreviewColor}" HeightRequest="80" WidthRequest="80" CornerRadius="12" />
+                <Label Text="Preview"
+                       TextColor="{helpers:ThemeColor TextPrimary}"
+                       HorizontalOptions="Center" />
             </VerticalStackLayout>
 
-            <HorizontalStackLayout Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Spacing="12">
+            <HorizontalStackLayout Grid.Row="1" Grid.ColumnSpan="2" Spacing="12">
                 <Button Text="Cancel"
                         BackgroundColor="{helpers:ThemeColor ButtonDisabled}"
                         TextColor="{helpers:ThemeColor ButtonText}"
-                        Clicked="OnCancelClicked"/>
+                        Clicked="OnCancelClicked" />
                 <Button Text="Apply"
                         BackgroundColor="{helpers:ThemeColor Primary}"
                         TextColor="{helpers:ThemeColor ButtonText}"
-                        Clicked="OnApplyClicked"/>
+                        Clicked="OnApplyClicked" />
             </HorizontalStackLayout>
         </Grid>
     </VerticalStackLayout>
 </ContentPage>
-

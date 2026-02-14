@@ -1,65 +1,38 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Microsoft.Maui.Graphics;
 
 namespace TabletopSpells.ViewModels
 {
     public class ThemeColorPickerViewModel : INotifyPropertyChanged
     {
-        private int _red;
-        private int _green;
-        private int _blue;
+        private Color _selectedColor;
         private readonly Action<Color> _onApply;
 
-        public int Red
+        public Color SelectedColor
         {
-            get => _red;
+            get => _selectedColor;
             set
             {
-                if (_red == value) return;
-                _red = value;
+                if (_selectedColor == value) return;
+                _selectedColor = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(PreviewColor));
             }
         }
 
-        public int Green
-        {
-            get => _green;
-            set
-            {
-                if (_green == value) return;
-                _green = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(PreviewColor));
-            }
-        }
-
-        public int Blue
-        {
-            get => _blue;
-            set
-            {
-                if (_blue == value) return;
-                _blue = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(PreviewColor));
-            }
-        }
-
-        public Color PreviewColor => Color.FromRgb(Red, Green, Blue);
+        public Color PreviewColor => SelectedColor;
 
         public ThemeColorPickerViewModel(Color initialColor, Action<Color> onApply)
         {
             _onApply = onApply;
-            Red = (int)(initialColor.Red * 255);
-            Green = (int)(initialColor.Green * 255);
-            Blue = (int)(initialColor.Blue * 255);
+            _selectedColor = initialColor;
         }
 
         public void Apply()
         {
-            _onApply(PreviewColor);
+            _onApply(SelectedColor);
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
